@@ -79,24 +79,75 @@ PT's own emitter produces a slightly different zlib stream (different zlib
 build): the rebuilt file is **not byte-identical** but is valid and opens
 the same.
 
-## Usage
+## Installation
+
+Requirements for every platform: **Python 3.12+**, **Git** and **curl**.
+
+### Linux (Debian / Ubuntu)
 
 ```bash
-git clone <repo> pkt-git && cd pkt-git
-./setup.sh          # venv + dependencies + patch + hooks — one command
+sudo apt update && sudo apt install -y python3 python3-venv git curl
+git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+./setup.sh
 ```
 
-Machine requirements: **Python 3.12+** and **Git**. Packet Tracer
-**9.0.1.0858** only for whoever edits the network in PT (someone just
-reviewing diffs on GitHub does not need it).
+### Linux (Arch / Fedora)
 
-### Platform support
+```bash
+# Arch
+sudo pacman -S --needed python git curl
+
+# Fedora
+sudo dnf install -y python3 git curl
+
+git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+./setup.sh
+```
+
+### macOS
+
+```bash
+# Homebrew (its own installer already uses curl)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install python git
+git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+./setup.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+# prerequisites
+winget install -e --id Python.Python.3.13
+winget install -e --id Git.Git
+
+# clone (Git) or download with curl (curl.exe ships with Windows 10+)
+git clone https://github.com/<your-user>/pkt-git.git ; cd pkt-git
+# curl alternative:
+# curl.exe -Lo pkt-git.zip https://github.com/<your-user>/pkt-git/archive/refs/heads/main.zip ; Expand-Archive pkt-git.zip
+
+powershell -ExecutionPolicy Bypass -File setup.ps1
+```
+
+### Install without Git (curl-only, Linux / macOS)
+
+```bash
+curl -fsSL https://github.com/<your-user>/pkt-git/archive/refs/heads/main.tar.gz | tar xz
+cd pkt-git-main
+./setup.sh
+```
+
+> Replace `<your-user>` with the GitHub account that hosts the repository.
+> Packet Tracer **9.0.1.0858** is only needed for whoever edits the network
+> in PT — someone just reviewing diffs on GitHub does not need it.
+
+## Usage
 
 | Platform | Install | Notes |
 |---|---|---|
 | Linux | `./setup.sh` | fully tested |
 | macOS | `./setup.sh` | needs Xcode Command Line Tools (C compiler for the Twofish binding) |
-| Windows | `powershell -ExecutionPolicy Bypass -File setup.ps1` (native) or `./setup.sh` from Git Bash | hooks run under Git Bash, which ships with Git for Windows |
+| Windows | `setup.ps1` (native) or `./setup.sh` from Git Bash | hooks run under Git Bash, which ships with Git for Windows |
 
 ```bash
 .venv/bin/python tools/ptg.py export "my_project.pkt" snapshot/my_project/
@@ -109,4 +160,3 @@ reviewing diffs on GitHub does not need it).
 The team's daily flow is just: **edit in PT → save → `git add` → `git commit`** —
 the pre-commit hook generates the textual snapshot automatically; after a
 `git pull`/merge the post-merge hook rebuilds the local `.pkt` files.
-# platform support v0.8
