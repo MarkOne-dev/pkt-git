@@ -116,22 +116,28 @@ When two branches edit the same config line (real example: VLAN 50 vs VLAN 60
 on `SW_ACC_ADMIN_PUNO` `FastEthernet0/3`), Git reports a conflict on the
 `.cfg`/XML text — exactly like code. The resolver:
 
-1. Edits the conflicted snapshot **by hand or with device-scoped tools**:
+1. Decide the conflict with **one command** — `pkt resolve`:
+   ```bash
+   pkt resolve                     # report: exactly what conflicts and where
+   pkt resolve --theirs            # accept the incoming branch
+   # or: pkt resolve --ours        # keep our version
+   # or: edit the <<<<<<< markers with device-scoped tools (below), then rerun
+   #     pkt resolve               # (no flags) to sync + rebuild + stage
+   ```
+   It regenerates `configs/*.cfg` and `metadata/topology.json` (`pkt sync`),
+   rebuilds the conflicted binary (`pkt build`) and stages everything.
+   The **decision** (whose VLAN wins) stays human; all mechanics are automated.
+
+   Device-scoped manual alternative (full control):
    ```bash
    pkt edit snapshot/<project>/base.snapshot.xml \
        chgline SW_ACC_ADMIN_PUNO FastEthernet0/3 "switchport access vlan 50" \
        "switchport access vlan 60"
+   pkt build snapshot/<project>/base.snapshot.xml topologia/<project>.pkt
+   git add . && git commit
    ```
 
-2. `git add` the snapshot.
-3. Rebuild the binary — **the only manual conversion command in the whole
-   workflow**:
-   ```bash
-   pkt build snapshot/<project>/base.snapshot.xml \
-       topologia/<project>.pkt
-   git add topologia/<project>.pkt
-   ```
-4. `git commit` to finish the merge commit.
+2. `git commit` to finish the merge commit.
 
 The pre-commit hook prints a warning whenever a snapshot was changed without
 its `.pkt`, so this step is hard to forget even if you don't read this doc.
@@ -140,11 +146,11 @@ its `.pkt`, so this step is hard to forget even if you don't read this doc.
 
 - **Never** fix conflicts with global tools (`sed` over the whole XML, any
   find-replace across the 5.9 MB document). Editions must be scoped to one
-  device — use `edit_config.py` (its `show/setiface/chgline/insertafter`
+  device — use `pkt edit` (its `show/setiface/chgline/insertafter`
   commands all take the device name first). A past incident where a global
   replace duplicated a VLAN assignment motivated this rule.
 - Be explicit about which config block you mean: `RUNNINGCONFIG` and
-  `STARTUPCONFIG` are separate; `edit_config.py` operates on the running one.
+  `STARTUPCONFIG` are separate; `pkt edit` operates on the running one.
 - `setiface` replaces the **entire interface block** — convenient but blunt;
   use `chgline` for surgical single-line changes and keep the surrounding
   lines (`description`, `portfast`, …) that you did not intend to touch.
