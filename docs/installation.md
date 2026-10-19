@@ -100,7 +100,7 @@ compilation from all three platforms.
 Everything is reproducible from the repository:
 
 ```bash
-git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 ./setup.sh              # or setup.ps1 on Windows
 .venv/bin/python tools/spike_roundtrip.py verify proof-pkt/Caso1_Grupo09-2.pkt
 ```

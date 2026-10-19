@@ -139,7 +139,7 @@ sudo pacman -S --needed python git curl
 sudo dnf install -y python3 git curl
 
 # Clone and run automated setup
-git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 ./setup.sh
 ```
 
@@ -148,7 +148,7 @@ git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
 ```bash
 # Ensure Homebrew and Python are installed
 brew install python git
-git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 ./setup.sh
 ```
 
@@ -162,7 +162,7 @@ winget install -e --id Python.Python.3.13
 winget install -e --id Git.Git
 
 # Clone and run one-command setup
-git clone https://github.com/<your-user>/pkt-git.git ; cd pkt-git
+git clone https://github.com/MarkOne-dev/pkt-git.git ; cd pkt-git
 powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
 
@@ -173,7 +173,7 @@ powershell -ExecutionPolicy Bypass -File setup.ps1
 If you do not have Git installed yet:
 
 ```bash
-curl -fsSL https://github.com/<your-user>/pkt-git/archive/refs/heads/main.tar.gz | tar xz
+curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz
 cd pkt-git-main
 ./setup.sh
 ```

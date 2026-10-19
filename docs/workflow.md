@@ -7,7 +7,7 @@ resolution.
 ## One-Time Setup (per machine)
 
 ```bash
-git clone https://github.com/<your-user>/pkt-git.git && cd pkt-git
+git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 ./setup.sh            # POSIX (Linux / macOS / Git Bash)
 # Windows: powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
