@@ -24,6 +24,8 @@ pkt inspect <project.pkt>
 pkt edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_config below
 pkt verify <file.pkt>
 pkt sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
+pkt resolve [--theirs|--ours]                              # one-command merge-conflict resolution
+pkt skills [--remove]                                      # install/uninstall agent skills globally
 pkt pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
 ```
 
@@ -46,6 +48,19 @@ Text-first edits (conflict resolution, `edit`) change `base.snapshot.xml`;
 `sync` regenerates the derived `configs/*.cfg` and `metadata/topology.json`
 from it so the snapshot never contradicts itself. `pkt edit` calls it
 automatically after every successful write.
+
+### `resolve`
+
+Turns a conflicted merge into one decision + one staging:
+
+```bash
+pkt resolve            # report mode: conflicted files, marker line numbers
+pkt resolve --theirs   # accept the incoming branch; or --ours
+```
+
+Applies the policy to the snapshot texts, verifies no conflict markers remain,
+refreshes derived configs/metadata, rebuilds any conflicted binary from the
+resolved snapshot, and stages the whole resolution — ready for `git commit`.
 
 ### Hook entry points
 
