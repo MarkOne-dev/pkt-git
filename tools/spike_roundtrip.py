@@ -1,16 +1,16 @@
-"""Codec reversible para archivos de Cisco Packet Tracer (.pkt/.pka).
+"""Reversible codec for Cisco Packet Tracer files (.pkt/.pka).
 
-Pipeline documentado y verificado contra PT 9.0.1.0858:
+Pipeline documented and verified against PT 9.0.1.0858:
 
-    1. qCompress: 4 bytes BE del tamaño sin comprimir + stream zlib
-    2. XOR posicional: b[i] ^= (L - i) mod 256
-    3. Twofish-EAX: clave 0x89*16, IV 0x10*16, tag al final del blob
-    4. XOR posicional con inversión: out[L-1-i] = in[i] ^ (L - i*L) mod 256
+    1. qCompress: 4-byte BE uncompressed size + zlib stream
+    2. Positional XOR: b[i] ^= (L - i) mod 256
+    3. Twofish-EAX: key 0x89*16, IV 0x10*16, tag appended to the blob
+    4. Positional XOR with reversal: out[L-1-i] = in[i] ^ (L - i*L) mod 256
 
-El descifrado invierte 4 -> 3 -> 2 -> 1.
+Decoding inverts 4 -> 3 -> 2 -> 1.
 
-El bloque Twofish usa el paquete `twofish` solo como referencia de
-validación; CMAC/OMAC y EAX son implementación propia.
+The Twofish block comes from the `twofish` package as a validation
+reference only; CMAC/OMAC and EAX are an in-house implementation.
 """
 
 import sys
@@ -25,7 +25,7 @@ BS = 16
 
 
 def _dbl(s: bytes) -> bytes:
-    """Duplica en GF(2^128) con polinomio de retorno 0x87."""
+    """Double in GF(2^128) with reduction polynomial 0x87."""
     n = int.from_bytes(s, "big")
     carry = (n >> 127) & 1
     n = (n << 1) & ((1 << 128) - 1)
@@ -39,7 +39,7 @@ def _xor(a: bytes, b: bytes) -> bytes:
 
 
 def cmac(cipher: Twofish, msg: bytes) -> bytes:
-    """CMAC/OMAC1 estándar (NIST SP 800-38B) sobre el cifrador dado."""
+    """Standard CMAC/OMAC1 (NIST SP 800-38B) over the given block cipher."""
     L = cipher.encrypt(bytes(BS))
     k1, k2 = _dbl(L), _dbl(_dbl(L))
     acc = bytes(BS)
@@ -58,12 +58,12 @@ def cmac(cipher: Twofish, msg: bytes) -> bytes:
 
 
 def omac(cipher: Twofish, tweak: int, data: bytes) -> bytes:
-    """OMAC^t(x) de EAX: prefijo de bloque completo 00*15 || t."""
+    """EAX's OMAC^t(x): full-block prefix 00*15 || t."""
     return cmac(cipher, b"\x00" * (BS - 1) + bytes([tweak]) + data)
 
 
 def _ctr_keystream(cipher: Twofish, n: bytes, length: int) -> bytes:
-    """Keystream CTR con contador inicial n, incremento big-endian de 128 bits."""
+    """CTR keystream with initial counter n, big-endian 128-bit increment."""
     out = bytearray()
     counter = int.from_bytes(n, "big")
     while len(out) < length:
@@ -73,7 +73,7 @@ def _ctr_keystream(cipher: Twofish, n: bytes, length: int) -> bytes:
 
 
 def eax_encrypt(cipher: Twofish, plain: bytes, nonce: bytes, header: bytes = b"") -> bytes:
-    """Cifra en EAX estilo Crypto++: devuelve ciphertext + tag (16 B) concatenados."""
+    """EAX-encrypt Crypto++ style: returns ciphertext + tag (16 B) concatenated."""
     n = omac(cipher, 0, nonce)
     ks = _ctr_keystream(cipher, n, len(plain))
     data = _xor(plain, ks)
@@ -82,7 +82,7 @@ def eax_encrypt(cipher: Twofish, plain: bytes, nonce: bytes, header: bytes = b""
 
 
 def eax_decrypt(cipher: Twofish, data: bytes, nonce: bytes, header: bytes = b""):
-    """Descifra EAX con tag al final. Retorna (plaintext, tag_esperado_hex, tag_real_hex)."""
+    """EAX-decrypt with trailing tag. Returns (plaintext, expected_tag_hex, actual_tag_hex)."""
     blob, tag = data[:-16], data[-16:]
     n = omac(cipher, 0, nonce)
     ks = _ctr_keystream(cipher, n, len(blob))
@@ -92,7 +92,7 @@ def eax_decrypt(cipher: Twofish, data: bytes, nonce: bytes, header: bytes = b"")
 
 
 def _unmask_stage4(raw: bytes) -> bytes:
-    """Invierte out[L-1-i] = enc[i] ^ (L - i*L): XOR por índice de salida."""
+    """Invert out[L-1-i] = enc[i] ^ (L - i*L): XOR indexed by output position."""
     L = len(raw)
     out = bytearray(L)
     for i in range(L):
@@ -117,23 +117,23 @@ def _mask_stage2(data: bytes) -> bytes:
 
 
 def decode(raw: bytes) -> str:
-    """Convierte un .pkt binario en su XML de origen (str)."""
+    """Convert a binary .pkt file into its originating XML (str)."""
     data = _unmask_stage4(raw)
     cipher = Twofish(KEY)
-    decrypted, tag_esp, tag_real = eax_decrypt(cipher, data, NONCE)
-    if tag_esp != tag_real:
-        print(f"[warn] EAX MAC no coincide ({tag_esp[:16]}... vs {tag_real[:16]}...)",
+    decrypted, expected_tag, actual_tag = eax_decrypt(cipher, data, NONCE)
+    if expected_tag != actual_tag:
+        print(f"[warn] EAX MAC mismatch ({expected_tag[:16]}... vs {actual_tag[:16]}...)",
               file=sys.stderr)
     payload = _unmask_stage2(decrypted)
     size = int.from_bytes(payload[:4], "big")
     xml = zlib.decompress(payload[4:])
     if len(xml) != size:
-        print(f"[warn] longitud declarada {size} != real {len(xml)}", file=sys.stderr)
+        print(f"[warn] declared length {size} != actual {len(xml)}", file=sys.stderr)
     return xml.decode("utf-8")
 
 
 def encode(xml_text: str) -> bytes:
-    """Reconstruye el .pkt binario desde el XML (str)."""
+    """Rebuild the binary .pkt from the XML (str)."""
     xml = xml_text.encode("utf-8")
     payload = len(xml).to_bytes(4, "big") + zlib.compress(xml, 9)
     payload = _mask_stage2(payload)
@@ -142,7 +142,7 @@ def encode(xml_text: str) -> bytes:
     return _mask_stage4(data)
 
 
-# alias de compatibilidad con versiones anteriores
+# backward-compatibility aliases
 _inferno_decode = decode
 _inferno_encode = encode
 
@@ -162,7 +162,7 @@ def cmd_encode(src: Path, out: Path) -> int:
 
 
 def cmd_verify(src: Path, tmpdir: Path) -> int:
-    """Test de round-trip: decode -> encode -> decode debe dar el mismo XML."""
+    """Round-trip test: decode -> encode -> decode must yield the same XML."""
     raw = src.read_bytes()
 
     xml1 = decode(raw)
@@ -179,13 +179,13 @@ def cmd_verify(src: Path, tmpdir: Path) -> int:
     ok_bytes = rebuilt == raw
 
     print("=" * 60)
-    print(f"especímen          : {src.name}")
-    print(f"tamaño binario     : {len(raw)} B")
-    print(f"XML extraído       : {len(xml1)} B  ({xml_path})")
-    print(f"binario regenerado : {len(rebuilt)} B  ({pkt_path})")
-    print(f"XML es documento   : {ok_start}")
-    print(f"ROUND TRIP XML     : {ok_xml}")
-    print(f"byte-idéntico      : {ok_bytes} (bonus: exige zlib emitter igual a PT)")
+    print(f"specimen           : {src.name}")
+    print(f"binary size        : {len(raw)} B")
+    print(f"extracted XML      : {len(xml1)} B  ({xml_path})")
+    print(f"rebuilt binary     : {len(rebuilt)} B  ({pkt_path})")
+    print(f"XML is a document  : {ok_start}")
+    print(f"XML ROUND TRIP     : {ok_xml}")
+    print(f"byte-identical     : {ok_bytes} (bonus: requires PT's zlib emitter)")
     print("=" * 60)
     return 0 if (ok_xml and ok_start) else 1
 

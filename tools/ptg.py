@@ -1,9 +1,9 @@
-"""CLI v0.1 de pkt-git: convierte proyectos de Packet Tracer en versionables.
+"""pkt-git CLI v0.1: turns Packet Tracer projects into versionable repositories.
 
-Comandos:
-    export <proyecto.pkt> <dir>   .pkt -> base.snapshot.xml + configs/*.cfg + metadata
-    build  <xml> <salida.pkt>     XML -> binario regenerado para abrir en PT
-    inspect <proyecto.pkt>        resumen de devices/links en consola
+Commands:
+    export <project.pkt> <dir>   .pkt -> base.snapshot.xml + configs/*.cfg + metadata
+    build  <xml> <output.pkt>    XML -> rebuilt binary, ready to open in PT
+    inspect <project.pkt>        console summary of devices/links
 """
 
 import json
@@ -20,20 +20,20 @@ RE_REF = re.compile(r"save-ref-id:(\d+)")
 
 @dataclass
 class Endpoint:
-    """Extremo de un link: device y puerto físico."""
+    """One end of a link: device and physical port."""
     name: str | None
     port: str
 
 
 @dataclass
 class Link:
-    """Cable entre dos dispositivos de la topología."""
+    """A cable between two topology devices."""
     link_type: str
     src: Endpoint
     dst: Endpoint
 
     def to_dict(self) -> dict:
-        """Representación JSON con las claves 'from'/'to' del esquema original."""
+        """JSON representation keeping the original 'from'/'to' schema keys."""
         return {
             "link_type": self.link_type,
             "from": {"name": self.src.name, "port": self.src.port},
@@ -43,7 +43,7 @@ class Link:
 
 @dataclass
 class Device:
-    """Dispositivo de la topología con sus configuraciones CLI."""
+    """Topology device with its CLI configurations."""
     name: str
     type: str
     model: str
@@ -53,12 +53,12 @@ class Device:
 
 
 def sanitize(name: str) -> str:
-    """Convierte un nombre de device en nombre de archivo seguro."""
+    """Turn a device name into a safe file name."""
     return re.sub(r"[^\w.-]+", "_", name).strip("._") or "device"
 
 
 def parse_topology(xml_text: str) -> tuple[list[Device], list[Link]]:
-    """Extrae devices y links del XML de Packet Tracer."""
+    """Extract devices (with configs) and links from the Packet Tracer XML."""
     root = ET.fromstring(xml_text)
     net = root.find(".//NETWORK")
 
@@ -109,7 +109,7 @@ def parse_topology(xml_text: str) -> tuple[list[Device], list[Link]]:
 
 
 def cmd_export(pkt: Path, outdir: Path) -> int:
-    """Exporta .pkt a snapshot textual: XML + configs por device + metadata."""
+    """Export a .pkt into a textual snapshot: XML + per-device configs + metadata."""
     outdir.mkdir(parents=True, exist_ok=True)
     cfgdir = outdir / "configs"
     cfgdir.mkdir(exist_ok=True)
@@ -127,7 +127,7 @@ def cmd_export(pkt: Path, outdir: Path) -> int:
                 "\n".join(dev.runningconfig) + "\n", encoding="utf-8")
             n_cfg += 1
 
-    catalogo = {
+    catalog = {
         "source_file": pkt.name,
         "document_root": "PACKETTRACER5",
         "total_devices": len(devices),
@@ -137,31 +137,31 @@ def cmd_export(pkt: Path, outdir: Path) -> int:
         "links": [lk.to_dict() for lk in links],
     }
     (metadir / "topology.json").write_text(
-        json.dumps(catalogo, indent=2, ensure_ascii=False), encoding="utf-8")
+        json.dumps(catalog, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"[ok] base.snapshot.xml     : {len(xml_text):,} B")
-    print(f"[ok] configs .cfg          : {n_cfg} dispositivos con CLI")
+    print(f"[ok] per-device .cfg files : {n_cfg} devices with CLI config")
     print(f"[ok] metadata/topology.json: {len(devices)} devices, {len(links)} links")
     return 0
 
 
 def cmd_build(xmlfile: Path, outpkt: Path) -> int:
-    """Regenera el binario .pkt desde el snapshot textual."""
+    """Rebuild the binary .pkt from the textual snapshot."""
     data = _encode(xmlfile.read_text(encoding="utf-8"))
     outpkt.write_bytes(data)
-    print(f"[ok] {xmlfile} -> {outpkt}  ({len(data):,} B) — listo para abrir en PT")
+    print(f"[ok] {xmlfile} -> {outpkt}  ({len(data):,} B) — ready to open in PT")
     return 0
 
 
 def cmd_inspect(pkt: Path) -> int:
-    """Imprime un resumen de la topología: devices, tipos, modelos y configs."""
+    """Print a topology summary: devices, types, models and configs."""
     xml_text = _decode(pkt.read_bytes())
     devices, links = parse_topology(xml_text)
     print(f"{pkt.name}: {len(devices)} devices, {len(links)} links\n")
-    print(f"{'NOMBRE':<28}{'TIPO':<16}{'MODELO':<14}CLI")
+    print(f"{'NAME':<28}{'TYPE':<16}{'MODEL':<14}CLI")
     print("-" * 66)
     for d in devices:
-        cli = f"✔ {len(d.runningconfig)} líneas" if d.runningconfig else "—"
+        cli = f"✔ {len(d.runningconfig)} lines" if d.runningconfig else "—"
         print(f"{d.name[:27]:<28}{d.type[:15]:<16}{d.model[:13]:<14}{cli}")
     return 0
 
