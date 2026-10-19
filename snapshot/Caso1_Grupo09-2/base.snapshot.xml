@@ -73642,11 +73642,7 @@ Password: &lt;input type="password" name="pw" id="pw" value="" size="20">&lt;br>
       <LINE>!</LINE>
       <LINE>interface FastEthernet0/3</LINE>
       <LINE> description PC_ADMIN_PUNO</LINE>
-
-      <LINE> switchport access vlan 50</LINE>
-
       <LINE> switchport access vlan 60</LINE>
-
       <LINE> spanning-tree portfast</LINE>
       <LINE>!</LINE>
       <LINE>interface FastEthernet0/4</LINE>
