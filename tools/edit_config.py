@@ -1,16 +1,12 @@
-#!/usr/bin/env python
-"""
-edit_config.py — edición textual segura del snapshot de pkt-git
+"""Edición textual segura del snapshot de pkt-git.
 
-Toda edición está delimitada por DEVICE y valida el XML después de escribir.
+Toda edición queda delimitada por device y valida el XML antes de escribir.
 
-  .venv/bin/python tools/edit_config.py <snapshot.xml> show <DEVICE>
-  .venv/bin/python tools/edit_config.py <snapshot.xml> setiface <DEVICE> <IFACE> "línea 1" "línea 2" ...
-  .venv/bin/python tools/edit_config.py <snapshot.xml> insertafter <DEVICE> <frase> "línea 1" ...
-
-Ejemplos:
-  ... setiface SW1_LIMA FastEthernet0/3 " switchport access vlan 40" " switchport mode access"
-  ... insertafter CORE_LIBERTAD "ip routing" "router ospf 1" " network 10.30.0.0 0.0.0.255 area 0"
+Uso:
+    edit_config.py <xml> show <DEVICE>
+    edit_config.py <xml> setiface <DEVICE> <IFACE> "línea 1" "línea 2" ...
+    edit_config.py <xml> chgline <DEVICE> <IFACE> <texto_original> <texto_nuevo>
+    edit_config.py <xml> insertafter <DEVICE> <frase> "línea 1" ...
 """
 
 import sys
@@ -19,15 +15,16 @@ from pathlib import Path
 
 
 def scope_device(xml: str, device: str) -> tuple[int, int]:
-    """Devuelve (inicio, fin) del segmento XML del device: [NAME_x, NAME_x+1)."""
+    """Segmento XML del device: [posición de su NAME, siguiente NAME)."""
     i = xml.find(f'<NAME translate="true">{device}</NAME>')
     if i < 0:
-        raise SystemExit(f"❌ device '{device}' no existe en el snapshot")
+        raise SystemExit(f"device '{device}' no existe en el snapshot")
     iN = xml.find('<NAME translate="true">', i + 40)
     return i, (iN if iN > 0 else len(xml))
 
 
 def config_bounds(xml: str, start: int, end: int) -> tuple[int | None, int | None]:
+    """Límites del bloque <RUNNINGCONFIG> dentro del segmento dado."""
     ra = xml.find("<RUNNINGCONFIG>", start, end)
     if ra < 0:
         return None, None
@@ -35,24 +32,8 @@ def config_bounds(xml: str, start: int, end: int) -> tuple[int | None, int | Non
     return ra, rb
 
 
-def verify(xml: str) -> None:
-    ET.fromstring(xml)  # un XML roto aquí aborta ANTES de escribir
-
-
-def cmd_show(xml: str, device: str) -> None:
-    s, e = scope_device(xml, device)
-    ra, rb = config_bounds(xml, s, e)
-    if ra is None:
-        print(f"(device '{device}' sin RUNNINGCONFIG)")
-        return
-    seg = xml[ra:rb]
-    for line in seg.split("\n"):
-        if line.strip().startswith("<LINE>") and "PASSWORD" not in line.upper():
-            print(line.replace("<LINE>", "").replace("</LINE>", "").strip())
-
-
 def block_bounds(seg: str, iface: str) -> tuple[int, int] | None:
-    """(inicio, fin) del CONTENIDO del bloque interface <iface> dentro de seg."""
+    """(inicio, fin) del contenido del bloque interface <iface>."""
     open_pat = f"<LINE>interface {iface}</LINE>"
     idx = seg.find(open_pat)
     if idx < 0:
@@ -63,24 +44,41 @@ def block_bounds(seg: str, iface: str) -> tuple[int, int] | None:
 
 
 def block_replace(seg: str, iface: str, lines: list[str]) -> str:
-    """Reemplaza el contenido del bloque interface <iface> en RUNNINGCONFIG."""
+    """Reemplaza todo el contenido del bloque interface <iface>."""
     open_pat = f"<LINE>interface {iface}</LINE>"
     idx = seg.find(open_pat)
     if idx < 0:
-        raise SystemExit(f"❌ interface '{iface}' no está en RUNNINGCONFIG del device")
+        raise SystemExit(f"interface '{iface}' no está en RUNNINGCONFIG del device")
     end_idx = seg.find("<LINE>!</LINE>", idx)
     content = "\n".join(f"      <LINE>{l}</LINE>" for l in lines)
-    return (seg[:idx] + open_pat + "\n" + content + "\n      " + seg[end_idx:])
+    return seg[:idx] + open_pat + "\n" + content + "\n      " + seg[end_idx:]
 
 
 def insert_after(seg: str, phrase: str, lines: list[str]) -> str:
-    """Inserta <LINE>s tras la 1ª línea de config que contenga <phrase>."""
+    """Inserta líneas tras la primera línea de config que contenga <phrase>."""
     idx = seg.find(phrase)
     if idx < 0:
-        raise SystemExit(f"❌ frase '{phrase}' no está en RUNNINGCONFIG del device")
+        raise SystemExit(f"frase '{phrase}' no está en RUNNINGCONFIG del device")
     line_end = seg.find("</LINE>", idx) + len("</LINE>")
     content = "\n" + "\n".join(f"      <LINE>{l}</LINE>" for l in lines)
     return seg[:line_end] + content + seg[line_end:]
+
+
+def verify(xml: str) -> None:
+    """Lanza excepción si el XML quedó inválido."""
+    ET.fromstring(xml)
+
+
+def cmd_show(xml: str, device: str) -> None:
+    """Imprime el RUNNINGCONFIG del device (sin líneas sensibles)."""
+    s, e = scope_device(xml, device)
+    ra, rb = config_bounds(xml, s, e)
+    if ra is None:
+        print(f"(device '{device}' sin RUNNINGCONFIG)")
+        return
+    for line in xml[ra:rb].split("\n"):
+        if line.strip().startswith("<LINE>") and "PASSWORD" not in line.upper():
+            print(line.replace("<LINE>", "").replace("</LINE>", "").strip())
 
 
 def main() -> int:
@@ -98,20 +96,20 @@ def main() -> int:
     s, e = scope_device(xml, device)
     ra, rb = config_bounds(xml, s, e)
     if ra is None:
-        raise SystemExit(f"❌ '{device}' no tiene RUNNINGCONFIG (¿PC/server?)")
+        raise SystemExit(f"'{device}' no tiene RUNNINGCONFIG (¿PC/server?)")
 
     seg = xml[ra:rb]
     if cmd == "setiface" and len(sys.argv) >= 6:
         seg2 = block_replace(seg, sys.argv[4], sys.argv[5:])
     elif cmd == "chgline" and len(sys.argv) == 7:
         iface, old, new = sys.argv[4], sys.argv[5], sys.argv[6]
-        i_o = block_bounds(seg, iface)
-        if i_o is None:
-            raise SystemExit(f"❌ interface '{iface}' sin contenido en RUNNINGCONFIG")
-        a, b = i_o
+        bb = block_bounds(seg, iface)
+        if bb is None:
+            raise SystemExit(f"interface '{iface}' sin contenido en RUNNINGCONFIG")
+        a, b = bb
         old_ct = seg[a:b]
         if old not in old_ct:
-            raise SystemExit(f"❌ la línea '{old}' no está en {iface} del device")
+            raise SystemExit(f"la línea '{old}' no está en {iface} del device")
         seg2 = seg[:a] + old_ct.replace(old, new, 1) + seg[b:]
     elif cmd == "insertafter" and len(sys.argv) >= 6:
         seg2 = insert_after(seg, sys.argv[4], sys.argv[5:])
@@ -120,9 +118,9 @@ def main() -> int:
         return 2
 
     xml2 = xml[:ra] + seg2 + xml[rb:]
-    verify(xml2)                       # XML válido antes de tocar disco
+    verify(xml2)
     xml_path.write_text(xml2, encoding="utf-8")
-    print(f"[ok] {device}: {cmd} aplicado ✓ (XML verificado)")
+    print(f"[ok] {device}: {cmd} aplicado (XML verificado)")
     return 0
 
 

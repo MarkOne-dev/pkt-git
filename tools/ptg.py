@@ -1,22 +1,9 @@
-#!/usr/bin/env python
-"""
-ptg.py — CLI v0.1 del proyecto pkt-git (PASO 2)
+"""CLI v0.1 de pkt-git: convierte proyectos de Packet Tracer en versionables.
 
-La herramienta que convierte un proyecto Packet Tracer en versionable con Git.
-
-    ptg export <proyecto.pkt> <dir_salida>
-        .pkt -> base.snapshot.xml (texto versionable)
-              + configs por dispositivo (<dir>/configs/<NAME>.cfg)
-              + metadata/topology.json (mapa de topología: devices + links)
-
-    ptg build <dir>/base.snapshot.xml <salida.pkt>
-        XML -> binario reversible (reconstruye el archivo para PT)
-
-    ptg inspect <proyecto.pkt> [partido]
-        resumen rápido en consola (devices/links/modelos)
-
-Uso de referencia:
-    .venv/bin/python tools/ptg.py export "proof-pkt/Caso1_Grupo09-2.pkt" snapshot/
+Comandos:
+    export <proyecto.pkt> <dir>   .pkt -> base.snapshot.xml + configs/*.cfg + metadata
+    build  <xml> <salida.pkt>     XML -> binario regenerado para abrir en PT
+    inspect <proyecto.pkt>        resumen de devices/links en consola
 """
 
 import json
@@ -25,21 +12,22 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from spike_roundtrip import _inferno_decode, _inferno_encode
+from spike_roundtrip import decode as _decode, encode as _encode
 
 RE_REF = re.compile(r"save-ref-id:(\d+)")
 
 
 def sanitize(name: str) -> str:
+    """Convierte un nombre de device en nombre de archivo seguro."""
     return re.sub(r"[^\w.-]+", "_", name).strip("._") or "device"
 
 
-# ----------------------------------------------------------------------------
-# parse del XMML de Packet Tracer
-# ----------------------------------------------------------------------------
-
 def parse_topology(xml_text: str):
-    """Extrae devices (con configs) y links del XML de Packet Tracer."""
+    """Extrae devices (con configs) y links del XML de Packet Tracer.
+
+    Retorna (devices, links). Cada device: name, type, model, ref,
+    runningconfig, startupconfig (listas de líneas o None).
+    """
     root = ET.fromstring(xml_text)
     net = root.find(".//NETWORK")
 
@@ -79,56 +67,39 @@ def parse_topology(xml_text: str):
         cable = lk.find("CABLE")
         if cable is None:
             continue
-        def dst(key, pkey):
-            node = cable.find(key)
-            if node is None:
-                return None
-            m = RE_REF.match(node.text or "")
-            if m is None:
-                return None
-            from_dev = by_ref.get(m.group(1))
-            return {
-                "ref": m.group(1),
-                "name": from_dev["name"] if from_dev else f"ref:{m.group(1)[-8:]}",
-                "port": (cable.find(pkey).text if cable.find(pkey) is not None else ""),
-            }
-
-        a, b = dst("FROM", "PORT"), None
-        # los LINK traen DOS <PORT>; el primero corresponde a FROM
         ports = [p.text or "" for p in cable.findall("PORT")]
         mfrom = RE_REF.match(cable.find("FROM").text or "") if cable.find("FROM") is not None else None
-        mto   = RE_REF.match(cable.find("TO").text or "")   if cable.find("TO")   is not None else None
+        mto = RE_REF.match(cable.find("TO").text or "") if cable.find("TO") is not None else None
         da = by_ref.get(mfrom.group(1)) if mfrom else None
-        db = by_ref.get(mto.group(1))   if mto   else None
+        db = by_ref.get(mto.group(1)) if mto else None
         links.append({
             "link_type": (lk.find("TYPE").text or "") if lk.find("TYPE") is not None else "",
-            "from": {"name": da["name"] if da else mfrom.group(1)[-8:] if mfrom else None,
+            "from": {"name": da["name"] if da else (mfrom.group(1)[-8:] if mfrom else None),
                      "port": ports[0] if ports else ""},
-            "to":   {"name": db["name"] if db else mto.group(1)[-8:] if mto else None,
-                     "port": ports[1] if len(ports) > 1 else ""},
+            "to": {"name": db["name"] if db else (mto.group(1)[-8:] if mto else None),
+                   "port": ports[1] if len(ports) > 1 else ""},
         })
 
     return devices, links
 
 
-# ----------------------------------------------------------------------------
-# comandos
-# ----------------------------------------------------------------------------
-
 def cmd_export(pkt: Path, outdir: Path) -> int:
+    """Exporta .pkt a snapshot textual: XML + configs por device + metadata."""
     outdir.mkdir(parents=True, exist_ok=True)
-    cfgdir = outdir / "configs";  cfgdir.mkdir(exist_ok=True)
-    metadir = outdir / "metadata"; metadir.mkdir(exist_ok=True)
+    cfgdir = outdir / "configs"
+    cfgdir.mkdir(exist_ok=True)
+    metadir = outdir / "metadata"
+    metadir.mkdir(exist_ok=True)
 
-    xml_text = _inferno_decode(pkt.read_bytes())
+    xml_text = _decode(pkt.read_bytes())
     (outdir / "base.snapshot.xml").write_text(xml_text, encoding="utf-8")
     devices, links = parse_topology(xml_text)
 
     n_cfg = 0
     for dev in devices:
         if dev["runningconfig"]:
-            fname = cfgdir / f"{sanitize(dev['name'])}.cfg"
-            fname.write_text("\n".join(dev["runningconfig"]) + "\n", encoding="utf-8")
+            (cfgdir / f"{sanitize(dev['name'])}.cfg").write_text(
+                "\n".join(dev["runningconfig"]) + "\n", encoding="utf-8")
             n_cfg += 1
 
     catalogo = {
@@ -136,35 +107,37 @@ def cmd_export(pkt: Path, outdir: Path) -> int:
         "document_root": "PACKETTRACER5",
         "total_devices": len(devices),
         "total_links": len(links),
-        "devices": [{k: v for k, v in d.items() if k.startswith(("name", "type", "model", "ref"))} for d in devices],
+        "devices": [{k: v for k, v in d.items() if k.startswith(("name", "type", "model", "ref"))}
+                    for d in devices],
         "links": links,
     }
     (metadir / "topology.json").write_text(
         json.dumps(catalogo, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print(f"[ok] base.snapshot.xml  : {len(xml_text):,} B")
-    print(f"[ok] configs .cfg       : {n_cfg} dispositivos con CLI")
+    print(f"[ok] base.snapshot.xml     : {len(xml_text):,} B")
+    print(f"[ok] configs .cfg          : {n_cfg} dispositivos con CLI")
     print(f"[ok] metadata/topology.json: {len(devices)} devices, {len(links)} links")
     return 0
 
 
 def cmd_build(xmlfile: Path, outpkt: Path) -> int:
-    xml_text = xmlfile.read_text(encoding="utf-8")
-    data = _inferno_encode(xml_text)
+    """Regenera el binario .pkt desde el snapshot textual."""
+    data = _encode(xmlfile.read_text(encoding="utf-8"))
     outpkt.write_bytes(data)
     print(f"[ok] {xmlfile} -> {outpkt}  ({len(data):,} B) — listo para abrir en PT")
     return 0
 
 
 def cmd_inspect(pkt: Path) -> int:
-    xml_text = _inferno_decode(pkt.read_bytes())
+    """Imprime un resumen de la topología: devices, tipos, modelos y configs."""
+    xml_text = _decode(pkt.read_bytes())
     devices, links = parse_topology(xml_text)
     print(f"{pkt.name}: {len(devices)} devices, {len(links)} links\n")
     print(f"{'NOMBRE':<28}{'TIPO':<16}{'MODELO':<14}CLI")
     print("-" * 66)
     for d in devices:
-        print(f"{d['name'][:27]:<28}{d['type'][:15]:<16}{d['model'][:13]:<14}"
-              f"{'✔ ' + str(len(d['runningconfig'])) + ' líneas' if d['runningconfig'] else '—'}")
+        cli = f"✔ {len(d['runningconfig'])} líneas" if d["runningconfig"] else "—"
+        print(f"{d['name'][:27]:<28}{d['type'][:15]:<16}{d['model'][:13]:<14}{cli}")
     return 0
 
 
