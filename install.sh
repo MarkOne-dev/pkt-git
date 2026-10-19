@@ -80,5 +80,5 @@ assert t.decrypt(t.encrypt(bytes(16))) == bytes(16)
 " && echo "crypto core verified"
 
 echo "pkt-git installed globally. In any repository run:"
-echo "    ptg init          # wire hooks and configuration"
-echo "    ptg --help        # full command list"
+echo "    pkt init          # wire hooks and configuration"
+echo "    pkt --help        # full command list"
