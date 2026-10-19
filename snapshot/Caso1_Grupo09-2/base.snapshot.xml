@@ -103354,6 +103354,10 @@ Password: &lt;input type="password" name="pw" id="pw" value="" size="20">&lt;br>
       <LINE>!</LINE>
       <LINE>no ip cef</LINE>
       <LINE>ip routing</LINE>
+      <LINE>router ospf 1</LINE>
+      <LINE> network 10.30.0.0 0.0.0.255 area 0</LINE>
+      <LINE> network 10.20.0.0 0.0.0.255 area 0</LINE>
+      <LINE> network 10.10.0.0 0.0.0.255 area 0</LINE>
       <LINE>!</LINE>
       <LINE>no ipv6 cef</LINE>
       <LINE>!</LINE>
