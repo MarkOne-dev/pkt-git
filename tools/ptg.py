@@ -10,6 +10,7 @@ import json
 import re
 import sys
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from spike_roundtrip import decode as _decode, encode as _encode
@@ -17,17 +18,47 @@ from spike_roundtrip import decode as _decode, encode as _encode
 RE_REF = re.compile(r"save-ref-id:(\d+)")
 
 
+@dataclass
+class Endpoint:
+    """Extremo de un link: device y puerto físico."""
+    name: str | None
+    port: str
+
+
+@dataclass
+class Link:
+    """Cable entre dos dispositivos de la topología."""
+    link_type: str
+    src: Endpoint
+    dst: Endpoint
+
+    def to_dict(self) -> dict:
+        """Representación JSON con las claves 'from'/'to' del esquema original."""
+        return {
+            "link_type": self.link_type,
+            "from": {"name": self.src.name, "port": self.src.port},
+            "to": {"name": self.dst.name, "port": self.dst.port},
+        }
+
+
+@dataclass
+class Device:
+    """Dispositivo de la topología con sus configuraciones CLI."""
+    name: str
+    type: str
+    model: str
+    ref: str
+    runningconfig: list[str] | None = field(default=None)
+    startupconfig: list[str] | None = field(default=None)
+
+
 def sanitize(name: str) -> str:
     """Convierte un nombre de device en nombre de archivo seguro."""
     return re.sub(r"[^\w.-]+", "_", name).strip("._") or "device"
 
 
-def parse_topology(xml_text: str):
-    """Extrae devices (con configs) y links del XML de Packet Tracer.
-
-    Retorna (devices, links). Cada device: name, type, model, ref,
-    runningconfig, startupconfig (listas de líneas o None).
-    """
+def parse_topology(xml_text: str) -> tuple[list[Device], list[Link]]:
+    """Extrae devices y links del XML de Packet Tracer."""
     root = ET.fromstring(xml_text)
     net = root.find(".//NETWORK")
 
@@ -50,14 +81,8 @@ def parse_topology(xml_text: str):
         st_node = eng.find("STARTUPCONFIG")
         slines = [l.text or "" for l in st_node.findall("LINE")] if st_node is not None else None
 
-        dev = {
-            "name": name,
-            "type": dtype,
-            "model": model,
-            "ref": ref,
-            "runningconfig": lines,
-            "startupconfig": slines,
-        }
+        dev = Device(name=name, type=dtype, model=model, ref=ref,
+                     runningconfig=lines, startupconfig=slines)
         devices.append(dev)
         if ref:
             by_ref[ref.split(":")[-1]] = dev
@@ -72,13 +97,13 @@ def parse_topology(xml_text: str):
         mto = RE_REF.match(cable.find("TO").text or "") if cable.find("TO") is not None else None
         da = by_ref.get(mfrom.group(1)) if mfrom else None
         db = by_ref.get(mto.group(1)) if mto else None
-        links.append({
-            "link_type": (lk.find("TYPE").text or "") if lk.find("TYPE") is not None else "",
-            "from": {"name": da["name"] if da else (mfrom.group(1)[-8:] if mfrom else None),
-                     "port": ports[0] if ports else ""},
-            "to": {"name": db["name"] if db else (mto.group(1)[-8:] if mto else None),
-                   "port": ports[1] if len(ports) > 1 else ""},
-        })
+        links.append(Link(
+            link_type=(lk.find("TYPE").text or "") if lk.find("TYPE") is not None else "",
+            src=Endpoint(name=da.name if da else (mfrom.group(1)[-8:] if mfrom else None),
+                         port=ports[0] if ports else ""),
+            dst=Endpoint(name=db.name if db else (mto.group(1)[-8:] if mto else None),
+                         port=ports[1] if len(ports) > 1 else ""),
+        ))
 
     return devices, links
 
@@ -97,9 +122,9 @@ def cmd_export(pkt: Path, outdir: Path) -> int:
 
     n_cfg = 0
     for dev in devices:
-        if dev["runningconfig"]:
-            (cfgdir / f"{sanitize(dev['name'])}.cfg").write_text(
-                "\n".join(dev["runningconfig"]) + "\n", encoding="utf-8")
+        if dev.runningconfig:
+            (cfgdir / f"{sanitize(dev.name)}.cfg").write_text(
+                "\n".join(dev.runningconfig) + "\n", encoding="utf-8")
             n_cfg += 1
 
     catalogo = {
@@ -107,9 +132,9 @@ def cmd_export(pkt: Path, outdir: Path) -> int:
         "document_root": "PACKETTRACER5",
         "total_devices": len(devices),
         "total_links": len(links),
-        "devices": [{k: v for k, v in d.items() if k.startswith(("name", "type", "model", "ref"))}
+        "devices": [{"name": d.name, "type": d.type, "model": d.model, "ref": d.ref}
                     for d in devices],
-        "links": links,
+        "links": [lk.to_dict() for lk in links],
     }
     (metadir / "topology.json").write_text(
         json.dumps(catalogo, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -136,8 +161,8 @@ def cmd_inspect(pkt: Path) -> int:
     print(f"{'NOMBRE':<28}{'TIPO':<16}{'MODELO':<14}CLI")
     print("-" * 66)
     for d in devices:
-        cli = f"✔ {len(d['runningconfig'])} líneas" if d["runningconfig"] else "—"
-        print(f"{d['name'][:27]:<28}{d['type'][:15]:<16}{d['model'][:13]:<14}{cli}")
+        cli = f"✔ {len(d.runningconfig)} líneas" if d.runningconfig else "—"
+        print(f"{d.name[:27]:<28}{d.type[:15]:<16}{d.model[:13]:<14}{cli}")
     return 0
 
 
