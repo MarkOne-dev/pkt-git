@@ -1,43 +1,89 @@
 # Installation & Setup
 
 Two installers implement the same steps once per machine and take under a
-minute: **`setup.sh`** for POSIX (Linux, macOS, and Windows via Git Bash) and
-**`setup.ps1`** for native PowerShell on Windows. Both are idempotent — safe to
-re-run.
+minute: **`install.sh`** for POSIX (Linux, macOS, and Windows via Git Bash) and
+**`install.ps1`** for native PowerShell on Windows. Both are idempotent — safe
+to re-run.
 
-## What Setup Does (step by step)
+## The One-Command Model
+
+pkt-git installs **globally, once per machine**, and the per-repository wiring
+is a single command:
+
+```bash
+# 1) install globally (per machine; POSIX / Windows respectively)
+./install.sh
+# Windows: powershell -ExecutionPolicy Bypass -File install.ps1
+
+# 2) in ANY repository (existing or brand new):
+ptg init
+```
+
+`ptg init` performs, without any template copying:
+
+1. Writes **thin hooks** into `.githooks/` — each is a single line that resolves
+   two repository configs (`pktgit.py`, `pktgit.script`) and executes them:
+   ```bash
+   exec "$(git config --get pktgit.py)" "$(git config --get pktgit.script)" pre-commit
+   ```
+2. Writes `.gitattributes` if missing — `*.pkt binary` (the artifact never
+   text-merges) plus text attributes for snapshot files.
+3. Saves the absolute interpreter/CLI paths in `git config`.
+4. Activates `git config core.hooksPath .githooks`.
+
+Because the hook logic lives in the **global** CLI (`~/.local/share/pkt-git/`
+on POSIX, `%LOCALAPPDATA%\pkt-git\` on Windows), repositories contain no tool
+copies: one install, upgrades take effect everywhere. The `ptg` command is on
+PATH for human use (`ptg export / build / inspect / edit / verify / sync`).
+
+### Per-repository import (integrating an existing project)
+
+```bash
+cd my-existing-pt-project
+ptg init
+ptg export my_project.pkt snapshot/my_project/
+mkdir -p topologia && cp my_project.pkt topologia/
+git add . && git commit -m "chore: import existing Packet Tracer project"
+```
+
+## What Setup/installer Actually Do
+
+The installers (`install.sh` / `install.ps1`) run the following once per
+machine, on install and re-run:
 
 1. **Interpreter detection.** Looks for a working Python 3.12+ in this order:
    `python3` → `python` → `py -3` (the `py -3` launcher covers Windows installs
    where no `python3` alias exists).
-2. **Virtual environment.** Creates `.venv/` once (skipped if it already
-   exists). The venv layout is resolved per platform:
-   - POSIX: `.venv/bin/` (`bin/python`, `bin/pip`)
-   - Windows: `.venv/Scripts/` (`Scripts/python.exe`, `Scripts/pip.exe`)
+2. **Global install root.** Files live in `~/.local/share/pkt-git/` (POSIX) or
+   `%LOCALAPPDATA%\pkt-git\` (Windows): the tool source (`tools/`) plus **one
+   shared venv** — no per-repository venvs are ever created.
 3. **Dependencies.** Installs `twofish` (block-cipher binding, validation
-   reference) and `pycryptodome` into the venv.
+   reference) and `pycryptodome` into the global venv.
 4. **Twofish patch.** The `twofish` package imports the removed-in-3.12 `imp`
-   module to locate its C extension. Setup rewrites that loader to use
+   module to locate its C extension. The installer rewrites that loader to use
    `importlib.util.find_spec('_twofish')` instead — keeping whatever binary
    extension `pip` built (`.so` on Linux/macOS, `.pyd` on Windows), with a
    file-name fallback. The patch is idempotent (applied only if `import imp`
    is still present).
-5. **Hooks activation.** `git config core.hooksPath .githooks` — the
-   repository-versioned hooks become live. (Skipped with a warning if the
-   directory is not a Git repo yet.)
-6. **Crypto self-test.** Runs one Twofish encrypt/decrypt cycle with the
-   project's key and asserts the round trip, printing `crypto core verified ✓`.
+5. **CLI on PATH.** A `ptg` wrapper is placed in `~/.local/bin/` (POSIX) or
+   `%USERPROFILE%\.local\bin\ptg.cmd` added to the user PATH (Windows).
+6. **Crypto self-test.** One Twofish encrypt/decrypt cycle with the project
+   key. Repositories are then wired per-project with `ptg init` (see above).
 
-## Platform Matrix
+> **Legacy repository-built mode:** the original `setup.sh` (creates
+> `.venv/` inside the repository and self-hosts the hooks) still works and is
+> kept for the development clone of pkt-git itself; the global install is the
+> recommended path for every other repository.
 
-| Platform | Install command | Notes |
+## Per-Platform Table
+
+| Platform | Command | Notes |
 |---|---|---|
-| Linux | `./setup.sh` | Fully tested (project of record). |
-| macOS | `./setup.sh` | Needs Xcode Command Line Tools (`xcode-select --install`) so pip can build the Twofish C binding. |
-| Windows (native) | `powershell -ExecutionPolicy Bypass -File setup.ps1` | Primary Windows path. |
-| Windows (Git Bash) | `bash setup.sh` | Works too; hooks run under Git Bash either way. |
+| Linux | `ptg` (global CLI) | Fully tested (project of record). |
+| macOS | `ptg` (global CLI) | Needs Xcode Command Line Tools (`xcode-select --install`) so pip can build the Twofish C binding. |
+| Windows | `ptg.cmd` (global CLI) | `install.ps1` adds it to the user PATH; thin hooks still run under Git Bash (ships with Git for Windows). |
 
-### Prerequisites per OS
+Prerequisites per OS:
 
 ```bash
 # Debian / Ubuntu
@@ -62,7 +108,7 @@ winget install -e --id Git.Git
 ### First import of an existing project
 
 ```bash
-.venv/bin/python tools/ptg.py export "my_project.pkt" snapshot/my_project/
+ptg export "my_project.pkt" snapshot/my_project/
 mkdir -p topologia && cp my_project.pkt topologia/    # if you keep it as an artifact
 git add . && git commit -m "chore: import my_project into version control"
 ```
@@ -73,15 +119,14 @@ automatically.
 ## The Hooks and Why They Are Safe Elsewhere
 
 Activation is **repository-local** (`core.hooksPath` is per-repo) and hooks are
-tracked in `.githooks/`:
+thin files generated into each repository's `.githooks/`:
 
 - `pre-commit` — acts only on staged `*.pkt`; any other commit (a README fix,
   a normal code project if you were to copy the pattern) passes untouched.
 - `post-merge` / `post-checkout` — act only on changed
   `snapshot/*/base.snapshot.xml` paths.
-- `.githooks/common.sh` — solves the one genuine cross-platform trap:
-  `pre-commit`/`post-merge`/`post-checkout` call `resolve_py` to pick
-  `.venv/bin/python` (POSIX) or `.venv/Scripts/python.exe` (Windows).
+- All actual logic runs in the global CLI; the hook just resolves
+  `pktgit.py` / `pktgit.script` from the repository configuration.
 
 No global Git configuration, aliases, or system files are touched — other
 repositories on the machine behave conventionally.
@@ -101,8 +146,9 @@ Everything is reproducible from the repository:
 
 ```bash
 git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
-./setup.sh              # or setup.ps1 on Windows
-.venv/bin/python tools/spike_roundtrip.py verify proof-pkt/Caso1_Grupo09-2.pkt
+./install.sh             # or install.ps1 on Windows
+ptg --version
+ptg verify proof-pkt/Caso1_Grupo09-2.pkt
 ```
 
 The last command re-establishes confidence in the crypto pipeline against the

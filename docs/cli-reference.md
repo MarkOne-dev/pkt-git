@@ -1,11 +1,12 @@
 # CLI Reference
 
-All commands run inside the project virtual environment. POSIX path is
-`.venv/bin/python`; on Windows it is `.venv\Scripts\python.exe` (hooks resolve
-this automatically via `.githooks/common.sh`).
+The command surface is the global **`ptg`** CLI (installed once per machine by
+`install.sh` / `install.ps1`); the underlying modules live in `tools/`. Both
+are documented here.
 
 ```
 tools/
+├── cli.py               # Global hub: init / hooks entries / dispatch
 ├── spike_roundtrip.py   # Codec layer: decode / encode / verify
 ├── ptg.py               # Topology layer: export / build / inspect
 └── edit_config.py       # Editing layer: show / setiface / chgline / insertafter
@@ -13,15 +14,58 @@ tools/
 
 ---
 
+## `ptg` — global CLI hub
+
+```bash
+ptg init [dir]
+ptg export <project.pkt> <output_dir>
+ptg build  <snapshot.xml> <output.pkt>
+ptg inspect <project.pkt>
+ptg edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_config below
+ptg verify <file.pkt>
+ptg sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
+ptg pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
+```
+
+### `init`
+
+Wires the tool into any repository (run inside it, or pass a path):
+
+- writes thin hooks into `.githooks/{pre-commit,post-merge,post-checkout}` —
+  each one line: `exec "$(git config --get pktgit.py)" "$(git config --get pktgit.script)" <hook>`.
+- writes `.gitattributes` if missing (`*.pkt binary` + snapshot text rules).
+- stores `pktgit.py` / `pktgit.script` in repository-local config and sets
+  `core.hooksPath`.
+
+No template copying, no per-repo venv: one global install serves all
+repositories, so tool updates propagate everywhere automatically.
+
+### `sync`
+
+Text-first edits (conflict resolution, `edit`) change `base.snapshot.xml`;
+`sync` regenerates the derived `configs/*.cfg` and `metadata/topology.json`
+from it so the snapshot never contradicts itself. `ptg edit` calls it
+automatically after every successful write.
+
+### Hook entry points
+
+`ptg pre-commit` and `ptg post-merge|post-checkout [old new]` are called by the
+thin hooks; they implement the same automation described in `workflow.md`
+(auto-export staged `.pkt`, auto-rebuild after merges/pull/checkouts).
+
+---
+
+## Module reference (internals)
+
 ## `tools/spike_roundtrip.py`
 
 Reversible codec for `.pkt`/`.pka` files. See `packet-tracer-format.md` for the
 format behind it.
 
 ```bash
-.venv/bin/python tools/spike_roundtrip.py decode <file.pkt> <out.xml>
-.venv/bin/python tools/spike_roundtrip.py encode <file.xml> <out.pkt>
-.venv/bin/python tools/spike_roundtrip.py verify <file.pkt>
+ptg decode <file.pkt> <out.xml>
+ptg encode <file.xml> <out.pkt>
+ptg spike_roundtrip.py verify <file.pkt>
 ```
 
 | Command | Behavior |
@@ -51,9 +95,9 @@ CLI and topology parser. Works from real binaries; knows nothing about crypto
 beyond calling `decode`/`encode`.
 
 ```bash
-.venv/bin/python tools/ptg.py export <project.pkt> <output_dir>
-.venv/bin/python tools/ptg.py build  <snapshot.xml> <output.pkt>
-.venv/bin/python tools/ptg.py inspect <project.pkt>
+ptg ptg.py export <project.pkt> <output_dir>
+ptg ptg.py build  <snapshot.xml> <output.pkt>
+ptg ptg.py inspect <project.pkt>
 ```
 
 ### `export <project.pkt> <dir>`
@@ -142,7 +186,7 @@ find-replace) have already caused a real incident (duplicated VLAN assignment)
 
 ---
 
-## `setup.sh` / `setup.ps1`
+## `install.sh` / `install.ps1`
 
 Idempotent one-command installer — full details in `installation.md`.
 

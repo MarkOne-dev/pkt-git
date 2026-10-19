@@ -9,15 +9,14 @@ areas are flagged as such.
 ```bash
 # Crypto pipeline sanity against the bundled specimen:
 # expect "XML ROUND TRIP : True" (exit code 0)
-.venv/bin/python tools/spike_roundtrip.py verify proof-pkt/Caso1_Grupo09-2.pkt
+ptg verify proof-pkt/Caso1_Grupo09-2.pkt
 
-# Is the venv healthy (after setup)?
-.venv/bin/python -c "import twofish, Crypto; print('deps ok')"
+# Is the global install healthy?
+ptg --version   # global CLI alive
 
 # Is a snapshot still valid XML after hand editing?
-.venv/bin/python -c "import xml.etree.ElementTree as ET, pathlib; \
-    ET.fromstring(pathlib.Path('snapshot/<project>/base.snapshot.xml').read_text())"
-```
+python3 -c "import xml.etree.ElementTree as ET, pathlib; \
+    ET.fromstring(pathlib.Path('snapshot/<project>/base.snapshot.xml').read_text())" && echo "XML valid"
 
 ## Symptoms and Fixes
 
@@ -50,7 +49,7 @@ Read the tool output the hook prints. Common causes:
 
 - PT is mid-save or the `.pkt` was written by a different PT version (see
   Compatibility below).
-- `.venv` missing or twofish broken → re-run `./setup.sh`.
+- `.venv` missing or twofish broken → re-run `./install.sh`.
 
 ### Hook printed `⚠ Warning: textual snapshot changed without its .pkt`
 
@@ -58,7 +57,7 @@ Informational, not an error — typical after conflict resolution or
 `edit_config.py`. If your intent was to change the network, finish with:
 
 ```bash
-.venv/bin/python tools/ptg.py build snapshot/<project>/base.snapshot.xml \
+ptg build snapshot/<project>/base.snapshot.xml \
     topologia/<project>.pkt
 git add topologia/<project>.pkt
 ```
@@ -97,9 +96,8 @@ side`), then `git add`, then rebuild.
   interface block; the safe default for a one-line change is `chgline`.
 - **Editing PT files while the tool writes them.** Save and close (or at least
   finish saving) before committing; PT holds the file mid-write.
-- **Assuming hooks exist before running setup.** `./setup.sh` /
-  `setup.ps1` set `core.hooksPath .githooks`; a clone without setup silently
-  has no automation.
+- **Assuming hooks exist before running `ptg init`.** The per-repository
+  wiring is `ptg init`; a repository without it silently has no automation.
 
 ## Compatibility Limits (tested vs. unknown)
 

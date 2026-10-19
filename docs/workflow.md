@@ -4,17 +4,40 @@ This document is the team SOP. It covers the day-to-day loop, what the hooks do
 automatically, branching and Pull Requests, and the explicit rules for conflict
 resolution.
 
-## One-Time Setup (per machine)
+## The One-Command Model (v1.0)
+
+Install the tool **globally, once per machine**, then wire any repository with
+a single command — no templates to copy:
 
 ```bash
-git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
-./setup.sh            # POSIX (Linux / macOS / Git Bash)
-# Windows: powershell -ExecutionPolicy Bypass -File setup.ps1
+# any repo, new or existing:
+ptg init
 ```
 
-Setup creates the venv, installs dependencies, patches the `twofish` package
-for Python 3.12+, activates the versioned hooks (`git config core.hooksPath
-.githooks`) and runs a crypto self-test. See `installation.md` for details.
+`ptg init` generates thin hooks that call the global CLI (they store the exact
+interpreter and script paths in the repository configuration), writes the
+`*.pkt binary` ownership rules into `.gitattributes` (if missing) and activates
+everything. See `installation.md` for the full model.
+
+To re-import a project that already exists on disk:
+
+```bash
+ptg export my_project.pkt snapshot/my_project/     # textual snapshot
+mkdir -p topologia && cp my_project.pkt topologia/ # binary artifact
+git add . && git commit -m "chore: import PT project"
+```
+
+## What `ptg init` Actually Does
+
+Instead of copying a template, the hooks are **thin**: three lines each. They
+resolve two repository-local configurations — `pktgit.py` (the interpreter) and
+`pktgit.script` (the installed CLI) — and hand control to the global
+installation. This means:
+
+- Repositories carry no copies of the tool — one install per machine,
+  upgrades propagate to every project.
+- The daily work is identical to the workflow described below.
+
 
 ## The Daily Loop (zero manual conversion)
 
@@ -95,7 +118,7 @@ on `SW_ACC_ADMIN_PUNO` `FastEthernet0/3`), Git reports a conflict on the
 
 1. Edits the conflicted snapshot **by hand or with device-scoped tools**:
    ```bash
-   .venv/bin/python tools/edit_config.py snapshot/<project>/base.snapshot.xml \
+   ptg edit snapshot/<project>/base.snapshot.xml \
        chgline SW_ACC_ADMIN_PUNO FastEthernet0/3 "switchport access vlan 50" \
        "switchport access vlan 60"
    ```
@@ -104,7 +127,7 @@ on `SW_ACC_ADMIN_PUNO` `FastEthernet0/3`), Git reports a conflict on the
 3. Rebuild the binary — **the only manual conversion command in the whole
    workflow**:
    ```bash
-   .venv/bin/python tools/ptg.py build snapshot/<project>/base.snapshot.xml \
+   ptg build snapshot/<project>/base.snapshot.xml \
        topologia/<project>.pkt
    git add topologia/<project>.pkt
    ```

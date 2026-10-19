@@ -99,7 +99,7 @@ extracted XML      : ~5.89 MB   (107 devices, 106 links, 34 CLI configs)
 Verification command:
 
 ```bash
-.venv/bin/python tools/spike_roundtrip.py verify proof-pkt/Caso1_Grupo09-2.pkt
+ptg verify proof-pkt/Caso1_Grupo09-2.pkt
 ```
 
 Expected report:

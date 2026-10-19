@@ -12,7 +12,7 @@ Tracer projects into Git-native repositories.
 | [Snapshot Format](snapshot-format.md) | The textual source of truth written into the repo: `base.snapshot.xml`, per-device `.cfg` files, and `metadata/topology.json`. |
 | [Collaborative Workflow](workflow.md) | The team SOP: daily loop, Git hooks automation, branching, Pull Requests, conflict resolution rules, and the one manual case (`ptg build`). |
 | [CLI Reference](cli-reference.md) | Full reference for `tools/ptg.py`, `tools/edit_config.py`, and `tools/spike_roundtrip.py` — every command, argument, and output. |
-| [Installation & Setup](installation.md) | What `setup.sh` / `setup.ps1` actually do, step by step, and the Windows/macOS platform notes. |
+| [Installation & Setup](installation.md) | Global one-machine install + `ptg init` per repository, platform notes. |
 | [Troubleshooting & Pitfalls](troubleshooting.md) | Known failure modes, dangerous patterns (global `sed` on the XML), verification commands, and compatibility limits. |
 
 ## Suggested Reading Order

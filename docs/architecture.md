@@ -36,14 +36,13 @@ pkt-git/
 ├── tools/
 │   ├── spike_roundtrip.py   # Codec: decode/encode .pkt <-> XML + crypto core
 │   ├── ptg.py               # CLI: export / build / inspect + topology parser
-│   └── edit_config.py       # Device-scoped surgical XML editor
-├── .githooks/
-│   ├── common.sh            # Cross-platform venv-python resolver
-│   ├── pre-commit           # .pkt staged  -> auto-export snapshot
-│   ├── post-merge           # snapshot merged -> auto-rebuild .pkt
-│   └── post-checkout        # branch switch     -> auto-rebuild .pkt
-├── setup.sh                 # POSIX one-command install (Linux/macOS/Git Bash)
-├── setup.ps1                # Windows-native PowerShell install
+│   ├── edit_config.py       # Device-scoped surgical XML editor
+│   └── cli.py               # Global `ptg` hub: init, thin-hook entries, sync
+├── .githooks/               # Development-clone hooks (self-hosted variant)
+├── install.sh               # Global one-machine install (Linux/macOS/Git Bash)
+├── install.ps1              # Global one-machine install (Windows PowerShell)
+├── setup.sh                 # Legacy per-repository installer (repo self-hosted)
+├── setup.ps1                # Legacy per-repository installer (Windows)
 ├── topologia/               # Canonical binary artifacts in the repo
 └── snapshot/                # Textual snapshots (the source of truth)
 ```

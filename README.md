@@ -126,7 +126,33 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 - **Git** and **curl**
 - *Cisco Packet Tracer 9.0.1+* (only needed to edit and run topologies; not required to review diffs or run CI).
 
-### Linux (Debian / Ubuntu / Arch / Fedora)
+### Global install (recommended)
+
+Install **once per machine**, then wire any repository with one command — no
+templates, nothing to copy between projects:
+
+```bash
+# 1) install globally
+git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
+./install.sh
+# Windows: powershell -ExecutionPolicy Bypass -File install.ps1
+
+# 2) in ANY repository (new or existing PT project):
+cd /path/to/your-pt-project
+ptg init
+```
+
+`ptg init` activates the hooks for that repository automatically.
+
+### Import an existing Packet Tracer project
+
+```bash
+ptg export my_project.pkt snapshot/my_project/
+mkdir -p topologia && cp my_project.pkt topologia/
+git add . && git commit -m "chore: import existing PT project"
+```
+
+### Prerequisites per OS
 
 ```bash
 # Debian / Ubuntu
@@ -138,45 +164,18 @@ sudo pacman -S --needed python git curl
 # Fedora
 sudo dnf install -y python3 git curl
 
-# Clone and run automated setup
-git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
-./setup.sh
-```
-
-### macOS
-
-```bash
-# Ensure Homebrew and Python are installed
+# macOS (Homebrew)
 brew install python git
-git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
-./setup.sh
+curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz
 ```
-
-### Windows (PowerShell)
-
-Open PowerShell as an Administrator or regular user:
 
 ```powershell
 # Prerequisites (via winget)
 winget install -e --id Python.Python.3.13
 winget install -e --id Git.Git
-
-# Clone and run one-command setup
-git clone https://github.com/MarkOne-dev/pkt-git.git ; cd pkt-git
-powershell -ExecutionPolicy Bypass -File setup.ps1
 ```
 
 > **Note for Windows users:** Git hooks run under Git Bash, which is included automatically with Git for Windows.
-
-### Tarball Bootstrap (curl-only)
-
-If you do not have Git installed yet:
-
-```bash
-curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz
-cd pkt-git-main
-./setup.sh
-```
 
 ---
 
@@ -237,39 +236,27 @@ When you change an interface configuration or VLAN in Packet Tracer and commit, 
 
 All scripts run inside the project virtual environment (`.venv`).
 
-### `tools/ptg.py`
-Core conversion and inspection utility:
+### `ptg` — global CLI
+One command surface for everything (after the global install):
 
 ```bash
 # Export a .pkt into base.snapshot.xml, configs/*.cfg, and topology.json
-.venv/bin/python tools/ptg.py export "project.pkt" snapshot/project/
+ptg export "project.pkt" snapshot/project/
 
 # Rebuild a working .pkt from a modified XML snapshot
-.venv/bin/python tools/ptg.py build snapshot/project/base.snapshot.xml rebuilt.pkt
+ptg build snapshot/project/base.snapshot.xml topologia/project.pkt
 
 # Inspect devices, interfaces, and connections directly in your terminal
-.venv/bin/python tools/ptg.py inspect "project.pkt"
-```
+ptg inspect "project.pkt"
 
-### `tools/edit_config.py`
-Safe programmatic CLI modifications for Cisco device configurations inside snapshots:
+# Safe per-device editing of a snapshot (XML validated on every write)
+ptg edit snapshot/project/base.snapshot.xml chgline SW1_LIMA FastEthernet0/1 "vlan 10" "vlan 20"
 
-```bash
-# Display the full running configuration of a device
-.venv/bin/python tools/edit_config.py snapshot/project/base.snapshot.xml show SW1_LIMA
+# Keep derived configs/metadata in sync after manual text edits
+ptg sync snapshot/project/
 
-# Set commands on a specific interface
-.venv/bin/python tools/edit_config.py snapshot/project/base.snapshot.xml setiface SW1_LIMA FastEthernet0/1 "description Uplink to Core" "switchport mode trunk"
-
-# Modify a specific line in an interface block
-.venv/bin/python tools/edit_config.py snapshot/project/base.snapshot.xml chgline SW1_LIMA FastEthernet0/1 "vlan 10" "vlan 20"
-```
-
-### `tools/spike_roundtrip.py`
-Verifies cryptographic pipeline integrity and roundtrip validity:
-
-```bash
-.venv/bin/python tools/spike_roundtrip.py verify "project.pkt"
+# Verify the crypto round trip against any specimen
+ptg verify "project.pkt"
 ```
 
 ---
@@ -325,7 +312,7 @@ Contributions from network engineers, developers, and students are welcome!
    ```
 3. **Validate changes:**
    ```bash
-   .venv/bin/python tools/spike_roundtrip.py verify "your_specimen.pkt"
+   ptg verify "your_specimen.pkt"
    ```
 4. **Commit your changes and push:**
    ```bash
