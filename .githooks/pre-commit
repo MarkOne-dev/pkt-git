@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# ============================================================================
+# pre-commit — pkt-git
+#
+# Garantía del sistema: NINGÚN commit con canbio en un .pkt queda sin su
+# snapshot textual. Si el .pkt cambió, se ejecuta 'ptg export' y las
+# actualizaciones de snapshot/ se agregan automáticamente al commit.
+# ============================================================================
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+PY=".venv/bin/python"
+
+SKS=$(mktemp); trap 'rm -f "$SKS"' EXIT
+
+# .pkt acá stageados (added/copied/moderated/renamed)
+changed=0
+while IFS= read -r f; do
+    [[ -z "$f" ]] && continue
+    base="$(basename "$f" .pkt)"
+    dir="snapshot/$base"
+
+    echo "[pre-commit] .pkt cambiado: $f -> exportando snapshot a $dir/"
+    "$PY" tools/ptg.py export "$f" "$dir" > "$SKS" 2>&1 || {
+        echo "❌ ERROR al exportar snapshot de $f — detalles:"; cat "$SKS"; exit 1
+    }
+    cat "$SKS" | sed 's/^/[pre-commit] /'
+
+    git add -- "$dir" 2>/dev/null || true
+    changed=1
+done < <(git diff --cached --name-only --diff-filter=ACMR -- '*.pkt')
+
+if [[ $changed -eq 1 ]]; then
+    echo "[pre-commit] snapshot textual incluido automáticamente ✓"
+fi
+
+# Aviso en opción contraria: cambio de snapshot SIN el .pkt (merge textual)
+if ! git diff --cached --name-only -- '*.pkt' | grep -q .; then
+    if git diff --cached --name-only --diff-filter=MCR 'snapshot/*/base.snapshot.xml' | grep -q .; then
+        echo "⚠️  Aviso: snapshot textual cambia sin su .pkt."
+        echo "    Es válido (edición/merge textual), pero recuerda regenerar"
+        echo "    el binario antes de abrir Packet Tracer:  ptg build"
+    fi
+fi
+
+exit 0

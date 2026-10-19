@@ -1,0 +1,16 @@
+# ===== pkt-git: atributos de versionado =====
+
+# El binario de Packet Tracer es un ARTEFACTO: se guarda, pero nunca hace
+# diff ni merge (la fuente de verdad es snapshot/).
+*.pkt binary
+*.pkt -diff -merge text=auto
+
+# El snapshot textual es la FUENTE DE VERDAD: diffs normales de línea
+snapshot/**/base.snapshot.xml text diff -merge
+snapshot/**/*.json text
+snapshot/**/*.cfg text
+
+# Herramientas del repo
+*.py text
+*.md text
+README.md text
