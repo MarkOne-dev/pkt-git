@@ -8092,10 +8092,12 @@ Password: &lt;input type="password" name="pw" id="pw" value="" size="20">&lt;br>
       <LINE> switchport mode trunk</LINE>
       <LINE>!</LINE>
       <LINE>interface FastEthernet0/3</LINE>
-      <LINE> switchport access vlan 30</LINE>
+      <LINE> switchport access vlan 40</LINE>
       <LINE> switchport mode access</LINE>
       <LINE>!</LINE>
       <LINE>interface FastEthernet0/4</LINE>
+      <LINE> switchport access vlan 30</LINE>
+      <LINE> switchport mode access</LINE>
       <LINE>!</LINE>
       <LINE>interface FastEthernet0/5</LINE>
       <LINE>!</LINE>
