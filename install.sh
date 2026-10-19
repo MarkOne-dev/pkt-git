@@ -79,6 +79,9 @@ t = Twofish(b'\x89' * 16)
 assert t.decrypt(t.encrypt(bytes(16))) == bytes(16)
 " && echo "crypto core verified"
 
+# agent skills (OpenCode / Claude Code / Gemini CLI) into their global dirs
+"$VPY" "$ROOT/tools/cli.py" skills
+
 echo "pkt-git installed globally. In any repository run:"
 echo "    pkt init          # wire hooks and configuration"
 echo "    pkt --help        # full command list"

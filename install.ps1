@@ -90,6 +90,9 @@ assert t.decrypt(t.encrypt(bytes(16))) == bytes(16)
 '@)
 if ($LASTEXITCODE -eq 0) { Write-Host "crypto core verified" }
 
+# agent skills (OpenCode / Claude Code / Gemini CLI) into their global dirs
+& $vpy (Join-Path $root "tools\cli.py") skills
+
 Write-Host "pkt-git installed globally. In any repository run:"
 Write-Host "    ptg init          # wire hooks and configuration"
 Write-Host "    ptg edit ...      # available in the tool command list"

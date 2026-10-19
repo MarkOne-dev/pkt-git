@@ -184,6 +184,23 @@ pkt init
 `pkt init` writes the thin hooks, the `*.pkt binary` rules and the per-repo
 configuration automatically.
 
+### Agent skills (OpenCode / Claude Code / Gemini CLI) — installed automatically
+
+The installer (`install.sh` / `install.ps1`) **bundles the agent skills too** —
+OpenCode, Claude Code and Gemini CLI pick them up globally right after
+installation. Manage them manually any time:
+
+```bash
+pkt skills              # install into ~/.config/opencode, ~/.claude, ~/.gemini
+pkt skills --remove     # uninstall from all three agents
+```
+
+| Skill installed at agent | Agent picks it up |
+|---|---|
+| `~/.config/opencode/skills/pkt-git/` | OpenCode (global scope) |
+| `~/.claude/skills/pkt-git/` | Claude Code |
+| `~/.gemini/skills/pkt-git/` | Gemini CLI |
+
 ### Import an existing Packet Tracer project
 
 ```bash
