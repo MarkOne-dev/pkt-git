@@ -5,7 +5,8 @@
 # If the .pkt changed, run 'ptg export' and stage the snapshot updates.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-PY=".venv/bin/python"
+source "$(dirname "$0")/common.sh"
+PY="$(resolve_py)"
 
 LOG=$(mktemp); trap 'rm -f "$LOG"' EXIT
 
