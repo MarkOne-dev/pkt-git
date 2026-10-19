@@ -169,6 +169,7 @@ def cmd_verify(src: Path, tmpdir: Path) -> int:
     rebuilt = encode(xml1)
 
     xml_path = tmpdir / f"{src.stem}.snapshot.xml"
+    xml_path.parent.mkdir(parents=True, exist_ok=True)
     xml_path.write_text(xml1, encoding="utf-8")
     pkt_path = tmpdir / f"{src.stem}.rebuilt.pkt"
     pkt_path.write_bytes(rebuilt)
