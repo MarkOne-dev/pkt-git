@@ -78,15 +78,24 @@ zlib): el archivo regenerado **no es byte-igual** pero es válido y abre igual.
 ## Cómo usar (en desarrollo)
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install twofish pycryptodome   # pycryptodome solo para tests de validación
+git clone <repo> pkt-git && cd pkt-git
+./setup.sh          # venv + dependencias + parche + hooks — UN solo comando
 ```
 
+Requisitos de la máquina: **Python 3.12+** y **Git**. Packet Tracer **9.0.1.0858**
+solo para quien edite la red en PT (quien solo revisa diffs en GitHub no lo necesita).
+
 ```bash
-.venv/bin/python tools/ptg.py export "mi_proyecto.pkt" snapshot/
-.venv/bin/python tools/ptg.py build  snapshot/base.snapshot.xml regenerado.pkt
-.venv/bin/python tools/spike_roundtrip.py verify "mi_proyecto.pkt"   # test del pipeline
+.venv/bin/python tools/ptg.py export "mi_proyecto.pkt" snapshot/mi_proyecto/
+.venv/bin/python tools/ptg.py build  snapshot/mi_proyecto/base.snapshot.xml regenerado.pkt
+.venv/bin/python tools/ptg.py inspect "mi_proyecto.pkt"          # resumen de la red
+.venv/bin/python tools/spike_roundtrip.py verify "mi_proyecto.pkt"  # test del pipeline
+.venv/bin/python tools/edit_config.py snapshot/mi_proyecto/base.snapshot.xml show SW1_LIMA
 ```
+
+El flujo diario del equipo es solo: **editar en PT → guardar → `git add` → `git commit`** —
+el hook pre-commit genera el snapshot textual automáticamente; tras un `git pull`/merge
+el hook post-merge regenera los `.pkt` locales.
 
 ## Pendiente de validación humana (Rol del equipo)
 - [ ] Abrir `out/reconstruido.pkt` (o el del archivo de prueba) en PT y
