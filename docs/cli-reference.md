@@ -25,6 +25,7 @@ pkt edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_co
 pkt verify <file.pkt>
 pkt sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
 pkt resolve [--theirs|--ours]                              # one-command merge-conflict resolution
+pkt skills [--remove]                                      # install/uninstall agent skills globally
 pkt pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
 ```
 

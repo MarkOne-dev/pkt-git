@@ -127,23 +127,79 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 - **Git** and **curl**
 - *Cisco Packet Tracer 9.0.1+* (only needed to edit and run topologies; not required to review diffs or run CI).
 
-### Global install (recommended)
+### Download per OS (then a single installer)
 
-Install **once per machine**, then wire any repository with one command — no
-templates, nothing to copy between projects:
+**Linux**
 
 ```bash
-# 1) install globally
-git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
-./install.sh
-# Windows: powershell -ExecutionPolicy Bypass -File install.ps1
+# Debian / Ubuntu
+sudo apt update && sudo apt install -y python3 python3-venv git curl
+# Arch
+sudo pacman -S --needed python git curl
+# Fedora
+sudo dnf install -y python3 git curl
 
-# 2) in ANY repository (new or existing PT project):
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git && ./install.sh
+```
+
+**macOS**
+
+```bash
+brew install git python
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git && ./install.sh
+```
+
+**Windows**
+
+```powershell
+winget install -e --id Git.Git
+winget install -e --id Python.Python.3.13
+git clone https://github.com/MarkOne-dev/pkt-git.git ; cd pkt-git
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
+> **Windows note:** Git hooks run under Git Bash, which ships with Git for Windows.
+
+### Download without Git (curl-only, any POSIX OS)
+
+The `curl` way — no clone needed, one line:
+
+```bash
+curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz \
+  && cd pkt-git-main && ./install.sh
+```
+
+### Wiring a repository (once per project)
+
+With `pkt` installed globally (above), wire **any** repository — new or
+existing PT project — with one command:
+
+```bash
 cd /path/to/your-pt-project
 pkt init
 ```
 
-`pkt init` activates the hooks for that repository automatically.
+`pkt init` writes the thin hooks, the `*.pkt binary` rules and the per-repo
+configuration automatically.
+
+### Agent skills (OpenCode / Claude Code / Gemini CLI) — installed automatically
+
+The installer (`install.sh` / `install.ps1`) **bundles the agent skills too** —
+OpenCode, Claude Code and Gemini CLI pick them up globally right after
+installation. Manage them manually any time:
+
+```bash
+pkt skills              # install into ~/.config/opencode, ~/.claude, ~/.gemini
+pkt skills --remove     # uninstall from all three agents
+```
+
+| Skill installed at agent | Agent picks it up |
+|---|---|
+| `~/.config/opencode/skills/pkt-git/` | OpenCode (global scope) |
+| `~/.claude/skills/pkt-git/` | Claude Code |
+| `~/.gemini/skills/pkt-git/` | Gemini CLI |
 
 ### Import an existing Packet Tracer project
 
@@ -152,31 +208,6 @@ pkt export my_project.pkt snapshot/my_project/
 mkdir -p topologia && cp my_project.pkt topologia/
 git add . && git commit -m "chore: import existing PT project"
 ```
-
-### Prerequisites per OS
-
-```bash
-# Debian / Ubuntu
-sudo apt update && sudo apt install -y python3 python3-venv git curl
-
-# Arch Linux
-sudo pacman -S --needed python git curl
-
-# Fedora
-sudo dnf install -y python3 git curl
-
-# macOS (Homebrew)
-brew install python git
-curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz
-```
-
-```powershell
-# Prerequisites (via winget)
-winget install -e --id Python.Python.3.13
-winget install -e --id Git.Git
-```
-
-> **Note for Windows users:** Git hooks run under Git Bash, which is included automatically with Git for Windows.
 
 ---
 
