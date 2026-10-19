@@ -9,10 +9,10 @@ areas are flagged as such.
 ```bash
 # Crypto pipeline sanity against the bundled specimen:
 # expect "XML ROUND TRIP : True" (exit code 0)
-ptg verify proof-pkt/Caso1_Grupo09-2.pkt
+pkt verify proof-pkt/Caso1_Grupo09-2.pkt
 
 # Is the global install healthy?
-ptg --version   # global CLI alive
+pkt --version   # global CLI alive
 
 # Is a snapshot still valid XML after hand editing?
 python3 -c "import xml.etree.ElementTree as ET, pathlib; \
@@ -57,7 +57,7 @@ Informational, not an error — typical after conflict resolution or
 `edit_config.py`. If your intent was to change the network, finish with:
 
 ```bash
-ptg build snapshot/<project>/base.snapshot.xml \
+pkt build snapshot/<project>/base.snapshot.xml \
     topologia/<project>.pkt
 git add topologia/<project>.pkt
 ```
@@ -83,7 +83,7 @@ real name in `metadata/topology.json` — case and spelling matter
 
 `base.snapshot.xml` inside a conflict contains `<<<<<<<` blocks and is not
 valid XML until resolved. Never `git add` a snapshot with unresolved markers
-(the next `ptg build` will fail). Resolve with device-scoped edits
+(the next `pkt build` will fail). Resolve with device-scoped edits
 (`view the conflict, choose one side, strip the markers around the chosen
 side`), then `git add`, then rebuild.
 
@@ -96,8 +96,8 @@ side`), then `git add`, then rebuild.
   interface block; the safe default for a one-line change is `chgline`.
 - **Editing PT files while the tool writes them.** Save and close (or at least
   finish saving) before committing; PT holds the file mid-write.
-- **Assuming hooks exist before running `ptg init`.** The per-repository
-  wiring is `ptg init`; a repository without it silently has no automation.
+- **Assuming hooks exist before running `pkt init`.** The per-repository
+  wiring is `pkt init`; a repository without it silently has no automation.
 
 ## Compatibility Limits (tested vs. unknown)
 

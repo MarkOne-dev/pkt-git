@@ -54,15 +54,18 @@ PYEOF
     echo "twofish patch applied"
 fi
 
-# CLI wrapper on PATH (bash) — hardcodes the resolved locations
-cat > "$BIN_DIR/ptg" <<EOF
+# CLI wrappers on PATH (bash) — hardcode the resolved locations.
+# Primary name is `pkt`; `ptg` stays as a legacy alias.
+for name in pkt ptg; do
+cat > "$BIN_DIR/$name" <<EOF
 #!/usr/bin/env bash
-export PKTG_CLI="$BIN_DIR/ptg"
+export PKTG_CLI="$BIN_DIR/$name"
 export PKTG_PY="$VPY"
 export PKTG_SCRIPT="$ROOT/tools/cli.py"
 exec "$VPY" "$ROOT/tools/cli.py" "\$@"
 EOF
-chmod +x "$BIN_DIR/ptg"
+chmod +x "$BIN_DIR/$name"
+done
 
 case ":$PATH:" in
     *":$BIN_DIR:"*) ;;

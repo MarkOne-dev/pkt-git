@@ -1,7 +1,7 @@
 # Snapshot Format
 
 The snapshot is the textual, human-reviewable representation of a Packet Tracer
-project, written by `ptg export` and stored inside the repository under
+project, written by `pkt export` and stored inside the repository under
 `snapshot/<ProjectName>/`. It is the **authoritative** state of the network;
 the `.pkt` binary is derived from it.
 
@@ -107,4 +107,4 @@ From `.gitattributes` / `.gitignore`:
 3. After any merge/pull/checkout that changes a snapshot, the post-merge /
    post-checkout hooks rebuild `topologia/<Project>.pkt` locally.
 4. Only the team member resolving a textual conflict needs to run
-   `ptg build` manually — see `workflow.md`.
+   `pkt build` manually — see `workflow.md`.

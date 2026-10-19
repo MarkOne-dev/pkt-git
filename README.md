@@ -62,7 +62,7 @@ With **pkt-git**, network topologies become Git-native: inspect line-by-line dif
 ## Key Features
 
 - ⚡ **Zero-Footprint in Packet Tracer:** Nothing to install inside Packet Tracer. Works externally on files, even when PT is closed.
-- 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the exact binary anytime with `ptg build`.
+- 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the exact binary anytime with `pkt build`.
 - 🪝 **Transparent Git Hooks:** Automatic `pre-commit` hook extracts snapshots on commit; automatic `post-merge` and `post-checkout` hooks rebuild `.pkt` binaries on branch change or pull.
 - 🛡️ **Safe CLI Editing:** Built-in `edit_config.py` allows updating interfaces and commands directly from the terminal without breaking the XML schema.
 - 💻 **Cross-Platform:** Tested and supported natively on **Linux**, **macOS**, and **Windows**.
@@ -79,8 +79,8 @@ flowchart LR
 
     subgraph ENGINE["pkt-git Engine"]
         direction TB
-        EXP["ptg export\n(Decode and Split)"]
-        BLD["ptg build\n(Pack and Encrypt)"]
+        EXP["pkt export\n(Decode and Split)"]
+        BLD["pkt build\n(Pack and Encrypt)"]
     end
 
     subgraph REPO["Git / GitHub Repository (Source of Truth)"]
@@ -139,15 +139,15 @@ git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 
 # 2) in ANY repository (new or existing PT project):
 cd /path/to/your-pt-project
-ptg init
+pkt init
 ```
 
-`ptg init` activates the hooks for that repository automatically.
+`pkt init` activates the hooks for that repository automatically.
 
 ### Import an existing Packet Tracer project
 
 ```bash
-ptg export my_project.pkt snapshot/my_project/
+pkt export my_project.pkt snapshot/my_project/
 mkdir -p topologia && cp my_project.pkt topologia/
 git add . && git commit -m "chore: import existing PT project"
 ```
@@ -196,7 +196,7 @@ sequenceDiagram
     DevA->>PT: Edit topology and save project.pkt
     DevA->>Git: git add . and git commit
     activate Hook
-    Hook->>Hook: pre-commit triggers: ptg export project.pkt
+    Hook->>Hook: pre-commit triggers: pkt export project.pkt
     Hook->>Git: Auto-stages XML, configs/*.cfg and topology.json
     deactivate Hook
     DevA->>Hub: git push origin feature/vlan-update
@@ -206,7 +206,7 @@ sequenceDiagram
 
     DevB->>Git: git pull origin main
     activate Hook
-    Hook->>Hook: post-merge triggers: ptg build snapshot to project.pkt
+    Hook->>Hook: post-merge triggers: pkt build snapshot to project.pkt
     Hook->>PT: Restores updated .pkt binary locally
     deactivate Hook
     DevB->>PT: Open project.pkt (Seamlessly updated)
@@ -236,27 +236,27 @@ When you change an interface configuration or VLAN in Packet Tracer and commit, 
 
 All scripts run inside the project virtual environment (`.venv`).
 
-### `ptg` — global CLI
+### `pkt` — global CLI
 One command surface for everything (after the global install):
 
 ```bash
 # Export a .pkt into base.snapshot.xml, configs/*.cfg, and topology.json
-ptg export "project.pkt" snapshot/project/
+pkt export "project.pkt" snapshot/project/
 
 # Rebuild a working .pkt from a modified XML snapshot
-ptg build snapshot/project/base.snapshot.xml topologia/project.pkt
+pkt build snapshot/project/base.snapshot.xml topologia/project.pkt
 
 # Inspect devices, interfaces, and connections directly in your terminal
-ptg inspect "project.pkt"
+pkt inspect "project.pkt"
 
 # Safe per-device editing of a snapshot (XML validated on every write)
-ptg edit snapshot/project/base.snapshot.xml chgline SW1_LIMA FastEthernet0/1 "vlan 10" "vlan 20"
+pkt edit snapshot/project/base.snapshot.xml chgline SW1_LIMA FastEthernet0/1 "vlan 10" "vlan 20"
 
 # Keep derived configs/metadata in sync after manual text edits
-ptg sync snapshot/project/
+pkt sync snapshot/project/
 
 # Verify the crypto round trip against any specimen
-ptg verify "project.pkt"
+pkt verify "project.pkt"
 ```
 
 ---
@@ -267,7 +267,7 @@ The `.pkt` and `.pka` files created by Cisco Packet Tracer (validated against ve
 
 ```mermaid
 flowchart TD
-    subgraph ENCODE["Encoding Pipeline (ptg build)"]
+    subgraph ENCODE["Encoding Pipeline (pkt build)"]
         direction TB
         E0["Plaintext XML Document"] --> E1["1. qCompress: 4-byte BE size header + zlib stream"]
         E1 --> E2["2. Inner Positional XOR: b[i] = a[i] ^ ((L2 - i) mod 256)"]
@@ -276,7 +276,7 @@ flowchart TD
         E4 --> E5["Valid .pkt / .pka Binary File"]
     end
 
-    subgraph DECODE["Decoding Pipeline (ptg export)"]
+    subgraph DECODE["Decoding Pipeline (pkt export)"]
         direction TB
         D5["Encrypted .pkt / .pka Binary"] --> D4["1. Invert Outer XOR and Reversal"]
         D4 --> D3["2. Twofish-EAX Decryption and OMAC Verification"]
@@ -312,7 +312,7 @@ Contributions from network engineers, developers, and students are welcome!
    ```
 3. **Validate changes:**
    ```bash
-   ptg verify "your_specimen.pkt"
+   pkt verify "your_specimen.pkt"
    ```
 4. **Commit your changes and push:**
    ```bash

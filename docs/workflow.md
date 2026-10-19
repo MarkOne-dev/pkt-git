@@ -11,10 +11,10 @@ a single command — no templates to copy:
 
 ```bash
 # any repo, new or existing:
-ptg init
+pkt init
 ```
 
-`ptg init` generates thin hooks that call the global CLI (they store the exact
+`pkt init` generates thin hooks that call the global CLI (they store the exact
 interpreter and script paths in the repository configuration), writes the
 `*.pkt binary` ownership rules into `.gitattributes` (if missing) and activates
 everything. See `installation.md` for the full model.
@@ -22,12 +22,12 @@ everything. See `installation.md` for the full model.
 To re-import a project that already exists on disk:
 
 ```bash
-ptg export my_project.pkt snapshot/my_project/     # textual snapshot
+pkt export my_project.pkt snapshot/my_project/     # textual snapshot
 mkdir -p topologia && cp my_project.pkt topologia/ # binary artifact
 git add . && git commit -m "chore: import PT project"
 ```
 
-## What `ptg init` Actually Does
+## What `pkt init` Actually Does
 
 Instead of copying a template, the hooks are **thin**: three lines each. They
 resolve two repository-local configurations — `pktgit.py` (the interpreter) and
@@ -55,7 +55,7 @@ The **pre-commit** hook guarantees that every commit containing a `.pkt` also
 contains its freshly generated textual snapshot:
 
 1. Detects staged `.pkt` files (added/copied/modified/renamed).
-2. Runs `ptg export <file> snapshot/<name>/` for each one.
+2. Runs `pkt export <file> snapshot/<name>/` for each one.
 3. Stages the regenerated XML, `.cfg` files, and `topology.json`.
 4. As a bonus guard, warns if the opposite case appears (snapshot changed
    without its `.pkt`) — valid after textual edits, with a reminder to rebuild.
@@ -74,7 +74,7 @@ The **post-merge** (and its twin **post-checkout**) hook:
 1. Computes the incoming commit range (`ORIG_HEAD..HEAD` for merges, the old→new
    range for checkouts).
 2. Lists `snapshot/*/base.snapshot.xml` files that changed.
-3. Runs `ptg build` for each, regenerating `topologia/<name>.pkt`.
+3. Runs `pkt build` for each, regenerating `topologia/<name>.pkt`.
 4. Reports success — open the `.pkt` in Packet Tracer and the network is there.
 
 The two directions are mirror images, fully automatic:
@@ -118,7 +118,7 @@ on `SW_ACC_ADMIN_PUNO` `FastEthernet0/3`), Git reports a conflict on the
 
 1. Edits the conflicted snapshot **by hand or with device-scoped tools**:
    ```bash
-   ptg edit snapshot/<project>/base.snapshot.xml \
+   pkt edit snapshot/<project>/base.snapshot.xml \
        chgline SW_ACC_ADMIN_PUNO FastEthernet0/3 "switchport access vlan 50" \
        "switchport access vlan 60"
    ```
@@ -127,7 +127,7 @@ on `SW_ACC_ADMIN_PUNO` `FastEthernet0/3`), Git reports a conflict on the
 3. Rebuild the binary — **the only manual conversion command in the whole
    workflow**:
    ```bash
-   ptg build snapshot/<project>/base.snapshot.xml \
+   pkt build snapshot/<project>/base.snapshot.xml \
        topologia/<project>.pkt
    git add topologia/<project>.pkt
    ```

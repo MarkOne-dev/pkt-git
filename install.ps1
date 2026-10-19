@@ -61,9 +61,11 @@ print("twofish patch applied")
     $patch | & $vpy - $tf.FullName
 }
 
-# cmd shim on PATH — the thin hooks call the repo config pktgit.py directly,
-# this shim is only for human use in cmd/PowerShell
-$shim = Join-Path $binDir "ptg.cmd"
+# cmd shims on PATH — primary name `pkt`, `ptg` stays as a legacy alias.
+# The thin hooks call the repository config pktgit.py directly;
+# these shims exist for human use in cmd/PowerShell.
+foreach ($name in @("pkt", "ptg")) {
+$shim = Join-Path $binDir "$name.cmd"
 @"
 @echo off
 set "PKTG_CLI=%~f0"
@@ -71,6 +73,7 @@ set "PKTG_PY=$vpy"
 set "PKTG_SCRIPT=$root\tools\cli.py"
 "$vpy" "$root\tools\cli.py" %*
 "@ | Set-Content -Path $shim -Encoding Ascii
+}
 
 # add to user PATH once
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")

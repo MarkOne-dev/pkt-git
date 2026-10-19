@@ -99,7 +99,7 @@ extracted XML      : ~5.89 MB   (107 devices, 106 links, 34 CLI configs)
 Verification command:
 
 ```bash
-ptg verify proof-pkt/Caso1_Grupo09-2.pkt
+pkt verify proof-pkt/Caso1_Grupo09-2.pkt
 ```
 
 Expected report:
@@ -118,5 +118,5 @@ Expected report:
   claiming support (see `troubleshooting.md`).
 - `.pka` activity files are expected to use the same container, but the inner
   document structure differs (activities), so they are untested.
-- `ptg build` recompresses deterministically at zlib level 9; it does not
+- `pkt build` recompresses deterministically at zlib level 9; it does not
   attempt to byte-match PT's own output (unnecessary for validity).

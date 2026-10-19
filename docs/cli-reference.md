@@ -1,8 +1,8 @@
 # CLI Reference
 
-The command surface is the global **`ptg`** CLI (installed once per machine by
-`install.sh` / `install.ps1`); the underlying modules live in `tools/`. Both
-are documented here.
+The command surface is the global **`pkt`** CLI (installed once per machine by
+`install.sh` / `install.ps1`; legacy alias `ptg`); the underlying modules live
+in `tools/`. Both are documented here.
 
 ```
 tools/
@@ -14,17 +14,17 @@ tools/
 
 ---
 
-## `ptg` — global CLI hub
+## `pkt` — global CLI hub
 
 ```bash
-ptg init [dir]
-ptg export <project.pkt> <output_dir>
-ptg build  <snapshot.xml> <output.pkt>
-ptg inspect <project.pkt>
-ptg edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_config below
-ptg verify <file.pkt>
-ptg sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
-ptg pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
+pkt init [dir]
+pkt export <project.pkt> <output_dir>
+pkt build  <snapshot.xml> <output.pkt>
+pkt inspect <project.pkt>
+pkt edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_config below
+pkt verify <file.pkt>
+pkt sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
+pkt pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
 ```
 
 ### `init`
@@ -44,12 +44,12 @@ repositories, so tool updates propagate everywhere automatically.
 
 Text-first edits (conflict resolution, `edit`) change `base.snapshot.xml`;
 `sync` regenerates the derived `configs/*.cfg` and `metadata/topology.json`
-from it so the snapshot never contradicts itself. `ptg edit` calls it
+from it so the snapshot never contradicts itself. `pkt edit` calls it
 automatically after every successful write.
 
 ### Hook entry points
 
-`ptg pre-commit` and `ptg post-merge|post-checkout [old new]` are called by the
+`pkt pre-commit` and `pkt post-merge|post-checkout [old new]` are called by the
 thin hooks; they implement the same automation described in `workflow.md`
 (auto-export staged `.pkt`, auto-rebuild after merges/pull/checkouts).
 
@@ -63,9 +63,9 @@ Reversible codec for `.pkt`/`.pka` files. See `packet-tracer-format.md` for the
 format behind it.
 
 ```bash
-ptg decode <file.pkt> <out.xml>
-ptg encode <file.xml> <out.pkt>
-ptg spike_roundtrip.py verify <file.pkt>
+pkt decode <file.pkt> <out.xml>
+pkt encode <file.xml> <out.pkt>
+pkt verify <file.pkt>
 ```
 
 | Command | Behavior |

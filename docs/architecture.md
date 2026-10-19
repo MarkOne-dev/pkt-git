@@ -37,7 +37,7 @@ pkt-git/
 │   ├── spike_roundtrip.py   # Codec: decode/encode .pkt <-> XML + crypto core
 │   ├── ptg.py               # CLI: export / build / inspect + topology parser
 │   ├── edit_config.py       # Device-scoped surgical XML editor
-│   └── cli.py               # Global `ptg` hub: init, thin-hook entries, sync
+│   └── cli.py               # Global `pkt` hub: init, thin-hook entries, sync
 ├── .githooks/               # Development-clone hooks (self-hosted variant)
 ├── install.sh               # Global one-machine install (Linux/macOS/Git Bash)
 ├── install.ps1              # Global one-machine install (Windows PowerShell)
@@ -65,10 +65,10 @@ pkt-git/
 
 ```mermaid
 flowchart LR
-    PT["Packet Tracer\n(Ctrl+S on the .pkt)"] -->|pre-commit hook| EXP["ptg export"]
+    PT["Packet Tracer\n(Ctrl+S on the .pkt)"] -->|pre-commit hook| EXP["pkt export"]
     EXP --> SNAP["snapshot/<Project>/\nXML + cfg + json"]
     SNAP -->|"git push → GitHub\nPR review on text diffs"| MAIN["main branch"]
-    MAIN -->|"git pull / merge"| BLD["ptg build\npost-merge hook"]
+    MAIN -->|"git pull / merge"| BLD["pkt build\npost-merge hook"]
     BLD --> PT2["Local .pkt rebuilt\n(ready to open in PT)"]
 ```
 
@@ -76,7 +76,7 @@ flowchart LR
 
 1. Engineer edits the topology in Packet Tracer and saves.
 2. `git add` + `git commit`: the **pre-commit** hook detects a staged `.pkt`.
-3. The hook runs `ptg export`, which decrypts the binary and writes the textual
+3. The hook runs `pkt export`, which decrypts the binary and writes the textual
    snapshot, then stages the snapshot automatically.
 4. Every commit, seen by Git and by GitHub, is a *pair*: binary + text, always
    in sync.
@@ -86,7 +86,7 @@ flowchart LR
 1. Engineer runs `git pull` (or merges a branch, or checks out a branch).
 2. The **post-merge** / **post-checkout** hook diffs the incoming commits for
    `snapshot/*/base.snapshot.xml` changes.
-3. For every changed snapshot it runs `ptg build`, regenerating
+3. For every changed snapshot it runs `pkt build`, regenerating
    `topologia/<Project>.pkt`.
 4. The engineer opens Packet Tracer and the network is already there — zero
    manual conversion steps in the daily loop.
@@ -94,7 +94,7 @@ flowchart LR
 ### Exception — Text-first edits
 
 A maintainer resolving a textual merge conflict edits only the snapshot. The
-binary becomes stale; `ptg build` must be run once (the pre-commit hook prints
+binary becomes stale; `pkt build` must be run once (the pre-commit hook prints
 an explicit reminder whenever this state is detected). This is the only
 situation in the daily life of the team where a manual conversion command exists.
 

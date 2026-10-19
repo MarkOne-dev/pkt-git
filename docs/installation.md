@@ -16,10 +16,10 @@ is a single command:
 # Windows: powershell -ExecutionPolicy Bypass -File install.ps1
 
 # 2) in ANY repository (existing or brand new):
-ptg init
+pkt init
 ```
 
-`ptg init` performs, without any template copying:
+`pkt init` performs, without any template copying:
 
 1. Writes **thin hooks** into `.githooks/` — each is a single line that resolves
    two repository configs (`pktgit.py`, `pktgit.script`) and executes them:
@@ -33,15 +33,15 @@ ptg init
 
 Because the hook logic lives in the **global** CLI (`~/.local/share/pkt-git/`
 on POSIX, `%LOCALAPPDATA%\pkt-git\` on Windows), repositories contain no tool
-copies: one install, upgrades take effect everywhere. The `ptg` command is on
-PATH for human use (`ptg export / build / inspect / edit / verify / sync`).
+copies: one install, upgrades take effect everywhere. The `pkt` command is on
+PATH for human use (`pkt export / build / inspect / edit / verify / sync`).
 
 ### Per-repository import (integrating an existing project)
 
 ```bash
 cd my-existing-pt-project
-ptg init
-ptg export my_project.pkt snapshot/my_project/
+pkt init
+pkt export my_project.pkt snapshot/my_project/
 mkdir -p topologia && cp my_project.pkt topologia/
 git add . && git commit -m "chore: import existing Packet Tracer project"
 ```
@@ -65,10 +65,10 @@ machine, on install and re-run:
    extension `pip` built (`.so` on Linux/macOS, `.pyd` on Windows), with a
    file-name fallback. The patch is idempotent (applied only if `import imp`
    is still present).
-5. **CLI on PATH.** A `ptg` wrapper is placed in `~/.local/bin/` (POSIX) or
-   `%USERPROFILE%\.local\bin\ptg.cmd` added to the user PATH (Windows).
+5. **CLI on PATH.** A `pkt` wrapper is placed in `~/.local/bin/` (POSIX) or
+   `%USERPROFILE%\.local\bin\pkt.cmd` (`ptg.cmd` kept as legacy alias) added to the user PATH (Windows).
 6. **Crypto self-test.** One Twofish encrypt/decrypt cycle with the project
-   key. Repositories are then wired per-project with `ptg init` (see above).
+   key. Repositories are then wired per-project with `pkt init` (see above).
 
 > **Legacy repository-built mode:** the original `setup.sh` (creates
 > `.venv/` inside the repository and self-hosts the hooks) still works and is
@@ -79,9 +79,9 @@ machine, on install and re-run:
 
 | Platform | Command | Notes |
 |---|---|---|
-| Linux | `ptg` (global CLI) | Fully tested (project of record). |
-| macOS | `ptg` (global CLI) | Needs Xcode Command Line Tools (`xcode-select --install`) so pip can build the Twofish C binding. |
-| Windows | `ptg.cmd` (global CLI) | `install.ps1` adds it to the user PATH; thin hooks still run under Git Bash (ships with Git for Windows). |
+| Linux | `pkt` (global CLI) | Fully tested (project of record). |
+| macOS | `pkt` (global CLI) | Needs Xcode Command Line Tools (`xcode-select --install`) so pip can build the Twofish C binding. |
+| Windows | `pkt.cmd` (global CLI) | `install.ps1` adds it to the user PATH; thin hooks still run under Git Bash (ships with Git for Windows). |
 
 Prerequisites per OS:
 
@@ -108,7 +108,7 @@ winget install -e --id Git.Git
 ### First import of an existing project
 
 ```bash
-ptg export "my_project.pkt" snapshot/my_project/
+pkt export "my_project.pkt" snapshot/my_project/
 mkdir -p topologia && cp my_project.pkt topologia/    # if you keep it as an artifact
 git add . && git commit -m "chore: import my_project into version control"
 ```
@@ -147,8 +147,8 @@ Everything is reproducible from the repository:
 ```bash
 git clone https://github.com/MarkOne-dev/pkt-git.git && cd pkt-git
 ./install.sh             # or install.ps1 on Windows
-ptg --version
-ptg verify proof-pkt/Caso1_Grupo09-2.pkt
+pkt --version
+pkt verify proof-pkt/Caso1_Grupo09-2.pkt
 ```
 
 The last command re-establishes confidence in the crypto pipeline against the
