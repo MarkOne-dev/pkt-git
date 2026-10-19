@@ -51,6 +51,17 @@ def cmd_show(xml: str, device: str) -> None:
             print(line.replace("<LINE>", "").replace("</LINE>", "").strip())
 
 
+def block_bounds(seg: str, iface: str) -> tuple[int, int] | None:
+    """(inicio, fin) del CONTENIDO del bloque interface <iface> dentro de seg."""
+    open_pat = f"<LINE>interface {iface}</LINE>"
+    idx = seg.find(open_pat)
+    if idx < 0:
+        return None
+    a = idx + len(open_pat) + 1
+    b = seg.find("<LINE>!</LINE>", idx)
+    return a, b
+
+
 def block_replace(seg: str, iface: str, lines: list[str]) -> str:
     """Reemplaza el contenido del bloque interface <iface> en RUNNINGCONFIG."""
     open_pat = f"<LINE>interface {iface}</LINE>"
@@ -92,6 +103,16 @@ def main() -> int:
     seg = xml[ra:rb]
     if cmd == "setiface" and len(sys.argv) >= 6:
         seg2 = block_replace(seg, sys.argv[4], sys.argv[5:])
+    elif cmd == "chgline" and len(sys.argv) == 7:
+        iface, old, new = sys.argv[4], sys.argv[5], sys.argv[6]
+        i_o = block_bounds(seg, iface)
+        if i_o is None:
+            raise SystemExit(f"❌ interface '{iface}' sin contenido en RUNNINGCONFIG")
+        a, b = i_o
+        old_ct = seg[a:b]
+        if old not in old_ct:
+            raise SystemExit(f"❌ la línea '{old}' no está en {iface} del device")
+        seg2 = seg[:a] + old_ct.replace(old, new, 1) + seg[b:]
     elif cmd == "insertafter" and len(sys.argv) >= 6:
         seg2 = insert_after(seg, sys.argv[4], sys.argv[5:])
     else:
