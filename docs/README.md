@@ -15,6 +15,7 @@ Tracer projects into Git-native repositories.
 | [CLI Reference](cli-reference.md) | Full reference for `tools/ptg.py`, `tools/edit_config.py`, and `tools/spike_roundtrip.py` — every command, argument, and output. |
 | [Installation & Setup](installation.md) | Global one-machine install + `pkt init` per repository, platform notes. |
 | [Troubleshooting & Pitfalls](troubleshooting.md) | Known failure modes, dangerous patterns (global `sed` on the XML), verification commands, and compatibility limits. |
+| **Agent skills** | Built-in skills for AI agents (OpenCode: `.opencode/skills/pkt-git/`, Claude Code: `.claude/skills/pkt-git/`) — they teach agents the invariants, command surface and safe recipes automatically. |
 
 ## Suggested Reading Order
 
