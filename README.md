@@ -90,6 +90,14 @@ Machine requirements: **Python 3.12+** and **Git**. Packet Tracer
 **9.0.1.0858** only for whoever edits the network in PT (someone just
 reviewing diffs on GitHub does not need it).
 
+### Platform support
+
+| Platform | Install | Notes |
+|---|---|---|
+| Linux | `./setup.sh` | fully tested |
+| macOS | `./setup.sh` | needs Xcode Command Line Tools (C compiler for the Twofish binding) |
+| Windows | `powershell -ExecutionPolicy Bypass -File setup.ps1` (native) or `./setup.sh` from Git Bash | hooks run under Git Bash, which ships with Git for Windows |
+
 ```bash
 .venv/bin/python tools/ptg.py export "my_project.pkt" snapshot/my_project/
 .venv/bin/python tools/ptg.py build  snapshot/my_project/base.snapshot.xml rebuilt.pkt
@@ -101,3 +109,4 @@ reviewing diffs on GitHub does not need it).
 The team's daily flow is just: **edit in PT → save → `git add` → `git commit`** —
 the pre-commit hook generates the textual snapshot automatically; after a
 `git pull`/merge the post-merge hook rebuilds the local `.pkt` files.
+# platform support v0.8
