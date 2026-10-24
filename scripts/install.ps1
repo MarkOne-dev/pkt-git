@@ -1,98 +1,152 @@
-# install.ps1 — install pkt-git globally on this machine (Windows, PowerShell).
-# Repositories are then wired with a single `ptg init` — no templates to copy.
-# Run:  powershell -ExecutionPolicy Bypass -File install.ps1
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+Installs the pkt-git Go binary on Windows.
 
+.DESCRIPTION
+Copies a prebuilt pkt.exe (or builds one with Go) into a per-user binary
+directory, adds that directory to the user PATH when needed, and installs the
+bundled agent skill. Safe to run repeatedly.
+#>
+[CmdletBinding()]
+param(
+    [string]$BinDir
+)
+
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
-$root = Join-Path $env:LOCALAPPDATA "pkt-git"
-$binDir = Join-Path $HOME ".local\bin"
-Set-Location $PSScriptRoot
 
-# interpreter detection: py -3 (official launcher) or python
-$py = $null
-foreach ($cand in @(@("py", "-3"), @("python"))) {
-    try {
-        $v = & $cand[0] $cand[1] -c "import sys; print(1 if sys.version_info >= (3,12) else 0)" 2>$null
-        if ("$v".Trim() -eq "1") { $py = $cand; break }
-    } catch { }
-}
-if (-not $py) { Write-Host "Python 3.12+ required (py -3 or python)"; exit 1 }
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rootDir = Split-Path -Parent $scriptDir
+$buildDir = $null
+$tmpTarget = $null
 
-New-Item -ItemType Directory -Force -Path (Join-Path $root "tools") | Out-Null
-New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+function Test-PathEntry {
+    param(
+        [string]$PathValue,
+        [string]$Entry
+    )
 
-# tool source -> global location
-Copy-Item -Path "tools\*" -Destination (Join-Path $root "tools") -Recurse -Force
-
-# global venv + dependencies
-$vpy = Join-Path $root "venv\Scripts\python.exe"
-if (-not (Test-Path $vpy)) {
-    & $py[0] $py[1] -m venv (Join-Path $root "venv")
-}
-if (-not (Test-Path $vpy)) { Write-Host "venv creation failed"; exit 1 }
-
-& $vpy -c "import twofish" 2>$null
-if ($LASTEXITCODE -ne 0) { & $vpy -m pip --quiet install twofish pycryptodome }
-
-# patch: the twofish package uses 'imp', removed in Python 3.12+
-$tf = Get-ChildItem -Recurse $root -Filter twofish.py |
-      Where-Object { $_.FullName -like "*site-packages*" } | Select-Object -First 1
-if ($tf -and (Select-String -Path $tf.FullName -Pattern "^import imp$" -Quiet)) {
-    $patch = @'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-src = src.replace(
-    "import imp\nimport sys",
-    "import importlib.util, os\nimport sys\n\n"
-    "_spec = importlib.util.find_spec('_twofish')",
-    1,
-)
-src = src.replace(
-    "_twofish = cdll.LoadLibrary(imp.find_module('_twofish')[1])",
-    "_twofish = cdll.LoadLibrary(\n"
-    "    _spec.origin if _spec and _spec.origin\n"
-    "    else os.path.join(os.path.dirname(__file__), '_twofish.so')\n"
-    ")",
-    1,
-)
-p.write_text(src)
-print("twofish patch applied")
-'@
-    $patch | & $vpy - $tf.FullName
+    if ([string]::IsNullOrWhiteSpace($PathValue)) {
+        return $false
+    }
+    $normalizedEntry = $Entry.TrimEnd([char[]]@('\', '/'))
+    foreach ($part in ($PathValue -split ';')) {
+        if ([string]::IsNullOrWhiteSpace($part)) {
+            continue
+        }
+        if ($part.TrimEnd([char[]]@('\', '/')) -ieq $normalizedEntry) {
+            return $true
+        }
+    }
+    return $false
 }
 
-# cmd shims on PATH — primary name `pkt`, `ptg` stays as a legacy alias.
-# The thin hooks call the repository config pktgit.py directly;
-# these shims exist for human use in cmd/PowerShell.
-foreach ($name in @("pkt", "ptg")) {
-$shim = Join-Path $binDir "$name.cmd"
-@"
-@echo off
-set "PKTG_CLI=%~f0"
-set "PKTG_PY=$vpy"
-set "PKTG_SCRIPT=$root\tools\cli.py"
-"$vpy" "$root\tools\cli.py" %*
-"@ | Set-Content -Path $shim -Encoding Ascii
+try {
+    if (-not $BinDir) {
+        if ($env:PKTG_BIN_DIR) {
+            $BinDir = $env:PKTG_BIN_DIR
+        }
+        else {
+            $BinDir = Join-Path $HOME ".local\bin"
+        }
+    }
+    $target = Join-Path $BinDir "pkt.exe"
+
+    $source = $env:PKTG_SOURCE
+    if (-not $source) {
+        foreach ($candidate in @((Join-Path $rootDir "bin\pkt.exe"), (Join-Path $rootDir "pkt.exe"))) {
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                $source = $candidate
+                break
+            }
+        }
+    }
+
+    if (-not $source) {
+        if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
+            throw "No prebuilt pkt.exe found and Go is not installed. Build with 'make build' or install a release archive."
+        }
+        $buildDir = Join-Path ([System.IO.Path]::GetTempPath()) ("pkt-git-build-" + [guid]::NewGuid().ToString("N"))
+        New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
+        $buildTarget = Join-Path $buildDir "pkt.exe"
+        Push-Location $rootDir
+        try {
+            & go build -o $buildTarget ./cmd/pkt
+            if ($LASTEXITCODE -ne 0) {
+                throw "go build failed with exit code $LASTEXITCODE."
+            }
+        }
+        finally {
+            Pop-Location
+        }
+        $source = $buildTarget
+    }
+
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+        throw "pkt-git binary not found: $source"
+    }
+
+    New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
+    $changed = $true
+    if (Test-Path -LiteralPath $target -PathType Leaf) {
+        $sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
+        $targetHash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+        if ($sourceHash -eq $targetHash) {
+            $changed = $false
+        }
+    }
+
+    if ($changed) {
+        $tmpTarget = Join-Path $BinDir (".pkt-" + [guid]::NewGuid().ToString("N") + ".tmp")
+        Copy-Item -LiteralPath $source -Destination $tmpTarget
+        if (Test-Path -LiteralPath $target) {
+            Remove-Item -LiteralPath $target -Force
+        }
+        Move-Item -LiteralPath $tmpTarget -Destination $target
+        $tmpTarget = $null
+    }
+
+    if ($env:PKTG_SKIP_PATH -ne "1") {
+        $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        if (-not (Test-PathEntry $userPath $BinDir)) {
+            $newPath = if ([string]::IsNullOrWhiteSpace($userPath)) {
+                $BinDir
+            }
+            else {
+                $userPath.TrimEnd(';') + ';' + $BinDir
+            }
+            [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+            Write-Host "Added $BinDir to the user PATH. Open a new terminal to use it."
+        }
+        if (-not (Test-PathEntry $env:PATH $BinDir)) {
+            $env:PATH = $env:PATH.TrimEnd(';') + ';' + $BinDir
+        }
+    }
+
+    & $target version
+    if ($LASTEXITCODE -ne 0) {
+        throw "pkt version failed with exit code $LASTEXITCODE."
+    }
+
+    if ($env:PKTG_SKIP_SKILLS -ne "1") {
+        & $target skills
+        if ($LASTEXITCODE -ne 0) {
+            throw "pkt skills failed with exit code $LASTEXITCODE."
+        }
+    }
+
+    $state = if ($changed) { "installed" } else { "unchanged" }
+    Write-Host "pkt-git $state at $target."
+    Write-Host "In any Git repository run:"
+    Write-Host "    pkt init          # wire hooks and configuration"
+    Write-Host "    pkt --help        # full command list"
 }
-
-# add to user PATH once
-$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if (($userPath -split ";") -notcontains $binDir) {
-    [Environment]::SetEnvironmentVariable("Path", "$userPath;$binDir", "User")
-    Write-Host "added $binDir to user PATH (open a new terminal)"
+finally {
+    if ($tmpTarget -and (Test-Path -LiteralPath $tmpTarget)) {
+        Remove-Item -LiteralPath $tmpTarget -Force
+    }
+    if ($buildDir -and (Test-Path -LiteralPath $buildDir)) {
+        Remove-Item -LiteralPath $buildDir -Recurse -Force
+    }
 }
-
-# crypto self-test
-& $vpy -c (@'
-from twofish import Twofish
-t = Twofish(b'\x89' * 16)
-assert t.decrypt(t.encrypt(bytes(16))) == bytes(16)
-'@)
-if ($LASTEXITCODE -eq 0) { Write-Host "crypto core verified" }
-
-# agent skills (OpenCode / Claude Code / Gemini CLI) into their global dirs
-& $vpy (Join-Path $root "tools\cli.py") skills
-
-Write-Host "pkt-git installed globally. In any repository run:"
-Write-Host "    ptg init          # wire hooks and configuration"
-Write-Host "    ptg edit ...      # available in the tool command list"

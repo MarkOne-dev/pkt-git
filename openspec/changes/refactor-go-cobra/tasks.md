@@ -65,7 +65,7 @@
 ## 7. Installers, release, and documentation
 
 - [x] 7.1 Rewrite `scripts/install.sh` to install the compiled binary without Python or a virtualenv, including PATH handling and idempotency; verify with `bash -n` and a temporary install prefix
-- [ ] 7.2 Rewrite `scripts/install.ps1` for the compiled Windows binary with PATH handling and idempotency; verify with PowerShell parsing and the Windows CI job
+- [x] 7.2 Rewrite `scripts/install.ps1` for the compiled Windows binary with PATH handling and idempotency; verify with PowerShell parsing and the Windows CI job
 - [ ] 7.3 Add `make dist` cross-compilation with version, commit, and date linker flags; verify Linux, macOS, and Windows artifacts are produced
 - [ ] 7.4 Update `docs/installation.md` for binary installation and migration from Python; verify the documented install and `pkt init` steps
 - [ ] 7.5 Update the `README.md` badges, quickstart, and CLI reference for Go; verify all internal links and commands
