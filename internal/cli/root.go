@@ -34,6 +34,9 @@ func NewRootCmd() *cobra.Command {
 		newBuildCmd(),
 		newInspectCmd(),
 		newEditCmd(),
+		newSyncCmd(),
+		newResolveCmd(),
+		newVerifyCmd(),
 		newVersionCmd(),
 	)
 
