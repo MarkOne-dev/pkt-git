@@ -39,7 +39,7 @@
 - [x] 4.5 Implement `insertafter` insertion after the first matching line; verify the insertion point and unchanged remainder with `go test ./internal/editor`
 - [x] 4.6 Add post-edit XML validation, atomic write, and automatic derived-file sync; verify invalid edits leave the original bytes and sync failures are reported with `go test ./internal/editor`
 - [x] 4.7 Implement the centralized redaction policy in `internal/security`; verify password, secret, key, and SNMP community cases with `go test ./internal/security`
-- [ ] 4.8 Update `docs/cli-reference.md` and `docs/troubleshooting.md` for the new editing behavior; verify the documented examples against a temporary snapshot
+- [x] 4.8 Update `docs/cli-reference.md` and `docs/troubleshooting.md` for the new editing behavior; verify the documented examples against a temporary snapshot
 
 ## 5. Git integration
 
