@@ -70,14 +70,22 @@ try {
         $buildDir = Join-Path ([System.IO.Path]::GetTempPath()) ("pkt-git-build-" + [guid]::NewGuid().ToString("N"))
         New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
         $buildTarget = Join-Path $buildDir "pkt.exe"
+        $previousCgo = $env:CGO_ENABLED
         Push-Location $rootDir
         try {
+            $env:CGO_ENABLED = "0"
             & go build -o $buildTarget ./cmd/pkt
             if ($LASTEXITCODE -ne 0) {
                 throw "go build failed with exit code $LASTEXITCODE."
             }
         }
         finally {
+            if ($null -eq $previousCgo) {
+                Remove-Item Env:CGO_ENABLED -ErrorAction SilentlyContinue
+            }
+            else {
+                $env:CGO_ENABLED = $previousCgo
+            }
             Pop-Location
         }
         $source = $buildTarget

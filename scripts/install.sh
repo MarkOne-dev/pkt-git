@@ -35,7 +35,7 @@ if [[ -z "${SOURCE}" ]]; then
             exit 1
         fi
         TMP_BUILD="$(mktemp -d "${TMPDIR:-/tmp}/pkt-git-build.XXXXXX")"
-        (cd "${ROOT_DIR}" && go build -o "${TMP_BUILD}/pkt" ./cmd/pkt)
+        (cd "${ROOT_DIR}" && CGO_ENABLED=0 go build -o "${TMP_BUILD}/pkt" ./cmd/pkt)
         SOURCE="${TMP_BUILD}/pkt"
     fi
 fi
