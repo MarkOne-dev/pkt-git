@@ -25,11 +25,14 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 	root.CompletionOptions.DisableDefaultCmd = true
+	root.Version = versionString()
+	root.SetVersionTemplate("{{.Version}}\n")
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
 		return usagef("%v", err)
 	})
 
 	root.AddCommand(
+		newInitCmd(),
 		newExportCmd(),
 		newBuildCmd(),
 		newInspectCmd(),
@@ -38,6 +41,9 @@ func NewRootCmd() *cobra.Command {
 		newResolveCmd(),
 		newVerifyCmd(),
 		newVersionCmd(),
+		newPreCommitCmd(),
+		newPostMergeCmd(),
+		newPostCheckoutCmd(),
 	)
 
 	return root
