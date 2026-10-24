@@ -32,7 +32,7 @@
 
 ## 4. XML editing and redaction
 
-- [ ] 4.1 Implement the byte-offset XML index in `internal/xmledit` using `encoding/xml` offsets; verify device spans, line spans, self-closing tags, and CRLF input with `go test ./internal/xmledit`
+- [x] 4.1 Implement the byte-offset XML index in `internal/xmledit` using `encoding/xml` offsets; verify device spans, line spans, self-closing tags, and CRLF input with `go test ./internal/xmledit`
 - [ ] 4.2 Implement read-only `show` with credential redaction; verify secret lines are masked and the file is unchanged with `go test ./internal/editor`
 - [ ] 4.3 Implement `setiface` block replacement; verify the block is replaced and surrounding bytes are preserved with `go test ./internal/editor`
 - [ ] 4.4 Implement `chgline` full-line matching with zero-match and ambiguous-match failures; verify substring rejection and multiple-match rejection with `go test ./internal/editor`
