@@ -60,7 +60,7 @@
 - [x] 6.5 Implement `init`, `version`, and hidden `pre-commit`/`post-merge`/`post-checkout` commands; verify help visibility and version output with `go test ./internal/cli`
 - [x] 6.6 Implement `skills` with an embedded skill asset and install/remove behavior for OpenCode, Claude Code, and Gemini CLI; verify with `go test ./internal/skills`
 - [x] 6.7 Add CLI integration tests for `pkt --help`, missing arguments, unknown commands, and version; verify with `go test ./internal/cli -run Integration`
-- [ ] 6.8 Update `README.md` and `docs/cli-reference.md` for the Go command surface; verify the documented commands with `go run ./cmd/pkt --help`
+- [x] 6.8 Update `README.md` and `docs/cli-reference.md` for the Go command surface; verify the documented commands with `go run ./cmd/pkt --help`
 
 ## 7. Installers, release, and documentation
 
