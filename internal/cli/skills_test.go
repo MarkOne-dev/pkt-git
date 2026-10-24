@@ -10,6 +10,7 @@ import (
 func TestSkillsCommand(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 
 	code, stdout, stderr := runCLI("skills")
 	if code != 0 {
@@ -34,6 +35,7 @@ func TestSkillsCommand(t *testing.T) {
 func TestSkillsRemoveCommand(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	if code, _, stderr := runCLI("skills"); code != 0 {
 		t.Fatalf("install exit code = %d, stderr=%q", code, stderr)
 	}

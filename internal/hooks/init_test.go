@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -13,12 +14,14 @@ import (
 
 func TestInitCreatesHooksAndConfig(t *testing.T) {
 	dir := initRepo(t)
-	result, err := Init(dir, "/opt/pkt/bin/pkt")
+	executable := filepath.Join(dir, "bin", "pkt")
+	result, err := Init(dir, executable)
 	if err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	if !filepath.IsAbs(result.Executable) || result.Executable != "/opt/pkt/bin/pkt" {
-		t.Fatalf("Executable = %q", result.Executable)
+	wantExecutable := filepath.ToSlash(executable)
+	if !filepath.IsAbs(result.Executable) || result.Executable != wantExecutable {
+		t.Fatalf("Executable = %q, want %q", result.Executable, wantExecutable)
 	}
 
 	for _, name := range hookNames {
@@ -27,7 +30,7 @@ func TestInitCreatesHooksAndConfig(t *testing.T) {
 		if err != nil {
 			t.Fatalf("stat %s: %v", path, err)
 		}
-		if info.Mode().Perm()&0o111 == 0 {
+		if runtime.GOOS != "windows" && info.Mode().Perm()&0o111 == 0 {
 			t.Fatalf("%s is not executable: %v", path, info.Mode())
 		}
 		body := readFile(t, path)
@@ -40,8 +43,8 @@ func TestInitCreatesHooksAndConfig(t *testing.T) {
 	if got, err := repo.ConfigGet(HooksPathKey); err != nil || got != HookDir {
 		t.Fatalf("%s = %q, %v; want %q", HooksPathKey, got, err, HookDir)
 	}
-	if got, err := repo.ConfigGet(BinConfigKey); err != nil || got != "/opt/pkt/bin/pkt" {
-		t.Fatalf("%s = %q, %v; want /opt/pkt/bin/pkt", BinConfigKey, got, err)
+	if got, err := repo.ConfigGet(BinConfigKey); err != nil || got != wantExecutable {
+		t.Fatalf("%s = %q, %v; want %q", BinConfigKey, got, err, wantExecutable)
 	}
 
 	attrs := readFile(t, filepath.Join(dir, ".gitattributes"))

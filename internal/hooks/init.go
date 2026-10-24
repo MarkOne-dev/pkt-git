@@ -68,6 +68,9 @@ func Init(dir, executable string) (InitResult, error) {
 	if err != nil {
 		return InitResult{}, fmt.Errorf("hooks: resolve executable path: %w", err)
 	}
+	// Hooks run under Git's POSIX shell, including on Windows; forward slashes
+	// are accepted by both POSIX and Windows path handling.
+	executable = filepath.ToSlash(executable)
 
 	hookDir := filepath.Join(root, HookDir)
 	if err := os.MkdirAll(hookDir, 0o755); err != nil {

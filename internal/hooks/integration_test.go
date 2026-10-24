@@ -153,7 +153,7 @@ func installHooks(t *testing.T, dir string) {
 	}
 	wrapperDir := t.TempDir()
 	wrapper := filepath.Join(wrapperDir, "pkt-wrapper")
-	body := "#!/bin/sh\nPKTG_TEST_HOOK=1 exec " + shellQuote(testBinary) + " \"$@\"\n"
+	body := "#!/bin/sh\nPKTG_TEST_HOOK=1 exec " + shellQuote(filepath.ToSlash(testBinary)) + " \"$@\"\n"
 	if err := os.WriteFile(wrapper, []byte(body), 0o755); err != nil {
 		t.Fatal(err)
 	}
