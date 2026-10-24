@@ -27,7 +27,7 @@
 - [x] 3.5 Implement `Build` with XML validation and atomic output; verify invalid XML leaves an existing binary unchanged with `go test ./internal/snapshot`
 - [x] 3.6 Implement `Sync` with missing-directory creation, stale config pruning, and no XML modification; verify with `go test ./internal/snapshot`
 - [x] 3.7 Implement read-only `Inspect`; verify it writes no files with `go test ./internal/snapshot`
-- [ ] 3.8 Add golden tests for the specimen's XML hash, config set, and metadata hash; verify with `go test ./internal/snapshot -run Golden`
+- [x] 3.8 Add golden tests for the specimen's XML hash, config set, and metadata hash; verify with `go test ./internal/snapshot -run Golden`
 - [ ] 3.9 Update `docs/snapshot-format.md` and `docs/architecture.md` for the Go layout and snapshot invariants; verify the documented export/sync commands
 
 ## 4. XML editing and redaction
