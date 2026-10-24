@@ -41,6 +41,7 @@ func NewRootCmd() *cobra.Command {
 		newResolveCmd(),
 		newVerifyCmd(),
 		newVersionCmd(),
+		newSkillsCmd(),
 		newPreCommitCmd(),
 		newPostMergeCmd(),
 		newPostCheckoutCmd(),
