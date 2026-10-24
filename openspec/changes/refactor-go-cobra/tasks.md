@@ -44,7 +44,7 @@
 ## 5. Git integration
 
 - [x] 5.1 Implement the `internal/gitx` wrapper with NUL-separated path parsing, config get/set, diff, checkout, and add; verify paths with spaces and revisions with `go test ./internal/gitx`
-- [ ] 5.2 Implement `pkt init` hook generation, `pktgit.bin` configuration, `.gitattributes` merging, idempotency, and non-repository rejection; verify with `go test ./internal/hooks`
+- [x] 5.2 Implement `pkt init` hook generation, `pktgit.bin` configuration, `.gitattributes` merging, idempotency, and non-repository rejection; verify with `go test ./internal/hooks`
 - [ ] 5.3 Implement `pre-commit` staged-binary export, automatic staging, failure abort, and text-only warning; verify with `go test ./internal/hooks`
 - [ ] 5.4 Implement `post-merge` and `post-checkout` changed-snapshot detection, squash-flag handling, zero-old-revision handling, and atomic rebuilds; verify with `go test ./internal/hooks`
 - [ ] 5.5 Implement `resolve` report mode, `--ours`/`--theirs`, marker verification, binary-only conflicts, and scoped staging; verify with `go test ./internal/hooks`
