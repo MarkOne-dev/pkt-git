@@ -1,87 +1,71 @@
 #!/usr/bin/env bash
-# install.sh — install pkt-git globally on this machine (Linux / macOS / Git Bash).
-# Repositories are then wired with a single `ptg init` — no templates to copy.
+# install.sh — install the pkt-git Go binary on this machine.
+# Repositories are then wired with a single `pkt init`.
 set -euo pipefail
-cd "$(dirname "$0")"
 
-ROOT="${HOME}/.local/share/pkt-git"
-BIN_DIR="${HOME}/.local/bin"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+BIN_DIR="${PKTG_BIN_DIR:-${HOME}/.local/bin}"
+TARGET="${BIN_DIR}/pkt"
 
-# interpreter detection: python3 (POSIX) or python / py -3 (Windows)
-PY3=""
-for cand in "python3" "python" "py -3"; do
-    if $cand -c 'import sys; print(1 if sys.version_info >= (3,12) else 0)' 2>/dev/null | grep -q 1; then
-        PY3="$cand"; break
+TMP_BUILD=""
+TMP_TARGET=""
+cleanup() {
+    [[ -n "${TMP_BUILD}" ]] && rm -rf "${TMP_BUILD}"
+    [[ -n "${TMP_TARGET}" ]] && rm -f "${TMP_TARGET}"
+}
+trap cleanup EXIT
+
+find_prebuilt() {
+    for candidate in "${ROOT_DIR}/bin/pkt" "${ROOT_DIR}/pkt"; do
+        if [[ -x "${candidate}" ]]; then
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+SOURCE="${PKTG_SOURCE:-}"
+if [[ -z "${SOURCE}" ]]; then
+    if ! SOURCE="$(find_prebuilt)"; then
+        if ! command -v go >/dev/null 2>&1; then
+            echo "pkt-git: no prebuilt binary found and Go is not installed." >&2
+            echo "Build with 'make build' or install a release archive." >&2
+            exit 1
+        fi
+        TMP_BUILD="$(mktemp -d "${TMPDIR:-/tmp}/pkt-git-build.XXXXXX")"
+        (cd "${ROOT_DIR}" && go build -o "${TMP_BUILD}/pkt" ./cmd/pkt)
+        SOURCE="${TMP_BUILD}/pkt"
     fi
-done
-[[ -n "$PY3" ]] || { echo "Python 3.12+ required (python3, python or py -3)"; exit 1; }
-
-mkdir -p "$ROOT/tools" "$BIN_DIR"
-
-# tool source -> global location
-cp -a tools/. "$ROOT/tools/"
-
-# global venv + dependencies
-[[ -d "$ROOT/venv" ]] || $PY3 -m venv "$ROOT/venv"
-VPY="$ROOT/venv/bin/python"
-[[ -f "$VPY" ]] || VPY="$ROOT/venv/Scripts/python.exe"
-
-"$VPY" -c "import twofish" 2>/dev/null || "$VPY" -m pip --quiet install twofish pycryptodome
-
-# patch: the twofish package uses 'imp', removed in Python 3.12+
-TF=$(find "$ROOT/venv" -name twofish.py -path '*/site-packages/*' | head -1)
-if [[ -n "$TF" ]] && grep -q "^import imp$" "$TF"; then
-    "$VPY" - "$TF" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-src = src.replace(
-    "import imp\nimport sys",
-    "import importlib.util, os\nimport sys\n\n"
-    "_spec = importlib.util.find_spec('_twofish')",
-    1,
-)
-src = src.replace(
-    "_twofish = cdll.LoadLibrary(imp.find_module('_twofish')[1])",
-    "_twofish = cdll.LoadLibrary(\n"
-    "    _spec.origin if _spec and _spec.origin\n"
-    "    else os.path.join(os.path.dirname(__file__), '_twofish.so')\n"
-    ")",
-    1,
-)
-p.write_text(src)
-PYEOF
-    echo "twofish patch applied"
 fi
 
-# CLI wrappers on PATH (bash) — hardcode the resolved locations.
-# Primary name is `pkt`; `ptg` stays as a legacy alias.
-for name in pkt ptg; do
-cat > "$BIN_DIR/$name" <<EOF
-#!/usr/bin/env bash
-export PKTG_CLI="$BIN_DIR/$name"
-export PKTG_PY="$VPY"
-export PKTG_SCRIPT="$ROOT/tools/cli.py"
-exec "$VPY" "$ROOT/tools/cli.py" "\$@"
-EOF
-chmod +x "$BIN_DIR/$name"
-done
+if [[ ! -f "${SOURCE}" ]]; then
+    echo "pkt-git: binary not found: ${SOURCE}" >&2
+    exit 1
+fi
 
-case ":$PATH:" in
-    *":$BIN_DIR:"*) ;;
-    *) echo "note: $BIN_DIR is not on PATH — add 'export PATH=\"\$PATH:$BIN_DIR\"' to your shell profile" ;;
+mkdir -p "${BIN_DIR}"
+TMP_TARGET="$(mktemp "${BIN_DIR}/.pkt.XXXXXX")"
+install -m 0755 "${SOURCE}" "${TMP_TARGET}"
+mv -f "${TMP_TARGET}" "${TARGET}"
+TMP_TARGET=""
+
+"${TARGET}" version
+
+if [[ "${PKTG_SKIP_SKILLS:-0}" != "1" ]]; then
+    "${TARGET}" skills
+fi
+
+case ":${PATH}:" in
+    *":${BIN_DIR}:"*) ;;
+    *)
+        echo "note: ${BIN_DIR} is not on PATH." >&2
+        echo "      Add 'export PATH=\"\$PATH:${BIN_DIR}\"' to your shell profile." >&2
+        ;;
 esac
 
-# crypto self-test
-"$VPY" -c "
-from twofish import Twofish
-t = Twofish(b'\x89' * 16)
-assert t.decrypt(t.encrypt(bytes(16))) == bytes(16)
-" && echo "crypto core verified"
-
-# agent skills (OpenCode / Claude Code / Gemini CLI) into their global dirs
-"$VPY" "$ROOT/tools/cli.py" skills
-
-echo "pkt-git installed globally. In any repository run:"
+echo "pkt-git installed at ${TARGET}."
+echo "In any Git repository run:"
 echo "    pkt init          # wire hooks and configuration"
 echo "    pkt --help        # full command list"
