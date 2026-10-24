@@ -16,19 +16,21 @@ snapshot/Caso1_Grupo09-2/
     └── topology.json          # Device and link catalog for quick inspection
 ```
 
+The Go implementation owns this contract in `internal/snapshot`, using
+`internal/codec` for the container and `internal/topology` for the XML model.
+
 ## base.snapshot.xml
 
 The full decrypted XML document, byte-for-byte what Packet Tracer holds in the
 file. Key structural facts (learned from the PT 9.0.1.0858 schema):
 
 - Root element: `<PACKETTRACER5>`.
-- The network lives under `.//NETWORK` with two central sections:
+- The network lives under `NETWORK` with two central sections:
   - `DEVICES/DEVICE` — one element per device.
   - `LINKS/LINK` — one element per cable.
 - Inside a device, everything hangs off the `<ENGINE>` element:
   - `<TYPE model="...">` — device type (router/switch/…) and model.
-  - `<NAME translate="true">Sw1_LIMA</NAME>` — device name (this exact marker
-    is what `edit_config.py` uses to scope edits to a device).
+  - `<NAME translate="true">Sw1_LIMA</NAME>` — device name.
   - `<SAVE_REF_ID>` — the ID that cables use to reference the device.
   - `<RUNNINGCONFIG>` vs `<STARTUPCONFIG>` — **two distinct blocks**, each
     holding IOS CLI lines as repeated `<LINE>` elements. A common early mistake
@@ -37,8 +39,10 @@ file. Key structural facts (learned from the PT 9.0.1.0858 schema):
 - Cables reference devices via `save-ref-id:<N>` inside `<FROM>` / `<TO>`, and
   carry the port names in `<PORT>` elements.
 
-`base.snapshot.xml` is always valid XML: every write performed by
-`edit_config.py` validates the document (`ET.fromstring`) before saving.
+`pkt export` writes the decoded XML unchanged. Future snapshot edits in
+`internal/xmledit` and `internal/editor` operate on byte spans and validate the
+whole document before replacing the file, so an invalid edit leaves the
+original bytes intact.
 
 ## configs/<Device>.cfg
 
@@ -55,19 +59,23 @@ like an ordinary code diff:
   spanning-tree portfast
 ```
 
-Rules of the extract (`ptg.py:cmd_export`):
+Rules of the extract (`internal/snapshot` and `internal/topology`):
 
 - Only devices with a non-empty `RUNNINGCONFIG` get a `.cfg` (end devices like
   PCs have none).
-- Device names are sanitized to safe file names (`sanitize()`: anything outside
-  `[A-Za-z0-9_.-]` becomes `_`).
-- Line order and content are preserved exactly — the regression invariant is
-  that `configs/*.cfg` and `metadata/topology.json` stay **byte-identical**
-  across refactors of the parser.
+- Device names are sanitized to safe file names: anything outside
+  `[A-Za-z0-9_.-]` becomes `_`, leading/trailing `._` is trimmed, and an empty
+  result becomes `device`.
+- Two devices that sanitize to the same file name are an error naming both
+  devices; the export never overwrites one config with another.
+- Line order and content are preserved exactly. The regression invariant is
+  that `configs/*.cfg` and `metadata/topology.json` stay byte-identical across
+  refactors of the parser; `internal/snapshot/golden_test.go` pins their hashes
+  for the bundled specimen.
 
 ## metadata/topology.json
 
-A compact catalog generated on every export:
+A compact catalog generated on every export and refresh:
 
 ```json
 {
@@ -82,6 +90,10 @@ A compact catalog generated on every export:
 }
 ```
 
+The JSON is emitted from typed structs, not maps, so field order and indentation
+are deterministic. `pkt sync` preserves an existing `source_file` value and
+otherwise derives it from the project directory.
+
 Cable endpoints whose device reference cannot be resolved keep a truncated
 fallback name (the last 8 characters of the ref id) rather than failing the
 export.
@@ -90,13 +102,14 @@ export.
 
 From `.gitattributes` / `.gitignore`:
 
-- `*.pkt` is marked **binary** — Git will not attempt text diffs or merges on
-  the binary artifact.
+- `*.pkt` and `*.pka` are marked **binary** — Git will not attempt text diffs or
+  merges on the binary artifact.
 - Snapshot files (`*.xml`, `*.cfg`, `*.json`) are normal text — line diffs and
   three-way merges are enabled (this is the property that makes PR reviews and
   conflict resolution possible).
-- `.venv/`, `out/`, and Scratch/exports are gitignored; only sources, hooks,
-  tools, topology binaries, and snapshots are tracked.
+- Go build output (`bin/`, `dist/`), Go workspace files, and local scratch
+  output (`out/`) are gitignored. Sources, tests, scripts, docs, and snapshots
+  are tracked.
 
 ## Synchronization Invariants
 
@@ -106,5 +119,30 @@ From `.gitattributes` / `.gitignore`:
    or merge), with an explicit warning that the binary is stale.
 3. After any merge/pull/checkout that changes a snapshot, the post-merge /
    post-checkout hooks rebuild `topologia/<Project>.pkt` locally.
-4. Only the team member resolving a textual conflict needs to run
-   `pkt build` manually — see `workflow.md`.
+4. `pkt sync <snapshot-dir|snapshot.xml>` regenerates `configs/*.cfg` and
+   `metadata/topology.json`, creates missing derived directories, and removes
+   stale `configs/*.cfg` files. It never writes `base.snapshot.xml`.
+5. `pkt build <snapshot.xml> <output.pkt>` validates the XML, encodes it, and
+   writes the output atomically. Invalid XML leaves an existing binary
+   unchanged.
+6. `pkt inspect <project.pkt>` is read-only: it decodes and summarizes the
+   topology without creating or modifying any file.
+
+## Verification
+
+The snapshot contract is exercised against the bundled specimen:
+
+```bash
+go test ./internal/snapshot -run 'Golden|Export|Sync|Build|Inspect'
+```
+
+The package-level equivalents of the user commands are:
+
+```bash
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt snapshot/Caso1_Grupo09-2
+pkt sync snapshot/Caso1_Grupo09-2
+pkt build snapshot/Caso1_Grupo09-2/base.snapshot.xml topologia/Caso1_Grupo09-2.pkt
+```
+
+The CLI wiring for these commands is completed in the CLI phase; the snapshot
+tests above verify the same operations end to end at the package boundary.
