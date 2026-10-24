@@ -12,7 +12,7 @@
 ## 2. Crypto and codec
 
 - [x] 2.1 Implement CMAC/OMAC1 in `internal/crypto/cmac` and verify NIST SP 800-38B known-answer tests with `go test ./internal/crypto/cmac`
-- [ ] 2.2 Implement EAX encryption, decryption, and tag verification in `internal/crypto/eax`; verify round-trip and tamper tests with `go test ./internal/crypto/eax`
+- [x] 2.2 Implement EAX encryption, decryption, and tag verification in `internal/crypto/eax`; verify round-trip and tamper tests with `go test ./internal/crypto/eax`
 - [ ] 2.3 Implement the qCompress framing and both positional XOR layers, including the reversed outer index; verify table-driven tests with `go test ./internal/codec`
 - [ ] 2.4 Implement `Decode`, `Encode`, and `Verify` in `internal/codec` using `golang.org/x/crypto/twofish`; verify against `testdata/specimens/Caso1_Grupo09-2.pkt` with `go test ./internal/codec`
 - [ ] 2.5 Add malformed, truncated, tag-mismatch, and length-mismatch tests; verify each fails without producing usable output using `go test ./internal/codec`
