@@ -7,7 +7,7 @@
 - [x] 1.3 Add `internal/config` build metadata and repository configuration keys, then verify `go run ./cmd/pkt version` prints the injected version
 - [x] 1.4 Add `internal/fsx` atomic same-directory write helper with tests for overwrite, permissions, and failure cleanup; verify with `go test ./internal/fsx`
 - [x] 1.5 Add `Makefile` targets for `build`, `test`, `fmt`, `vet`, `lint`, `dist`, and `clean`; verify `make test` and `make build` succeed
-- [ ] 1.6 Update `.gitignore` for Go build artifacts and `.gitattributes` for `.pkt`, `.pka`, and snapshot text rules; verify with `git check-attr binary text -- testdata/specimens/Caso1_Grupo09-2.pkt snapshot/demo/base.snapshot.xml`
+- [x] 1.6 Update `.gitignore` for Go build artifacts and `.gitattributes` for `.pkt`, `.pka`, and snapshot text rules; verify with `git check-attr binary text -- testdata/specimens/Caso1_Grupo09-2.pkt snapshot/demo/base.snapshot.xml`
 
 ## 2. Crypto and codec
 
