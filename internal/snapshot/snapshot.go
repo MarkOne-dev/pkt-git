@@ -88,7 +88,10 @@ func prepareExport(sourceFile string, raw []byte) (exportFiles, error) {
 	if err != nil {
 		return exportFiles{}, err
 	}
+	return prepareSnapshot(sourceFile, xmlData)
+}
 
+func prepareSnapshot(sourceFile string, xmlData []byte) (exportFiles, error) {
 	doc, err := topology.Parse(xmlData)
 	if err != nil {
 		return exportFiles{}, err
