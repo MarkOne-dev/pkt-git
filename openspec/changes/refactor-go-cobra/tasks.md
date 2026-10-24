@@ -3,7 +3,7 @@
 ## 1. Foundation and build tooling
 
 - [x] 1.1 Confirm the Go module `github.com/MarkOne-dev/pkt-git`, Cobra root, and `cmd/pkt` scaffold build with `go build ./...`
-- [ ] 1.2 Add and pin `golang.org/x/crypto` for Twofish, run `go mod tidy`, and verify `go build ./...` and `go test ./...` succeed
+- [x] 1.2 Add and pin `golang.org/x/crypto` for Twofish, run `go mod tidy`, and verify `go build ./...` and `go test ./...` succeed
 - [ ] 1.3 Add `internal/config` build metadata and repository configuration keys, then verify `go run ./cmd/pkt version` prints the injected version
 - [ ] 1.4 Add `internal/fsx` atomic same-directory write helper with tests for overwrite, permissions, and failure cleanup; verify with `go test ./internal/fsx`
 - [ ] 1.5 Add `Makefile` targets for `build`, `test`, `fmt`, `vet`, `lint`, `dist`, and `clean`; verify `make test` and `make build` succeed
