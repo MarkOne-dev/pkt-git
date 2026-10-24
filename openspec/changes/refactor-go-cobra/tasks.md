@@ -20,7 +20,7 @@
 
 ## 3. Topology and snapshot
 
-- [ ] 3.1 Implement ordered device, link, and endpoint parsing in `internal/topology`; verify devices, links, and unresolved references with `go test ./internal/topology`
+- [x] 3.1 Implement ordered device, link, and endpoint parsing in `internal/topology`; verify devices, links, and unresolved references with `go test ./internal/topology`
 - [ ] 3.2 Implement device-name sanitization and collision detection; verify safe names and duplicate-name failures with `go test ./internal/topology`
 - [ ] 3.3 Implement deterministic `metadata/topology.json` generation from typed structs; verify field order, totals, and fallback endpoints with `go test ./internal/topology`
 - [ ] 3.4 Implement `Export` with decode/parse-before-write and atomic file writes; verify a first export and a failed refresh that preserves the previous snapshot with `go test ./internal/snapshot`
