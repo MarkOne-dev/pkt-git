@@ -25,7 +25,7 @@ pkt version
 
 # Hidden hook entry points, invoked by generated hooks:
 pkt pre-commit
-pkt post-merge [squash-flag|old new]
+pkt post-merge [squash-flag]
 pkt post-checkout <old> <new> <branch-flag>
 ```
 
@@ -285,7 +285,8 @@ pkt resolve --theirs   # accept the incoming branch
 ```
 
 Report mode lists conflicted text and binary files, including the first conflict
-marker line for text files, without modifying or staging anything.
+marker line for text files, without modifying or staging anything. It exits
+non-zero after printing the report; scripts must choose a policy.
 
 With a policy, `pkt resolve` applies the chosen side to conflicted text files,
 verifies that no conflict markers remain, refreshes derived snapshot files,
@@ -324,7 +325,7 @@ Generated hooks call these commands; they are hidden from normal help:
 
 ```bash
 pkt pre-commit
-pkt post-merge [squash-flag|old new]
+pkt post-merge [squash-flag]
 pkt post-checkout <old> <new> <branch-flag>
 ```
 

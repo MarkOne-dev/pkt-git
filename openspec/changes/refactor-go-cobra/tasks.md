@@ -49,7 +49,7 @@
 - [x] 5.4 Implement `post-merge` and `post-checkout` changed-snapshot detection, squash-flag handling, zero-old-revision handling, and atomic rebuilds; verify with `go test ./internal/hooks`
 - [x] 5.5 Implement `resolve` report mode, `--ours`/`--theirs`, marker verification, binary-only conflicts, and scoped staging; verify with `go test ./internal/hooks`
 - [x] 5.6 Add temporary-repository integration tests covering init, commit, merge, checkout, squash, and conflict resolution; verify with `go test ./internal/hooks -run Integration`
-- [ ] 5.7 Update `docs/workflow.md`, `docs/installation.md`, and `docs/cli-reference.md` for the Go hooks and `pkt init`; verify the documented migration and conflict commands
+- [x] 5.7 Update `docs/workflow.md`, `docs/installation.md`, and `docs/cli-reference.md` for the Go hooks and `pkt init`; verify the documented migration and conflict commands
 
 ## 6. CLI
 
