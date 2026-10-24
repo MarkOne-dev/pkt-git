@@ -33,6 +33,7 @@ func NewRootCmd() *cobra.Command {
 		newExportCmd(),
 		newBuildCmd(),
 		newInspectCmd(),
+		newEditCmd(),
 		newVersionCmd(),
 	)
 

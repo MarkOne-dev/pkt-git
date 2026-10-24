@@ -17,3 +17,12 @@ func rootArgs(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+func minArgs(n int) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) < n {
+			return usagef("%s: expected at least %d argument(s), got %d", cmd.CommandPath(), n, len(args))
+		}
+		return nil
+	}
+}
