@@ -101,7 +101,7 @@ func TestPostMergeRebuildsChangedSnapshot(t *testing.T) {
 	runGit(t, dir, "merge", "--no-ff", "-m", "merge side", "side")
 
 	var out bytes.Buffer
-	result, err := PostMerge(dir, []string{"1"}, &out)
+	result, err := PostMerge(dir, []string{"0"}, &out)
 	if err != nil {
 		t.Fatalf("PostMerge: %v", err)
 	}

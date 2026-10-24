@@ -25,8 +25,9 @@ type RebuildResult struct {
 
 // PostMerge rebuilds binaries for snapshots changed by a merge or pull. Git
 // passes the squash flag as the only argument; it is never treated as a
-// revision. The changed range is ORIG_HEAD..HEAD, falling back to HEAD^..HEAD
-// and then to the root commit.
+// revision. A squash merge has no new HEAD commit, so its changes are read
+// from the index; a normal merge uses ORIG_HEAD..HEAD, falling back to
+// HEAD^..HEAD and then to the root commit.
 func PostMerge(dir string, args []string, out io.Writer) (RebuildResult, error) {
 	if out == nil {
 		out = io.Discard
@@ -34,6 +35,7 @@ func PostMerge(dir string, args []string, out io.Writer) (RebuildResult, error) 
 	if len(args) > 1 {
 		return RebuildResult{}, fmt.Errorf("hooks: post-merge expects at most one squash flag")
 	}
+	squash := len(args) == 1 && args[0] == "1"
 	if len(args) == 1 && args[0] != "0" && args[0] != "1" {
 		return RebuildResult{}, fmt.Errorf("hooks: post-merge expected squash flag 0 or 1, got %q", args[0])
 	}
@@ -44,7 +46,12 @@ func PostMerge(dir string, args []string, out io.Writer) (RebuildResult, error) 
 		return RebuildResult{}, fmt.Errorf("post-merge: %w", ErrNotRepository)
 	}
 
-	changed, err := mergeChangedSnapshots(repo)
+	var changed []string
+	if squash {
+		changed, err = repo.CachedChangedFiles("ACMR", "snapshot/*/base.snapshot.xml")
+	} else {
+		changed, err = mergeChangedSnapshots(repo)
+	}
 	if err != nil {
 		return RebuildResult{}, fmt.Errorf("post-merge: list changed snapshots: %w", err)
 	}
