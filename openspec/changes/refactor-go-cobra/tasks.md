@@ -77,7 +77,7 @@
 - [x] 8.3 Run an end-to-end specimen flow: `export`, `sync`, `build`, `verify`, and `inspect`; verify round-trip equality and unchanged source snapshots
 - [x] 8.4 Run an end-to-end hook flow in a temporary repository: `init`, commit a `.pkt`, merge, checkout, and resolve a conflict; verify snapshots, staged paths, and rebuilt binaries
 - [x] 8.5 Remove remaining Python, virtualenv, and old tool references outside historical documentation; verify with `rg -n 'python|\\.venv|ptg\\.py|edit_config|spike_roundtrip' --glob '!openspec/**'`
-- [ ] 8.6 Review `git status`, confirm no secrets or generated artifacts are staged, and verify the final diff against the specifications
+- [x] 8.6 Review `git status`, confirm no secrets or generated artifacts are staged, and verify the final diff against the specifications
 
 ## Workflow follow-up
 
