@@ -74,7 +74,7 @@
 
 - [x] 8.1 Add a GitHub Actions matrix for Ubuntu, macOS, and Windows running formatting, vet, tests, and build; verify the workflow syntax and a local equivalent
 - [x] 8.2 Run `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./...`; verify all commands are clean
-- [ ] 8.3 Run an end-to-end specimen flow: `export`, `sync`, `build`, `verify`, and `inspect`; verify round-trip equality and unchanged source snapshots
+- [x] 8.3 Run an end-to-end specimen flow: `export`, `sync`, `build`, `verify`, and `inspect`; verify round-trip equality and unchanged source snapshots
 - [ ] 8.4 Run an end-to-end hook flow in a temporary repository: `init`, commit a `.pkt`, merge, checkout, and resolve a conflict; verify snapshots, staged paths, and rebuilt binaries
 - [ ] 8.5 Remove remaining Python, virtualenv, and old tool references outside historical documentation; verify with `rg -n 'python|\\.venv|ptg\\.py|edit_config|spike_roundtrip' --glob '!openspec/**'`
 - [ ] 8.6 Review `git status`, confirm no secrets or generated artifacts are staged, and verify the final diff against the specifications
