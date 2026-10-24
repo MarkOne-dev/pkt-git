@@ -181,6 +181,24 @@ func (r *Repo) Checkout(policy string, paths []string) error {
 	return err
 }
 
+// TrackedFiles returns the subset of paths that exist in the index.
+func (r *Repo) TrackedFiles(paths []string) (map[string]bool, error) {
+	if len(paths) == 0 {
+		return map[string]bool{}, nil
+	}
+	args := []string{"ls-files", "-z", "--"}
+	args = append(args, paths...)
+	out, err := r.RunBytes(args...)
+	if err != nil {
+		return nil, err
+	}
+	tracked := make(map[string]bool)
+	for _, path := range splitNUL(out) {
+		tracked[path] = true
+	}
+	return tracked, nil
+}
+
 // Add stages the supplied paths, including deletions and renames under a
 // directory, without touching unrelated repository paths.
 func (r *Repo) Add(paths []string) error {

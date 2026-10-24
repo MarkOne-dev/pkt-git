@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -17,7 +18,10 @@ type SyncResult struct {
 	ConfigCount int
 	DeviceCount int
 	LinkCount   int
-	Removed     []string
+	// Files lists regenerated paths relative to the project directory, using
+	// forward slashes. Removed lists stale config files that were deleted.
+	Files   []string
+	Removed []string
 }
 
 // Sync regenerates configs/*.cfg and metadata/topology.json from a snapshot
@@ -36,7 +40,7 @@ func Sync(snapshotPath string) (SyncResult, error) {
 	projectDir := filepath.Dir(xmlPath)
 	files, err := prepareSnapshot(sourceFileFor(projectDir), xmlData)
 	if err != nil {
-		return SyncResult{}, err
+		return SyncResult{}, fmt.Errorf("snapshot: sync %s: %w", xmlPath, err)
 	}
 
 	configDir := filepath.Join(projectDir, "configs")
@@ -67,11 +71,18 @@ func Sync(snapshotPath string) (SyncResult, error) {
 		return SyncResult{}, err
 	}
 
+	generated := make([]string, 0, 1+len(names))
+	for _, name := range names {
+		generated = append(generated, path.Join("configs", name))
+	}
+	generated = append(generated, path.Join("metadata", "topology.json"))
+
 	return SyncResult{
 		XMLSize:     len(xmlData),
 		ConfigCount: len(files.configs),
 		DeviceCount: files.devices,
 		LinkCount:   files.links,
+		Files:       generated,
 		Removed:     removed,
 	}, nil
 }
@@ -111,6 +122,11 @@ func pruneConfigs(configDir string, expected map[string][]byte) ([]string, error
 		return nil, fmt.Errorf("snapshot: read %s: %w", configDir, err)
 	}
 
+	expectedNames := make(map[string]string, len(expected))
+	for name := range expected {
+		expectedNames[strings.ToLower(name)] = name
+	}
+
 	removed := []string{}
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".cfg") {
@@ -118,6 +134,16 @@ func pruneConfigs(configDir string, expected map[string][]byte) ([]string, error
 		}
 		if _, ok := expected[entry.Name()]; ok {
 			continue
+		}
+		// A case-only rename is a real stale file on a case-sensitive
+		// filesystem, but the same file on a case-insensitive one. Keep it
+		// only when both names resolve to the same inode.
+		if expectedName, ok := expectedNames[strings.ToLower(entry.Name())]; ok {
+			expectedInfo, expectedErr := os.Stat(filepath.Join(configDir, expectedName))
+			entryInfo, entryErr := entry.Info()
+			if expectedErr == nil && entryErr == nil && os.SameFile(expectedInfo, entryInfo) {
+				continue
+			}
 		}
 		if err := os.Remove(filepath.Join(configDir, entry.Name())); err != nil {
 			return nil, fmt.Errorf("snapshot: remove stale config %s: %w", entry.Name(), err)

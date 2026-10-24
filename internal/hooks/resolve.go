@@ -121,6 +121,8 @@ func Resolve(dir, policy string, out io.Writer) (ResolveResult, error) {
 	}
 
 	refreshed := make(map[string]bool)
+	refreshedFiles := make(map[string]bool)
+	removedFiles := make(map[string]bool)
 	rebuildFromSnapshot := func(project, xmlPath string) error {
 		if refreshed[project] {
 			return nil
@@ -129,11 +131,19 @@ func Resolve(dir, policy string, out io.Writer) (ResolveResult, error) {
 		if _, err := os.Stat(xmlAbs); err != nil {
 			return fmt.Errorf("resolve: snapshot %s: %w", xmlPath, err)
 		}
-		if _, err := snapshot.Sync(xmlAbs); err != nil {
+		syncResult, err := snapshot.Sync(xmlAbs)
+		if err != nil {
 			return fmt.Errorf("resolve: refresh %s: %w", xmlPath, err)
 		}
 		refreshed[project] = true
-		result.Refreshed = append(result.Refreshed, filepath.ToSlash(filepath.Join("snapshot", project)))
+		projectRel := path.Join("snapshot", project)
+		result.Refreshed = append(result.Refreshed, projectRel)
+		for _, file := range syncResult.Files {
+			refreshedFiles[path.Join(projectRel, file)] = true
+		}
+		for _, file := range syncResult.Removed {
+			removedFiles[path.Join(projectRel, "configs", file)] = true
+		}
 		return nil
 	}
 
@@ -171,8 +181,23 @@ func Resolve(dir, policy string, out io.Writer) (ResolveResult, error) {
 	for _, textPath := range result.Text {
 		stageSet[filepath.ToSlash(textPath)] = true
 	}
-	for _, project := range result.Refreshed {
-		stageSet[project] = true
+	for stagePath := range refreshedFiles {
+		stageSet[stagePath] = true
+	}
+	if len(removedFiles) > 0 {
+		paths := make([]string, 0, len(removedFiles))
+		for stagePath := range removedFiles {
+			paths = append(paths, stagePath)
+		}
+		tracked, err := repo.TrackedFiles(paths)
+		if err != nil {
+			return ResolveResult{}, fmt.Errorf("resolve: check removed configs: %w", err)
+		}
+		for stagePath := range removedFiles {
+			if tracked[stagePath] {
+				stageSet[stagePath] = true
+			}
+		}
 	}
 	for _, binaryPath := range result.Rebuilt {
 		stageSet[filepath.ToSlash(binaryPath)] = true
@@ -205,7 +230,12 @@ func firstMarkerLine(content string) int {
 }
 
 func hasConflictMarker(content string) bool {
-	return strings.Contains(content, "<<<<<<<") ||
-		strings.Contains(content, "=======") ||
-		strings.Contains(content, ">>>>>>>")
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(line, "<<<<<<<") ||
+			strings.HasPrefix(line, "=======") ||
+			strings.HasPrefix(line, ">>>>>>>") {
+			return true
+		}
+	}
+	return false
 }

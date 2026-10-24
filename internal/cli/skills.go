@@ -27,9 +27,10 @@ func newSkillsCmd() *cobra.Command {
 				results, err = skills.Install(home)
 			}
 			out := cmd.OutOrStdout()
+			errOut := cmd.ErrOrStderr()
 			for _, result := range results {
 				if result.Err != nil {
-					fmt.Fprintf(out, "[error] %s: %v\n", result.Target.Agent, result.Err)
+					fmt.Fprintf(errOut, "[error] %s: %v\n", result.Target.Agent, result.Err)
 					continue
 				}
 				fmt.Fprintf(out, "[ok] %s: %s %s\n", result.Target.Agent, result.Action, result.Target.Dir)

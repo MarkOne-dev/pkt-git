@@ -29,9 +29,9 @@ func runTestHook(args []string) int {
 	case "pre-commit":
 		_, err = PreCommit(".", os.Stdout)
 	case "post-merge":
-		_, err = PostMerge(".", args[1:], os.Stdout)
+		_, err = PostMerge(".", args[1:], os.Stdout, os.Stderr)
 	case "post-checkout":
-		_, err = PostCheckout(".", args[1:], os.Stdout)
+		_, err = PostCheckout(".", args[1:], os.Stdout, os.Stderr)
 	default:
 		err = fmt.Errorf("test hook: unknown command %q", args[0])
 	}

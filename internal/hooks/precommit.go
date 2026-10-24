@@ -36,53 +36,85 @@ func PreCommit(dir string, out io.Writer) (PreCommitResult, error) {
 	}
 
 	result := PreCommitResult{}
-	if len(staged) == 0 {
-		textOnly, err := repo.CachedChangedFiles("ACMR", "snapshot/*/base.snapshot.xml")
-		if err != nil {
-			return PreCommitResult{}, fmt.Errorf("pre-commit: list staged snapshots: %w", err)
-		}
-		if len(textOnly) == 0 {
-			return result, nil
-		}
-		result.TextOnlySnapshots = textOnly
-		fmt.Fprintln(out, "[pre-commit] Warning: textual snapshot changed without its .pkt.")
-		fmt.Fprintln(out, "  Valid (textual edit/merge); rebuild the binary before opening PT:")
-		for _, xml := range textOnly {
-			project := path.Base(path.Dir(filepath.ToSlash(xml)))
-			fmt.Fprintf(out, "    pkt build %s topologia/%s.pkt\n", filepath.ToSlash(xml), project)
-		}
-		return result, nil
-	}
-
+	stagedProjects := make(map[string]bool, len(staged))
+	stagePaths := make([]string, 0, len(staged)*3)
+	removedPaths := make([]string, 0)
 	seen := make(map[string]string, len(staged))
-	dirs := make([]string, 0, len(staged))
 	for _, binary := range staged {
 		rel := filepath.FromSlash(binary)
 		stem := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
 		if stem == "" || stem == "." {
 			return PreCommitResult{}, fmt.Errorf("pre-commit: invalid binary path %q", binary)
 		}
-		if previous, ok := seen[stem]; ok {
+		key := strings.ToLower(stem)
+		if previous, ok := seen[key]; ok {
 			return PreCommitResult{}, fmt.Errorf(
 				"pre-commit: %s and %s both map to snapshot/%s", previous, binary, stem)
 		}
-		seen[stem] = binary
+		seen[key] = binary
+		stagedProjects[key] = true
 
-		snapshotRel := filepath.Join("snapshot", stem)
-		snapshotAbs := filepath.Join(root, snapshotRel)
+		snapshotRel := path.Join("snapshot", stem)
+		snapshotAbs := filepath.Join(root, filepath.FromSlash(snapshotRel))
 		binaryAbs := filepath.Join(root, rel)
 		fmt.Fprintf(out, "[pre-commit] binary changed: %s -> exporting snapshot to %s\n",
-			binary, filepath.ToSlash(snapshotRel))
-		if _, err := snapshot.Export(binaryAbs, snapshotAbs); err != nil {
+			binary, snapshotRel)
+		exportResult, err := snapshot.Export(binaryAbs, snapshotAbs)
+		if err != nil {
 			return PreCommitResult{}, fmt.Errorf("pre-commit: export %s: %w", binary, err)
 		}
-		result.Exported = append(result.Exported, filepath.ToSlash(snapshotRel))
-		dirs = append(dirs, filepath.ToSlash(snapshotRel))
+		result.Exported = append(result.Exported, snapshotRel)
+		removed := make(map[string]bool, len(exportResult.Removed))
+		for _, name := range exportResult.Removed {
+			removed[path.Join(snapshotRel, "configs", name)] = true
+		}
+		for _, file := range exportResult.Files {
+			stagePath := path.Join(snapshotRel, file)
+			if removed[stagePath] {
+				removedPaths = append(removedPaths, stagePath)
+				continue
+			}
+			stagePaths = append(stagePaths, stagePath)
+		}
 	}
 
-	if err := repo.Add(dirs); err != nil {
-		return PreCommitResult{}, fmt.Errorf("pre-commit: stage exported snapshots: %w", err)
+	if len(removedPaths) > 0 {
+		tracked, err := repo.TrackedFiles(removedPaths)
+		if err != nil {
+			return PreCommitResult{}, fmt.Errorf("pre-commit: check removed configs: %w", err)
+		}
+		for _, stagePath := range removedPaths {
+			if tracked[stagePath] {
+				stagePaths = append(stagePaths, stagePath)
+			}
+		}
 	}
-	fmt.Fprintln(out, "[pre-commit] textual snapshot included automatically.")
+
+	textOnly, err := repo.CachedChangedFiles("ACMR", "snapshot/*/base.snapshot.xml")
+	if err != nil {
+		return PreCommitResult{}, fmt.Errorf("pre-commit: list staged snapshots: %w", err)
+	}
+	for _, xml := range textOnly {
+		project := path.Base(path.Dir(filepath.ToSlash(xml)))
+		if stagedProjects[strings.ToLower(project)] {
+			continue
+		}
+		result.TextOnlySnapshots = append(result.TextOnlySnapshots, xml)
+	}
+
+	if len(stagePaths) > 0 {
+		if err := repo.Add(stagePaths); err != nil {
+			return PreCommitResult{}, fmt.Errorf("pre-commit: stage exported snapshots: %w", err)
+		}
+		fmt.Fprintln(out, "[pre-commit] textual snapshot included automatically.")
+	}
+	if len(result.TextOnlySnapshots) > 0 {
+		fmt.Fprintln(out, "[pre-commit] Warning: textual snapshot changed without its .pkt.")
+		fmt.Fprintln(out, "  Valid (textual edit/merge); rebuild the binary before opening PT:")
+		for _, xml := range result.TextOnlySnapshots {
+			project := path.Base(path.Dir(filepath.ToSlash(xml)))
+			fmt.Fprintf(out, "    pkt build %s topologia/%s.pkt\n", filepath.ToSlash(xml), project)
+		}
+	}
 	return result, nil
 }

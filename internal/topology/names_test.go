@@ -21,6 +21,9 @@ func TestSanitizeName(t *testing.T) {
 		{"-device-", "-device-"},
 		{"device.v1", "device.v1"},
 		{"MKT LOG", "MKT_LOG"},
+		{"CON", "_CON"},
+		{"NUL.cfg", "_NUL.cfg"},
+		{"con", "_con"},
 	}
 	for _, tt := range tests {
 		if got := SanitizeName(tt.in); got != tt.want {
@@ -40,6 +43,21 @@ func TestValidateUniqueConfigNamesAcceptsDistinctDevices(t *testing.T) {
 	devices := []Device{{Name: "R1"}, {Name: "R2"}, {Name: "R 3"}}
 	if err := ValidateUniqueConfigNames(devices); err != nil {
 		t.Fatalf("ValidateUniqueConfigNames: %v", err)
+	}
+}
+
+func TestValidateUniqueConfigNamesRejectsCaseInsensitiveCollision(t *testing.T) {
+	devices := []Device{{Name: "R1"}, {Name: "r1"}}
+	err := ValidateUniqueConfigNames(devices)
+	if err == nil {
+		t.Fatal("ValidateUniqueConfigNames accepted a case-insensitive collision")
+	}
+	var collision *NameCollisionError
+	if !errors.As(err, &collision) {
+		t.Fatalf("error type = %T, want *NameCollisionError", err)
+	}
+	if collision.First != "R1" || collision.Second != "r1" {
+		t.Fatalf("names = %q/%q", collision.First, collision.Second)
 	}
 }
 

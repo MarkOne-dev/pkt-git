@@ -57,6 +57,43 @@ func TestSyncRefreshesDerivedFilesAndPrunesStaleConfigs(t *testing.T) {
 	}
 }
 
+func TestPruneConfigsHandlesCaseOnlyNames(t *testing.T) {
+	dir := t.TempDir()
+	lower := filepath.Join(dir, "r1.cfg")
+	upper := filepath.Join(dir, "R1.cfg")
+	if err := os.WriteFile(lower, []byte("new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(upper, []byte("old\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lowerInfo, err := os.Stat(lower)
+	if err != nil {
+		t.Fatal(err)
+	}
+	upperInfo, err := os.Stat(upper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if os.SameFile(lowerInfo, upperInfo) {
+		t.Skip("filesystem is case-insensitive")
+	}
+
+	removed, err := pruneConfigs(dir, map[string][]byte{"r1.cfg": []byte("new\n")})
+	if err != nil {
+		t.Fatalf("pruneConfigs: %v", err)
+	}
+	if len(removed) != 1 || removed[0] != "R1.cfg" {
+		t.Fatalf("removed = %q, want [R1.cfg]", removed)
+	}
+	if _, err := os.Stat(upper); !os.IsNotExist(err) {
+		t.Fatalf("case-only stale config still exists: %v", err)
+	}
+	if _, err := os.Stat(lower); err != nil {
+		t.Fatalf("expected config was removed: %v", err)
+	}
+}
+
 func TestSyncAcceptsXMLPath(t *testing.T) {
 	outputDir := filepath.Join(t.TempDir(), "snapshot")
 	if _, err := Export(specimenPath(t), outputDir); err != nil {

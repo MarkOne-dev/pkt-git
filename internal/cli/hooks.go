@@ -29,7 +29,7 @@ func newPostMergeCmd() *cobra.Command {
 			if len(args) == 1 && args[0] != "0" && args[0] != "1" {
 				return usagef("post-merge: expected squash flag 0 or 1, got %q", args[0])
 			}
-			_, err := hooks.PostMerge(".", args, cmd.OutOrStdout())
+			_, err := hooks.PostMerge(".", args, cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return err
 		},
 	}
@@ -42,7 +42,10 @@ func newPostCheckoutCmd() *cobra.Command {
 		Hidden: true,
 		Args:   exactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := hooks.PostCheckout(".", args, cmd.OutOrStdout())
+			if args[2] != "0" && args[2] != "1" {
+				return usagef("post-checkout: expected branch flag 0 or 1, got %q", args[2])
+			}
+			_, err := hooks.PostCheckout(".", args, cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return err
 		},
 	}

@@ -32,6 +32,7 @@ func SetInterfaceData(data []byte, deviceName, iface string, lines []string) ([]
 	}
 
 	var replacement bytes.Buffer
+	replacement.WriteString(block.Newline)
 	for _, line := range lines {
 		replacement.WriteString(block.Indent)
 		replacement.WriteString("<LINE>")
@@ -41,6 +42,7 @@ func SetInterfaceData(data []byte, deviceName, iface string, lines []string) ([]
 		replacement.WriteString("</LINE>")
 		replacement.WriteString(block.Newline)
 	}
+	replacement.WriteString(block.Close.Indent)
 
 	var out bytes.Buffer
 	out.Write(data[:block.ContentStart])

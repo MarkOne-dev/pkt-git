@@ -9,6 +9,9 @@ var credentialPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(?:password|secret|community|pre-shared-key|wpa-psk|key-string)\b\s+(.*)$`),
 	regexp.MustCompile(`(?i)\bcrypto\s+key\b\s+(.*)$`),
 	regexp.MustCompile(`(?i)\bkey\b\s+(.*)$`),
+	regexp.MustCompile(`(?i)\bsnmp-server\s+host\s+\S+\s+(?:(?:informs|traps)\s+)?(?:version\s+(?:1|2c|3)\s+)?(\S.*)$`),
+	regexp.MustCompile(`(?i)\bsnmp-server\s+user\s+\S+\s+\S+(?:\s+\S+)*?\s+auth\s+(?:md5|sha-1|sha-224|sha-256|sha-384|sha-512|sha)\s+(\S+).*$`),
+	regexp.MustCompile(`(?i)\bsnmp-server\s+user\s+\S+\s+\S+(?:\s+\S+)*?\s+priv\s+(?:des|des56|3des|aes)(?:\s+\d+)?\s+(\S+).*$`),
 }
 
 // RedactLine masks the value after a credential keyword. Lines without a

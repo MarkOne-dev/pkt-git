@@ -57,6 +57,46 @@ func TestRedactLine(t *testing.T) {
 			want: "wpa-psk <redacted>",
 		},
 		{
+			name: "snmp host community",
+			in:   "snmp-server host 10.0.0.1 version 2c public",
+			want: "snmp-server host 10.0.0.1 version 2c <redacted>",
+		},
+		{
+			name: "snmp host community without version",
+			in:   "snmp-server host 10.0.0.1 private",
+			want: "snmp-server host 10.0.0.1 <redacted>",
+		},
+		{
+			name: "snmp host informs community",
+			in:   "snmp-server host 10.0.0.1 informs version 2c public",
+			want: "snmp-server host 10.0.0.1 informs version 2c <redacted>",
+		},
+		{
+			name: "snmp v3 auth and priv",
+			in:   "snmp-server user admin netmon v3 auth sha authpass priv aes 128 privpass",
+			want: "snmp-server user admin netmon v3 auth sha <redacted>",
+		},
+		{
+			name: "snmp v3 priv only",
+			in:   "snmp-server user admin netmon v3 priv aes 128 privpass",
+			want: "snmp-server user admin netmon v3 priv aes 128 <redacted>",
+		},
+		{
+			name: "snmp v3 sha-384",
+			in:   "snmp-server user a1 g v3 auth sha-384 leak384",
+			want: "snmp-server user a1 g v3 auth sha-384 <redacted>",
+		},
+		{
+			name: "snmp v3 sha-224",
+			in:   "snmp-server user a2 g v3 auth sha-224 leak224",
+			want: "snmp-server user a2 g v3 auth sha-224 <redacted>",
+		},
+		{
+			name: "snmp v3 des56",
+			in:   "snmp-server user a3 g v3 priv des56 leakDes56",
+			want: "snmp-server user a3 g v3 priv des56 <redacted>",
+		},
+		{
 			name: "case insensitive",
 			in:   "SNMP-SERVER COMMUNITY Public RO",
 			want: "SNMP-SERVER COMMUNITY <redacted>",

@@ -32,11 +32,11 @@ func Inspect(pktPath string) (InspectResult, error) {
 	}
 	xmlData, err := codec.Decode(raw)
 	if err != nil {
-		return InspectResult{}, err
+		return InspectResult{}, fmt.Errorf("snapshot: inspect %s: %w", pktPath, err)
 	}
 	doc, err := topology.Parse(xmlData)
 	if err != nil {
-		return InspectResult{}, err
+		return InspectResult{}, fmt.Errorf("snapshot: inspect %s: %w", pktPath, err)
 	}
 
 	result := InspectResult{

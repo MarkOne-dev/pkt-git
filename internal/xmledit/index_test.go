@@ -157,7 +157,7 @@ func TestBuildIndexInterfaceBlock(t *testing.T) {
 	if block.Lines[0].Text != " description Uplink" {
 		t.Fatalf("first block line = %q", block.Lines[0].Text)
 	}
-	if block.ContentStart != block.Interface.LineEnd || block.ContentEnd != block.Close.LineStart {
+	if block.ContentStart != block.Interface.End || block.ContentEnd != block.Close.Start {
 		t.Fatalf("block bounds = %d..%d", block.ContentStart, block.ContentEnd)
 	}
 	if got := string(data[block.ContentStart:block.ContentEnd]); !strings.Contains(got, "description Uplink") {

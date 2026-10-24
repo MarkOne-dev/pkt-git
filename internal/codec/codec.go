@@ -7,9 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/MarkOne-dev/pkt-git/internal/crypto/eax"
 	"github.com/MarkOne-dev/pkt-git/internal/crypto/twofish"
+)
+
+const (
+	// SupportedVersion is the Packet Tracer version covered by the bundled
+	// regression specimen.
+	SupportedVersion = "9.0.1.0858"
 )
 
 var (
@@ -36,9 +43,13 @@ func Decode(raw []byte) ([]byte, error) {
 	data := unmaskStage4(raw)
 	plain, err := eax.Decrypt(block, data, containerNonce, nil)
 	if err != nil {
-		return nil, fmt.Errorf("codec: decode container: %w", err)
+		return nil, fmt.Errorf("codec: decode container: %w; check the producing Packet Tracer version (tested: %s)", err, SupportedVersion)
 	}
-	return qUncompress(unmaskStage2(plain))
+	xmlData, err := qUncompress(unmaskStage2(plain))
+	if err != nil {
+		return nil, fmt.Errorf("codec: decompress container: %w; check the producing Packet Tracer version (tested: %s)", err, SupportedVersion)
+	}
+	return xmlData, nil
 }
 
 // Encode converts an XML document into a Packet Tracer binary.
@@ -60,17 +71,54 @@ func Encode(xmlData []byte) ([]byte, error) {
 	return maskStage4(sealed), nil
 }
 
-// ValidateXML reports whether data is a complete, well-formed XML document.
+// ValidateXML reports whether data is a complete, well-formed XML document
+// with exactly one root element. Comments, processing instructions, and
+// whitespace around the root are allowed; character data outside the root and
+// multiple roots are rejected.
 func ValidateXML(data []byte) error {
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	decoder := xml.NewDecoder(bytes.NewReader(data))
+	depth := 0
+	seenRoot := false
+	seenToken := false
+	seenDoctype := false
 	for {
-		_, err := decoder.Token()
+		token, err := decoder.Token()
 		if errors.Is(err, io.EOF) {
+			if !seenRoot {
+				return errors.New("XML document has no root element")
+			}
 			return nil
 		}
 		if err != nil {
 			return err
 		}
+		switch token := token.(type) {
+		case xml.StartElement:
+			if depth == 0 {
+				if seenRoot {
+					return errors.New("XML document has multiple root elements")
+				}
+				seenRoot = true
+			}
+			depth++
+		case xml.EndElement:
+			depth--
+		case xml.CharData:
+			if depth == 0 && strings.TrimSpace(string(token)) != "" {
+				return errors.New("XML document has character data outside the root element")
+			}
+		case xml.ProcInst:
+			if strings.EqualFold(token.Target, "xml") && seenToken {
+				return errors.New("XML declaration is not at the start of the document")
+			}
+		case xml.Directive:
+			if seenRoot || seenDoctype || !bytes.HasPrefix(bytes.TrimSpace(token), []byte("DOCTYPE")) {
+				return errors.New("XML document has a misplaced or unsupported directive")
+			}
+			seenDoctype = true
+		}
+		seenToken = true
 	}
 }
 

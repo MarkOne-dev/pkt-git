@@ -26,7 +26,7 @@ func Build(xmlPath, outputPath string) (BuildResult, error) {
 
 	data, err := codec.Encode(xmlData)
 	if err != nil {
-		return BuildResult{}, err
+		return BuildResult{}, fmt.Errorf("snapshot: encode %s: %w", xmlPath, err)
 	}
 	if err := fsx.WriteFileAtomic(outputPath, data, 0o644); err != nil {
 		return BuildResult{}, err

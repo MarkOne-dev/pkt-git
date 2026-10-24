@@ -125,11 +125,37 @@ func TestDecodeRejectsLengthMismatch(t *testing.T) {
 }
 
 func TestValidateXML(t *testing.T) {
-	if err := ValidateXML([]byte("<root><child/></root>")); err != nil {
-		t.Fatalf("ValidateXML: %v", err)
+	valid := []string{
+		"<root><child/></root>",
+		"<?xml version=\"1.0\"?>\n<!-- comment -->\n<root/>\n",
+		"<!DOCTYPE root><root/>",
+		"<root/><?xml-stylesheet href=\"style.xsl\"?>",
+		"\xEF\xBB\xBF<root/>",
 	}
-	if err := ValidateXML([]byte("<root>")); err == nil {
-		t.Fatal("ValidateXML accepted malformed XML")
+	for _, input := range valid {
+		if err := ValidateXML([]byte(input)); err != nil {
+			t.Errorf("ValidateXML(%q): %v", input, err)
+		}
+	}
+
+	invalid := []string{
+		"",
+		"   \n",
+		"<!-- comment only -->",
+		"<root>",
+		"<a/><b/>",
+		"<a/>junk",
+		"<a></a>junk",
+		"<a/><?xml version=\"1.0\"?>",
+		"<a/><!DOCTYPE foo>",
+		"<!DOCTYPE a><!DOCTYPE b><root/>",
+		"<!ENTITY foo><root/>",
+		"<!-- comment --><?xml version=\"1.0\"?><root/>",
+	}
+	for _, input := range invalid {
+		if err := ValidateXML([]byte(input)); err == nil {
+			t.Errorf("ValidateXML accepted invalid document %q", input)
+		}
 	}
 }
 

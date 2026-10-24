@@ -22,7 +22,7 @@ func newVerifyCmd() *cobra.Command {
 			}
 			result, err := codec.Verify(raw)
 			if err != nil {
-				return fmt.Errorf("verify: %s: %w", args[0], err)
+				return fmt.Errorf("verify: %s: %w; check the producing Packet Tracer version (tested: %s)", args[0], err, codec.SupportedVersion)
 			}
 			out := cmd.OutOrStdout()
 			fmt.Fprintf(out, "binary size        : %d\n", result.BinarySize)

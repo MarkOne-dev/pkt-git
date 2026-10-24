@@ -75,6 +75,27 @@ func TestInsertAfterFirstMatchingLine(t *testing.T) {
 	}
 }
 
+func TestInsertAfterMinifiedXML(t *testing.T) {
+	data := []byte(`<PACKETTRACER5><NETWORK><DEVICES><DEVICE><ENGINE><TYPE model="2811">Router</TYPE><NAME translate="true">R1</NAME><RUNNINGCONFIG><LINE>hostname R1</LINE><LINE>!</LINE></RUNNINGCONFIG></ENGINE></DEVICE></DEVICES></NETWORK></PACKETTRACER5>`)
+	result, err := InsertAfterData(data, "R1", "hostname", []string{"ntp server 1.1.1.1"})
+	if err != nil {
+		t.Fatalf("InsertAfterData: %v", err)
+	}
+	index, err := xmledit.BuildIndex(result)
+	if err != nil {
+		t.Fatalf("result is not valid XML: %v", err)
+	}
+	device, _ := index.FindDevice("R1")
+	texts := make([]string, len(device.RunningConfig.Lines))
+	for i, line := range device.RunningConfig.Lines {
+		texts[i] = line.Text
+	}
+	want := []string{"hostname R1", "ntp server 1.1.1.1", "!"}
+	if strings.Join(texts, "|") != strings.Join(want, "|") {
+		t.Fatalf("lines = %q, want %q", texts, want)
+	}
+}
+
 func TestInsertAfterOnlyFirstMatch(t *testing.T) {
 	result, err := InsertAfterData([]byte(insertXML), "R1", "description", []string{" description Inserted"})
 	if err != nil {

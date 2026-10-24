@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -83,6 +84,43 @@ func TestExportSpecimen(t *testing.T) {
 	}
 	if catalog.TotalDevices != 107 || catalog.TotalLinks != 106 {
 		t.Fatalf("metadata totals = %d/%d", catalog.TotalDevices, catalog.TotalLinks)
+	}
+}
+
+func TestExportPrunesStaleConfigs(t *testing.T) {
+	dir := t.TempDir()
+	outputDir := filepath.Join(dir, "snapshot")
+	xmlData := []byte(`<PACKETTRACER5><NETWORK><DEVICES><DEVICE><ENGINE><TYPE model="2960">Switch</TYPE><NAME translate="true">R1</NAME><RUNNINGCONFIG><LINE>hostname R1</LINE><LINE>!</LINE></RUNNINGCONFIG></ENGINE></DEVICE></DEVICES><LINKS/></NETWORK></PACKETTRACER5>`)
+	raw, err := codec.Encode(xmlData)
+	if err != nil {
+		t.Fatalf("encode test binary: %v", err)
+	}
+	pktPath := filepath.Join(dir, "project.pkt")
+	if err := os.WriteFile(pktPath, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Export(pktPath, outputDir)
+	if err != nil {
+		t.Fatalf("Export: %v", err)
+	}
+	if !slices.Contains(result.Files, "base.snapshot.xml") || !slices.Contains(result.Files, "configs/R1.cfg") {
+		t.Fatalf("Files = %q", result.Files)
+	}
+
+	stale := filepath.Join(outputDir, "configs", "OLD.cfg")
+	if err := os.WriteFile(stale, []byte("stale\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result, err = Export(pktPath, outputDir)
+	if err != nil {
+		t.Fatalf("Export: %v", err)
+	}
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Fatalf("stale config still exists: %v", err)
+	}
+	if !slices.Contains(result.Removed, "OLD.cfg") || !slices.Contains(result.Files, "configs/OLD.cfg") {
+		t.Fatalf("result = %+v", result)
 	}
 }
 

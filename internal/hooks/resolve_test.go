@@ -75,6 +75,8 @@ func TestResolvePolicy(t *testing.T) {
 			if err := repo.Add([]string{"notes.txt"}); err != nil {
 				t.Fatal(err)
 			}
+			writeFile(t, dir, "snapshot/project/README.md", "unrelated snapshot note\n")
+			writeFile(t, dir, "snapshot/project/configs/UNTRACKED.cfg", "untracked\n")
 
 			var out bytes.Buffer
 			result, err := Resolve(dir, tt.policy, &out)
@@ -95,7 +97,7 @@ func TestResolvePolicy(t *testing.T) {
 			if !contains(result.Refreshed, "snapshot/project") {
 				t.Fatalf("Refreshed = %q", result.Refreshed)
 			}
-			if !contains(result.Staged, "snapshot/project") {
+			if !contains(result.Staged, "snapshot/project/configs/R1.cfg") {
 				t.Fatalf("Staged = %q", result.Staged)
 			}
 			if !strings.Contains(out.String(), "resolution staged") {
@@ -106,14 +108,20 @@ func TestResolvePolicy(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !contains(result.Staged, "snapshot/project") {
-				t.Fatalf("snapshot project is not staged: %q", result.Staged)
+			if !contains(result.Staged, "snapshot/project/configs/R1.cfg") {
+				t.Fatalf("generated config is not staged: %q", result.Staged)
 			}
 			if !contains(staged, "snapshot/project/configs/R1.cfg") {
 				t.Fatalf("derived config is not staged: %q", staged)
 			}
 			if !contains(staged, "notes.txt") {
 				t.Fatalf("unrelated staged file was lost: %q", staged)
+			}
+			if contains(staged, "snapshot/project/README.md") {
+				t.Fatalf("resolve staged an unrelated snapshot file: %q", staged)
+			}
+			if contains(staged, "snapshot/project/configs/UNTRACKED.cfg") {
+				t.Fatalf("resolve staged an untracked stale config: %q", staged)
 			}
 			if !strings.Contains(out.String(), "resolution staged") {
 				t.Fatalf("missing completion message:\n%s", out.String())
@@ -217,6 +225,17 @@ func TestResolveRejectsRemainingMarkers(t *testing.T) {
 	}
 	if len(staged) != 0 {
 		t.Fatalf("marker failure staged paths: %q", staged)
+	}
+}
+
+func TestHasConflictMarkerOnlyMatchesLineStart(t *testing.T) {
+	if hasConflictMarker(" banner ======= text\n") {
+		t.Fatal("hasConflictMarker matched a substring instead of a marker line")
+	}
+	for _, marker := range []string{"<<<<<<< HEAD\n", "=======\n", ">>>>>>> side\n"} {
+		if !hasConflictMarker(marker) {
+			t.Fatalf("hasConflictMarker did not match %q", marker)
+		}
 	}
 }
 

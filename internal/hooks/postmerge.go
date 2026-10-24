@@ -28,9 +28,12 @@ type RebuildResult struct {
 // revision. A squash merge has no new HEAD commit, so its changes are read
 // from the index; a normal merge uses ORIG_HEAD..HEAD, falling back to
 // HEAD^..HEAD and then to the root commit.
-func PostMerge(dir string, args []string, out io.Writer) (RebuildResult, error) {
+func PostMerge(dir string, args []string, out, errOut io.Writer) (RebuildResult, error) {
 	if out == nil {
 		out = io.Discard
+	}
+	if errOut == nil {
+		errOut = io.Discard
 	}
 	if len(args) > 1 {
 		return RebuildResult{}, fmt.Errorf("hooks: post-merge expects at most one squash flag")
@@ -55,20 +58,26 @@ func PostMerge(dir string, args []string, out io.Writer) (RebuildResult, error) 
 	if err != nil {
 		return RebuildResult{}, fmt.Errorf("post-merge: list changed snapshots: %w", err)
 	}
-	return rebuildSnapshots(root, changed, out)
+	return rebuildSnapshots(root, changed, out, errOut)
 }
 
 // PostCheckout rebuilds binaries for snapshots changed by a branch checkout.
 // Git passes old revision, new revision, and a branch flag; only branch
 // checkouts (flag 1) trigger a rebuild.
-func PostCheckout(dir string, args []string, out io.Writer) (RebuildResult, error) {
+func PostCheckout(dir string, args []string, out, errOut io.Writer) (RebuildResult, error) {
 	if out == nil {
 		out = io.Discard
+	}
+	if errOut == nil {
+		errOut = io.Discard
 	}
 	if len(args) != 3 {
 		return RebuildResult{}, fmt.Errorf("hooks: post-checkout expects old, new, and branch flag")
 	}
 	oldRev, newRev, branchFlag := args[0], args[1], args[2]
+	if branchFlag != "0" && branchFlag != "1" {
+		return RebuildResult{}, fmt.Errorf("hooks: post-checkout expected branch flag 0 or 1, got %q", branchFlag)
+	}
 	if branchFlag != "1" {
 		return RebuildResult{}, nil
 	}
@@ -91,7 +100,7 @@ func PostCheckout(dir string, args []string, out io.Writer) (RebuildResult, erro
 	if err != nil {
 		return RebuildResult{}, fmt.Errorf("post-checkout: list changed snapshots: %w", err)
 	}
-	return rebuildSnapshots(root, changed, out)
+	return rebuildSnapshots(root, changed, out, errOut)
 }
 
 func mergeChangedSnapshots(repo *gitx.Repo) ([]string, error) {
@@ -104,7 +113,7 @@ func mergeChangedSnapshots(repo *gitx.Repo) ([]string, error) {
 	return repo.DiffTreeRootFiles("HEAD", "snapshot/*/base.snapshot.xml")
 }
 
-func rebuildSnapshots(root string, xmlPaths []string, out io.Writer) (RebuildResult, error) {
+func rebuildSnapshots(root string, xmlPaths []string, out, errOut io.Writer) (RebuildResult, error) {
 	result := RebuildResult{}
 	for _, xmlPath := range xmlPaths {
 		rel := filepath.FromSlash(xmlPath)
@@ -114,14 +123,14 @@ func rebuildSnapshots(root string, xmlPaths []string, out io.Writer) (RebuildRes
 				continue
 			}
 			result.Failed = append(result.Failed, xmlPath)
-			fmt.Fprintf(out, "[pkt-git] ERROR reading %s: %v\n", filepath.ToSlash(xmlPath), err)
+			fmt.Fprintf(errOut, "[pkt-git] ERROR reading %s: %v\n", filepath.ToSlash(xmlPath), err)
 			continue
 		}
 
 		project := path.Base(path.Dir(filepath.ToSlash(xmlPath)))
 		if project == "" || project == "." || project == "/" {
 			result.Failed = append(result.Failed, xmlPath)
-			fmt.Fprintf(out, "[pkt-git] ERROR: cannot derive a project name from %s\n", filepath.ToSlash(xmlPath))
+			fmt.Fprintf(errOut, "[pkt-git] ERROR: cannot derive a project name from %s\n", filepath.ToSlash(xmlPath))
 			continue
 		}
 		pktRel := path.Join("topologia", project+".pkt")
@@ -129,7 +138,7 @@ func rebuildSnapshots(root string, xmlPaths []string, out io.Writer) (RebuildRes
 		fmt.Fprintf(out, "[pkt-git] snapshot of '%s' updated; rebuilding %s ...\n", project, pktRel)
 		if _, err := snapshot.Build(abs, pktAbs); err != nil {
 			result.Failed = append(result.Failed, pktRel)
-			fmt.Fprintf(out, "[pkt-git] ERROR rebuilding %s: %v\n", pktRel, err)
+			fmt.Fprintf(errOut, "[pkt-git] ERROR rebuilding %s: %v\n", pktRel, err)
 			continue
 		}
 		fmt.Fprintf(out, "[pkt-git] '%s' rebuilt; open it in Packet Tracer.\n", pktRel)

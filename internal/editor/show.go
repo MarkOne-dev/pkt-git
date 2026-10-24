@@ -19,7 +19,7 @@ func Show(xmlPath, deviceName string, out io.Writer) error {
 	}
 	lines, err := ShowData(data, deviceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("editor: show %s: %w", xmlPath, err)
 	}
 	for _, line := range lines {
 		if _, err := fmt.Fprintln(out, line); err != nil {

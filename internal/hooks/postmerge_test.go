@@ -24,7 +24,7 @@ func TestPostCheckoutRebuildsChangedSnapshot(t *testing.T) {
 	newRev := revParse(t, dir, "HEAD")
 
 	var out bytes.Buffer
-	result, err := PostCheckout(dir, []string{oldRev, newRev, "0"}, &out)
+	result, err := PostCheckout(dir, []string{oldRev, newRev, "0"}, &out, nil)
 	if err != nil {
 		t.Fatalf("PostCheckout flag 0: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestPostCheckoutRebuildsChangedSnapshot(t *testing.T) {
 		t.Fatalf("non-branch checkout created a binary: %v", err)
 	}
 
-	result, err = PostCheckout(dir, []string{oldRev, newRev, "1"}, &out)
+	result, err = PostCheckout(dir, []string{oldRev, newRev, "1"}, &out, nil)
 	if err != nil {
 		t.Fatalf("PostCheckout: %v", err)
 	}
@@ -50,6 +50,17 @@ func TestPostCheckoutRebuildsChangedSnapshot(t *testing.T) {
 	}
 }
 
+func TestPostCheckoutRejectsInvalidBranchFlag(t *testing.T) {
+	dir := initRepo(t)
+	writeFile(t, dir, "file.txt", "data")
+	commitAll(t, dir, "commit")
+	rev := revParse(t, dir, "HEAD")
+
+	if _, err := PostCheckout(dir, []string{rev, rev, "banana"}, nil, nil); err == nil {
+		t.Fatal("PostCheckout accepted an invalid branch flag")
+	}
+}
+
 func TestPostCheckoutRootCommit(t *testing.T) {
 	dir := initRepo(t)
 	xmlPath := "snapshot/root/base.snapshot.xml"
@@ -58,7 +69,7 @@ func TestPostCheckoutRootCommit(t *testing.T) {
 	newRev := revParse(t, dir, "HEAD")
 
 	var out bytes.Buffer
-	result, err := PostCheckout(dir, []string{strings.Repeat("0", 40), newRev, "1"}, &out)
+	result, err := PostCheckout(dir, []string{strings.Repeat("0", 40), newRev, "1"}, &out, nil)
 	if err != nil {
 		t.Fatalf("PostCheckout: %v", err)
 	}
@@ -77,7 +88,7 @@ func TestPostCheckoutUnchangedSnapshot(t *testing.T) {
 	rev := revParse(t, dir, "HEAD")
 
 	var out bytes.Buffer
-	result, err := PostCheckout(dir, []string{rev, rev, "1"}, &out)
+	result, err := PostCheckout(dir, []string{rev, rev, "1"}, &out, nil)
 	if err != nil {
 		t.Fatalf("PostCheckout: %v", err)
 	}
@@ -101,7 +112,7 @@ func TestPostMergeRebuildsChangedSnapshot(t *testing.T) {
 	runGit(t, dir, "merge", "--no-ff", "-m", "merge side", "side")
 
 	var out bytes.Buffer
-	result, err := PostMerge(dir, []string{"0"}, &out)
+	result, err := PostMerge(dir, []string{"0"}, &out, nil)
 	if err != nil {
 		t.Fatalf("PostMerge: %v", err)
 	}
@@ -125,7 +136,7 @@ func TestPostMergeFallsBackWithoutOrigHead(t *testing.T) {
 	_ = os.Remove(filepath.Join(dir, ".git", "ORIG_HEAD"))
 
 	var out bytes.Buffer
-	result, err := PostMerge(dir, nil, &out)
+	result, err := PostMerge(dir, nil, &out, nil)
 	if err != nil {
 		t.Fatalf("PostMerge: %v", err)
 	}
@@ -142,7 +153,7 @@ func TestPostMergeRejectsRevisionAsSquashFlag(t *testing.T) {
 	writeFile(t, dir, "file.txt", "data")
 	commitAll(t, dir, "commit")
 
-	if _, err := PostMerge(dir, []string{"HEAD"}, nil); err == nil {
+	if _, err := PostMerge(dir, []string{"HEAD"}, nil, nil); err == nil {
 		t.Fatal("PostMerge accepted a revision as the squash flag")
 	}
 }
@@ -158,8 +169,8 @@ func TestRebuildFailureReturnsError(t *testing.T) {
 	commitAll(t, dir, "invalid")
 	newRev := revParse(t, dir, "HEAD")
 
-	var out bytes.Buffer
-	result, err := PostCheckout(dir, []string{oldRev, newRev, "1"}, &out)
+	var out, errOut bytes.Buffer
+	result, err := PostCheckout(dir, []string{oldRev, newRev, "1"}, &out, &errOut)
 	if !errors.Is(err, ErrRebuildFailed) {
 		t.Fatalf("error = %v, want ErrRebuildFailed", err)
 	}
@@ -169,8 +180,11 @@ func TestRebuildFailureReturnsError(t *testing.T) {
 	if _, statErr := os.Stat(filepath.Join(dir, "topologia", "project.pkt")); !os.IsNotExist(statErr) {
 		t.Fatalf("invalid snapshot produced a binary: %v", statErr)
 	}
-	if !strings.Contains(out.String(), "ERROR rebuilding topologia/project.pkt") {
-		t.Fatalf("output does not report the failure:\n%s", out.String())
+	if !strings.Contains(errOut.String(), "ERROR rebuilding topologia/project.pkt") {
+		t.Fatalf("stderr does not report the failure:\n%s", errOut.String())
+	}
+	if strings.Contains(out.String(), "ERROR rebuilding") {
+		t.Fatalf("error was written to stdout:\n%s", out.String())
 	}
 }
 

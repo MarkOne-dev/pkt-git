@@ -5,6 +5,7 @@ package snapshot
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -20,6 +21,10 @@ type ExportResult struct {
 	ConfigCount int
 	DeviceCount int
 	LinkCount   int
+	// Files lists generated paths relative to the output directory, using
+	// forward slashes. Removed lists stale config files that were deleted.
+	Files   []string
+	Removed []string
 }
 
 type exportFiles struct {
@@ -71,8 +76,22 @@ func Export(pktPath, outputDir string) (ExportResult, error) {
 		}
 	}
 
+	removed, err := pruneConfigs(configDir, files.configs)
+	if err != nil {
+		return ExportResult{}, err
+	}
 	if err := fsx.WriteFileAtomic(filepath.Join(metadataDir, "topology.json"), files.metadata, 0o644); err != nil {
 		return ExportResult{}, err
+	}
+
+	generated := make([]string, 0, 2+len(names)+len(removed))
+	generated = append(generated, "base.snapshot.xml")
+	for _, name := range names {
+		generated = append(generated, path.Join("configs", name))
+	}
+	generated = append(generated, path.Join("metadata", "topology.json"))
+	for _, name := range removed {
+		generated = append(generated, path.Join("configs", name))
 	}
 
 	return ExportResult{
@@ -80,6 +99,8 @@ func Export(pktPath, outputDir string) (ExportResult, error) {
 		ConfigCount: len(files.configs),
 		DeviceCount: files.devices,
 		LinkCount:   files.links,
+		Files:       generated,
+		Removed:     removed,
 	}, nil
 }
 

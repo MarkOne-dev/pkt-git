@@ -227,8 +227,8 @@ func (device *Device) InterfaceBlock(iface string) (*Block, error) {
 		Interface:    open,
 		Close:        closeLine,
 		Lines:        lines[openIndex+1 : closeIndex],
-		ContentStart: open.LineEnd,
-		ContentEnd:   closeLine.LineStart,
+		ContentStart: open.End,
+		ContentEnd:   closeLine.Start,
 		Indent:       open.Indent,
 		Newline:      open.Newline,
 	}
@@ -290,6 +290,10 @@ type lineBuilder struct {
 
 func (builder *lineBuilder) finish(data []byte, contentEnd, end int) Line {
 	lineStart, lineEnd := physicalLine(data, builder.start, end)
+	indentStart := builder.start
+	for indentStart > 0 && (data[indentStart-1] == ' ' || data[indentStart-1] == '\t') {
+		indentStart--
+	}
 	return Line{
 		Text:         builder.text.String(),
 		Start:        builder.start,
@@ -298,7 +302,7 @@ func (builder *lineBuilder) finish(data []byte, contentEnd, end int) Line {
 		ContentEnd:   contentEnd,
 		LineStart:    lineStart,
 		LineEnd:      lineEnd,
-		Indent:       string(data[lineStart:builder.start]),
+		Indent:       string(data[indentStart:builder.start]),
 		Newline:      newlineAt(data, lineEnd),
 		SelfClosing:  bytes.HasSuffix(data[builder.start:end], []byte("/>")),
 	}

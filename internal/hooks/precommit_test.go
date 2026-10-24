@@ -65,6 +65,38 @@ func TestPreCommitExportsStagedBinaries(t *testing.T) {
 	}
 }
 
+func TestPreCommitStagesRemovedConfig(t *testing.T) {
+	dir := initRepo(t)
+	twoDevices := strings.Replace(minimalXML, "</DEVICES>", `<DEVICE><ENGINE><TYPE model="2960">Switch</TYPE><NAME translate="true">R2</NAME><RUNNINGCONFIG><LINE>hostname R2</LINE><LINE>!</LINE></RUNNINGCONFIG></ENGINE></DEVICE></DEVICES>`, 1)
+	writeFile(t, dir, "a.pkt", encodeBinary(t, twoDevices))
+	repo := gitx.New(dir)
+	if err := repo.Add([]string{"a.pkt"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := PreCommit(dir, nil); err != nil {
+		t.Fatalf("baseline PreCommit: %v", err)
+	}
+	runGit(t, dir, "commit", "-q", "-m", "baseline")
+
+	writeFile(t, dir, "a.pkt", encodeBinary(t, minimalXML))
+	if err := repo.Add([]string{"a.pkt"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := PreCommit(dir, nil); err != nil {
+		t.Fatalf("PreCommit: %v", err)
+	}
+	staged, err := repo.CachedChangedFiles("D", "snapshot/a/configs/R2.cfg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(staged, "snapshot/a/configs/R2.cfg") {
+		t.Fatalf("removed config deletion is not staged: %q", staged)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "snapshot", "a", "configs", "R2.cfg")); !os.IsNotExist(err) {
+		t.Fatalf("stale config still exists: %v", err)
+	}
+}
+
 func TestPreCommitExportFailureAbortsWithoutStaging(t *testing.T) {
 	dir := initRepo(t)
 	writeFile(t, dir, "bad.pkt", "this is not a packet tracer container")
@@ -125,6 +157,43 @@ func TestPreCommitTextOnlySnapshotWarns(t *testing.T) {
 	}
 	if readFile(t, xmlPath) == minimalXML {
 		t.Fatal("text-only check modified the staged snapshot")
+	}
+}
+
+func TestPreCommitWarnsForOtherTextOnlySnapshot(t *testing.T) {
+	dir := initRepo(t)
+	writeFile(t, dir, "a.pkt", encodeBinary(t, minimalXML))
+	writeFile(t, dir, "snapshot/other/base.snapshot.xml", minimalXML)
+	commitAll(t, dir, "baseline")
+
+	writeFile(t, dir, "a.pkt", encodeBinary(t, strings.Replace(minimalXML, "hostname R1", "hostname A2", 1)))
+	writeFile(t, dir, "snapshot/other/base.snapshot.xml", minimalXML+"\n")
+	writeFile(t, dir, "snapshot/other/README.md", "unrelated snapshot note\n")
+	repo := gitx.New(dir)
+	if err := repo.Add([]string{"a.pkt", "snapshot/other/base.snapshot.xml"}); err != nil {
+		t.Fatal(err)
+	}
+
+	var out bytes.Buffer
+	result, err := PreCommit(dir, &out)
+	if err != nil {
+		t.Fatalf("PreCommit: %v", err)
+	}
+	if !contains(result.Exported, "snapshot/a") {
+		t.Fatalf("Exported = %q", result.Exported)
+	}
+	if len(result.TextOnlySnapshots) != 1 || result.TextOnlySnapshots[0] != "snapshot/other/base.snapshot.xml" {
+		t.Fatalf("TextOnlySnapshots = %q", result.TextOnlySnapshots)
+	}
+	if !strings.Contains(out.String(), "textual snapshot changed without its .pkt") {
+		t.Fatalf("missing warning for the other project:\n%s", out.String())
+	}
+	staged, err := repo.CachedChangedFiles("A", "snapshot/other/README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(staged) != 0 {
+		t.Fatalf("pre-commit staged an unrelated snapshot file: %q", staged)
 	}
 }
 

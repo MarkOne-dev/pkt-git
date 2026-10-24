@@ -82,6 +82,29 @@ func TestSetInterfaceReplacesBlockAndPreservesSurroundings(t *testing.T) {
 	}
 }
 
+func TestSetInterfaceMinifiedXML(t *testing.T) {
+	data := []byte(`<PACKETTRACER5><NETWORK><DEVICES><DEVICE><ENGINE><TYPE model="2811">Router</TYPE><NAME translate="true">R1</NAME><RUNNINGCONFIG><LINE>interface Fa0/1</LINE><LINE> description Old</LINE><LINE>!</LINE></RUNNINGCONFIG></ENGINE></DEVICE></DEVICES></NETWORK></PACKETTRACER5>`)
+	result, err := SetInterfaceData(data, "R1", "Fa0/1", []string{" description New"})
+	if err != nil {
+		t.Fatalf("SetInterfaceData: %v", err)
+	}
+	index, err := xmledit.BuildIndex(result)
+	if err != nil {
+		t.Fatalf("result is not valid XML: %v", err)
+	}
+	device, _ := index.FindDevice("R1")
+	block, err := device.InterfaceBlock("Fa0/1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(block.Lines) != 1 || block.Lines[0].Text != " description New" {
+		t.Fatalf("lines = %+v", block.Lines)
+	}
+	if strings.Contains(string(result), "description Old") {
+		t.Fatal("old interface line remains")
+	}
+}
+
 func TestSetInterfaceEmptyLinesRemovesBlockContent(t *testing.T) {
 	result, err := SetInterfaceData([]byte(setifaceXML), "R1", "Fa0/2", nil)
 	if err != nil {

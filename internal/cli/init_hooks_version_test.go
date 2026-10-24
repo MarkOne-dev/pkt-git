@@ -109,6 +109,7 @@ func TestHookCommandArguments(t *testing.T) {
 		{"pre-commit", "extra"},
 		{"post-merge", "HEAD"},
 		{"post-checkout", "old", "new"},
+		{"post-checkout", "old", "new", "2"},
 	}
 	for _, args := range tests {
 		code, _, stderr := runCLI(args...)

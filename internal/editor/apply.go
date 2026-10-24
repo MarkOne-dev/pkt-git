@@ -22,10 +22,10 @@ func Apply(xmlPath string, transform Transform) error {
 
 	updated, err := transform(data)
 	if err != nil {
-		return err
+		return fmt.Errorf("editor: edit %s: %w", xmlPath, err)
 	}
 	if err := codec.ValidateXML(updated); err != nil {
-		return fmt.Errorf("editor: resulting XML is invalid: %w", err)
+		return fmt.Errorf("editor: resulting XML in %s is invalid: %w", xmlPath, err)
 	}
 	if err := fsx.WriteFileAtomic(xmlPath, updated, 0); err != nil {
 		return err
