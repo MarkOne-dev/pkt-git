@@ -54,7 +54,7 @@
 ## 6. CLI
 
 - [x] 6.1 Wire the Cobra root with help, no-argument behavior, typed usage errors, and exit codes 0/1/2; verify with `go test ./internal/cli`
-- [ ] 6.2 Implement `export`, `build`, and `inspect` commands with exact argument validation; verify success and usage failures with `go test ./internal/cli`
+- [x] 6.2 Implement `export`, `build`, and `inspect` commands with exact argument validation; verify success and usage failures with `go test ./internal/cli`
 - [ ] 6.3 Implement the `edit` command tree and its subcommands; verify argument validation and dispatch with `go test ./internal/cli`
 - [ ] 6.4 Implement `sync`, `resolve`, and `verify` commands; verify flags, policy validation, and exit codes with `go test ./internal/cli`
 - [ ] 6.5 Implement `init`, `version`, and hidden `pre-commit`/`post-merge`/`post-checkout` commands; verify help visibility and version output with `go test ./internal/cli`

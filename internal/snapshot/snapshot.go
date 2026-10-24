@@ -41,7 +41,7 @@ func Export(pktPath, outputDir string) (ExportResult, error) {
 
 	files, err := prepareExport(filepath.Base(pktPath), raw)
 	if err != nil {
-		return ExportResult{}, err
+		return ExportResult{}, fmt.Errorf("snapshot: export %s: %w", pktPath, err)
 	}
 
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
