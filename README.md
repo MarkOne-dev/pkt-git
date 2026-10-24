@@ -130,30 +130,41 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 - **Cisco Packet Tracer 9.0.1+** only to edit and run topologies; not required
   to review diffs or run CI.
 
-### Build and install the binary
+### Install the binary
 
-Linux / macOS:
+Linux / macOS, from a clone:
 
 ```bash
 git clone https://github.com/MarkOne-dev/pkt-git.git
 cd pkt-git
-make build
-install -m 0755 bin/pkt ~/.local/bin/pkt
+./scripts/install.sh
 pkt --version
 ```
 
-Windows (PowerShell):
+Windows (PowerShell), from a clone:
 
 ```powershell
 git clone https://github.com/MarkOne-dev/pkt-git.git
 cd pkt-git
-go build -o pkt.exe ./cmd/pkt
-# Copy pkt.exe to a directory on PATH.
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 pkt.exe --version
 ```
 
-`make dist` produces release binaries for Linux, macOS, and Windows. Unpack the
-archive for your platform and place `pkt` (or `pkt.exe`) on `PATH`.
+The scripts install into `~/.local/bin`, build a static binary when `bin/pkt`
+is absent, report `PATH` problems, install the agent skill, and are safe to
+rerun. See [Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`,
+`PKTG_SOURCE`, and manual build options.
+
+Manual build:
+
+```bash
+make build
+install -m 0755 bin/pkt ~/.local/bin/pkt
+```
+
+On Windows, use `CGO_ENABLED=0 go build -o pkt.exe ./cmd/pkt`. `make dist`
+produces self-contained release artifacts for Linux, macOS, and Windows; place
+the artifact for your platform on `PATH`.
 
 ### Wiring a repository (once per project)
 
