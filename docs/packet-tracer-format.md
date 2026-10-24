@@ -1,9 +1,11 @@
 # The .pkt Binary Format
 
 Reverse-engineered and verified against a real Cisco Packet Tracer file
-(`Caso1_Grupo09-2.pkt`, Packet Tracer **9.0.1.0858**). Encoding and decoding are
-both implemented in `tools/spike_roundtrip.py`; a full round trip
-(`.pkt → XML → .pkt → same XML`) is the standing regression test.
+(`testdata/specimens/Caso1_Grupo09-2.pkt`, Packet Tracer **9.0.1.0858**).
+Encoding and decoding are implemented in `internal/codec`, with CMAC/EAX in
+`internal/crypto/{cmac,eax}` and Twofish from `golang.org/x/crypto/twofish`.
+A full round trip (`.pkt → XML → .pkt → same XML`) is the standing regression
+test.
 
 ## Summary of the Pipeline
 
@@ -29,8 +31,9 @@ payload = uncompressed_size (4 bytes, big-endian) || zlib_stream
 ```
 
 The leading length lets a decoder know the exact decompressed size in advance.
-In-house code reproduces this with `zlib.compress(xml, 9)` and the manual size
-header — output is compatible with both `qUncompress` and `zlib.decompress`.
+The Go implementation uses `compress/zlib` at level 9 and writes the size header
+manually; the output is compatible with Qt's `qUncompress` and with
+`zlib.decompress`.
 
 ### 2. Inner positional XOR
 
@@ -40,7 +43,7 @@ b[i] = payload[i] XOR ((L - i) mod 256)
 
 A per-byte mask that slides with position: the first byte is XORed with
 `L mod 256`, the last one with `1 mod 256`. `L` is the payload length. The
-operation is its own inverse shape (`_mask_stage2` == `_unmask_stage2`).
+operation is its own inverse shape (`maskStage2` == `unmaskStage2`).
 
 ### 3. Twofish-EAX encryption
 
@@ -54,10 +57,10 @@ AEAD built over the Twofish block cipher (128-bit blocks, 16-byte key):
   plaintext). This is the exact EAX variant PT uses.
 
 Two fixed constants are enough because there is no per-file keying: the
- Encryption strength is the same for every PT file of this version, which is
+encryption strength is the same for every PT file of this version, which is
 precisely what makes external tooling feasible.
 
-#### The EAX internals (all in-house)
+#### The EAX internals (CMAC/EAX in-house, Twofish from x/crypto)
 
 - **CMAC / OMAC1** exactly as NIST SP 800-38B: derive subkeys `k1`, `k2` by
   doubling in GF(2^128) with reduction polynomial `0x87`; the last block is
@@ -71,12 +74,13 @@ precisely what makes external tooling feasible.
 - **Tag:** `T = N ⊕ H ⊕ C` where `N = OMAC^0(nonce)`, `H = OMAC^1(header)`,
   `C = OMAC^2(ciphertext)`.
 
-On decode, the tag is verified and a mismatch is reported as a warning (not a
-hard failure) so that slightly-off specimens can still be inspected.
+On decode, the tag is verified before any XML is returned. A mismatch is a hard
+failure (`eax.ErrAuthentication`): the codec returns no plaintext and no XML, so
+callers cannot accidentally inspect or export unauthenticated data.
 
 ### 4. Outer positional XOR + byte reversal
 
-The outermost layer combines a mirror and an position-indexed mask:
+The outermost layer combines a mirror and a position-indexed mask:
 
 ```
 out[L-1-i] = in[i] XOR ((L - i*L) mod 256)
@@ -85,31 +89,38 @@ out[L-1-i] = in[i] XOR ((L - i*L) mod 256)
 Crucial subtlety (learned the hard way): the XOR operand `L - i*L` indexes the
 **output** position `i`, while the byte is read from the **reversed** input
 position (`L-1-i`). Inverting it writes `out[i]` from `raw[L-1-i]`. Both
-`_mask_stage4` / `_unmask_stage4` implement and document this.
+`maskStage4` / `unmaskStage4` implement and document this.
 
 ## What Decoding Looks Like
 
 For the reference specimen (real project, PT 9.0.1.0858):
 
 ```
-binary size        : ~599 KB
-extracted XML      : ~5.89 MB   (107 devices, 106 links, 34 CLI configs)
+binary size        : 598810 bytes
+extracted XML      : 5894851 bytes   (107 devices, 106 links, 34 CLI configs)
+rebuilt binary     : 585372 bytes
 ```
 
 Verification command:
 
 ```bash
-pkt verify proof-pkt/Caso1_Grupo09-2.pkt
+pkt verify testdata/specimens/Caso1_Grupo09-2.pkt
 ```
 
-Expected report:
+Until the CLI command is wired, the same check runs directly against the codec:
 
-- `XML ROUND TRIP : True` — required; the invariant of the whole project.
-- `XML is a document : True` — decrypts into well-formed XML.
-- `byte-identical : False` — **expected and acceptable**: Packet Tracer's own
-  zlib emitter uses different compression parameters than level-9 in-house
-  compression, so the rebuilt bytes differ while remaining a fully valid PT
-  file (PT opens it identically).
+```bash
+go test ./internal/codec -run TestVerifySpecimen -v
+```
+
+Expected report from `codec.Verify`:
+
+- `XML is a document : true` — decrypts into well-formed XML.
+- `XML round trip : true` — required; the invariant of the whole project.
+- `byte-identical : false` — **expected and acceptable**: Packet Tracer's own
+  zlib emitter uses different compression parameters than the Go level-9
+  encoder, so the rebuilt bytes differ while remaining a fully valid PT file
+  (PT opens it identically).
 
 ## Known Limits
 
