@@ -14,7 +14,44 @@ is installed inside Packet Tracer.
 
 ## Install the Binary
 
-### From source
+### Script installer (recommended)
+
+Linux and macOS, from a clone of this repository:
+
+```bash
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git
+./scripts/install.sh
+```
+
+Windows, from a PowerShell prompt in the clone:
+
+```powershell
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+```
+
+The installers:
+
+1. Use `bin/pkt` (or `bin/pkt.exe`) when it already exists, otherwise build a
+   static binary with `CGO_ENABLED=0 go build ./cmd/pkt`.
+2. Install `pkt` (or `pkt.exe`) into `~/.local/bin` by default.
+3. Report when that directory is not on `PATH`; the Windows installer adds it
+   to the user `PATH` when needed.
+4. Install the bundled agent skill unless `PKTG_SKIP_SKILLS=1`.
+5. Are idempotent: rerunning them replaces the binary only when it changed.
+
+Useful overrides:
+
+| Variable | Effect |
+|---|---|
+| `PKTG_BIN_DIR` | Install into a different directory. |
+| `PKTG_SOURCE` | Install a specific binary instead of `bin/pkt` or a build. |
+| `PKTG_SKIP_SKILLS=1` | Do not run `pkt skills`. |
+| `PKTG_SKIP_PATH=1` | Windows only: do not modify or inspect `PATH`. |
+
+### From source manually
 
 ```bash
 git clone https://github.com/MarkOne-dev/pkt-git.git
@@ -26,25 +63,41 @@ install -m 0755 bin/pkt ~/.local/bin/pkt
 Ensure `~/.local/bin` is on `PATH`. On Windows:
 
 ```powershell
+$env:CGO_ENABLED = "0"
 go build -o pkt.exe ./cmd/pkt
 # Copy pkt.exe to a directory on PATH, for example:
 # $env:USERPROFILE\.local\bin
 ```
 
-### From a release archive
+`make build` and `make dist` force `CGO_ENABLED=0`, so the resulting binary is
+static and does not require a C toolchain.
 
-Unpack the archive for your platform and place `pkt` (or `pkt.exe`) on `PATH`.
-The binary is self-contained.
+### From release artifacts
+
+`make dist` produces self-contained binaries:
+
+```text
+dist/pkt_linux_amd64
+dist/pkt_linux_arm64
+dist/pkt_darwin_amd64
+dist/pkt_darwin_arm64
+dist/pkt_windows_amd64.exe
+```
+
+Place the artifact for your platform on `PATH` as `pkt` (or `pkt.exe`).
 
 ### Verify the install
+
+From a clone, so the specimen is available:
 
 ```bash
 pkt --version
 pkt verify testdata/specimens/Caso1_Grupo09-2.pkt
 ```
 
-The specimen check must report `XML is a document: true` and
-`XML round trip: true`.
+The specimen check must report `XML is a document  : true` and
+`XML round trip     : true`. A `byte-identical     : false` result is expected
+for many files because Packet Tracer's own zlib emitter differs.
 
 ## Wire a Repository
 
@@ -95,7 +148,7 @@ Existing repositories may still have `.githooks` that call `pktgit.py` and
 is unchanged; migrate in place:
 
 ```bash
-# 1. Install and verify the Go binary.
+# 1. Install and verify the Go binary (script installer or release artifact).
 pkt --version
 
 # 2. Rewrite the hooks, attributes, and pktgit.bin key.
@@ -119,9 +172,10 @@ they are migrated individually.
 
 ## Upgrading
 
-Replace the binary on `PATH`. Hooks resolve `pktgit.bin` on every run, so an
-upgrade takes effect immediately in every wired repository. If the binary
-moves to a different absolute path, rerun `pkt init` in each repository.
+Replace the binary on `PATH` (or rerun the installer). Hooks resolve
+`pktgit.bin` on every run, so an upgrade takes effect immediately in every
+wired repository. If the binary moves to a different absolute path, rerun
+`pkt init` in each repository.
 
 ## Why the Hooks Are Safe Elsewhere
 
@@ -141,8 +195,8 @@ repositories on the machine behave conventionally.
 | Platform | Status | Notes |
 |---|---|---|
 | Linux | Fully tested (project of record) | The reference environment. |
-| macOS | Supported by design | Build the binary or use a release archive; no C toolchain is required. |
-| Windows | Supported by design | Use `pkt.exe`; hooks run through the POSIX shell shipped with Git for Windows. Physical validation is pending the first Windows teammate. |
+| macOS | Supported by design | Build the binary or use a release artifact; no C toolchain is required. |
+| Windows | Supported by design | Use `pkt.exe`; hooks run through the POSIX shell shipped with Git for Windows. |
 
 The PT format itself is pinned to **9.0.1.0858** for the team. Newer Packet
 Tracer versions may produce an unverified format variant; run `pkt verify` on a
