@@ -8,7 +8,7 @@ dependency. The command tree is built with Cobra and implemented under
 
 ```bash
 pkt init [dir]
-pkt export <project.pkt> <output_dir>
+pkt export [project.pkt] [output_dir] [--all]
 pkt build  <snapshot.xml> <output.pkt>
 pkt inspect <project.pkt>
 
@@ -43,6 +43,15 @@ never prompts for input: choices such as `resolve --ours` must be explicit.
 Errors are written to standard error and identify the failing operation and
 path. No stack traces or credentials are printed.
 
+### Terminal output and NO_COLOR
+
+`pkt` emits modern, semantic terminal styling (colors, status indicators, and
+Unicode tables) when connected to an interactive TTY. In non-interactive
+environments (pipes, file redirects, CI) or whenever the `NO_COLOR` or
+`TERM=dumb` environment variable is set, the CLI automatically emits pure plain
+text without ANSI escape codes, ensuring 100% script safety and backward
+compatibility.
+
 ## `init`
 
 Wires pkt-git into an existing Git repository:
@@ -59,6 +68,8 @@ pkt init path/to/repository
 - Sets `core.hooksPath` to `.githooks`.
 - Creates or merges `.gitattributes`: `.pkt`/`.pka` are binary; snapshot XML,
   JSON, and config files are text.
+- Auto-detects any existing `.pkt` or `.pka` files in the repository and automatically
+  exports their initial snapshots into `snapshot/<project>/`.
 - Refuses to modify a directory that is not a Git repository.
 - Is idempotent: rerunning it leaves the same usable configuration and does not
   duplicate attribute rules.
@@ -69,7 +80,10 @@ configuration and does not affect other repositories.
 ## `export`
 
 ```bash
-pkt export testdata/specimens/Caso1_Grupo09-2.pkt snapshot/Caso1_Grupo09-2
+pkt export                                                      # auto-detects a single repository .pkt
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt               # destination defaults to snapshot/Caso1_Grupo09-2/
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt custom/dest/  # explicit destination
+pkt export --all                                                # export all discovered topologies
 ```
 
 Creates or refreshes:
@@ -111,11 +125,14 @@ identity with Packet Tracer's own encoder is not required.
 
 ```bash
 pkt inspect testdata/specimens/Caso1_Grupo09-2.pkt
+pkt inspect testdata/specimens/Caso1_Grupo09-2.pkt --type Router
 ```
 
-Decodes the binary and prints a read-only summary: device and link totals plus
-one row per device with type, model, and CLI line count. It creates or modifies
-no file.
+Decodes the binary and prints a read-only summary formatted in an aligned Unicode
+table: device and link totals, one row per device with role badge, model, and
+CLI line count, and a categorized breakdown rollup. When `--type` (`-t`) is
+supplied, only devices matching the specified type are shown. It creates or
+modifies no file.
 
 ## `edit`
 

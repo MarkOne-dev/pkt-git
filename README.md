@@ -64,6 +64,7 @@ binary; nothing is installed inside Packet Tracer.
 - 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the binary anytime with `pkt build`.
 - 🪝 **Transparent Git Hooks:** `pre-commit` exports snapshots on commit; `post-merge` and `post-checkout` rebuild binaries on pull or branch change.
 - 🛡️ **Safe CLI Editing:** `pkt edit` updates one device's interface or config lines with byte-offset edits and full XML validation.
+- 🎨 **Modern CLI UX:** Grouped help navigation, Unicode tabular topology inspection with role badges, humanized file sizes, and full `NO_COLOR` / TTY compliance.
 - 🤖 **Agent Skills:** Bundled skill for OpenCode, Claude Code, and Gemini CLI, installable with `pkt skills`.
 - 💻 **Cross-Platform:** Linux, macOS, and Windows; no cgo or C runtime.
 
@@ -196,10 +197,18 @@ pkt skills --remove     # remove only the pkt-git skill
 
 ### Import an existing Packet Tracer project
 
+Simply run `pkt init` inside your repository. If a `.pkt` file is present, it is automatically detected and exported:
+
 ```bash
-pkt export my_project.pkt snapshot/my_project/
-mkdir -p topologia && cp my_project.pkt topologia/
+pkt init
 git add . && git commit -m "chore: import existing PT project"
+```
+
+You can also run `pkt export` anytime; with no arguments it auto-detects the project, or you can specify a file and let the snapshot directory default by convention:
+
+```bash
+pkt export                      # auto-detects .pkt file
+pkt export my_project.pkt       # exports to snapshot/my_project/
 ```
 
 ---

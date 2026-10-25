@@ -2,11 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/hooks"
+	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
 func newInitCmd() *cobra.Command {
@@ -24,7 +27,7 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "[ok] initialized %s\n", result.Root)
+			ui.Success(out, "initialized %s", result.Root)
 			fmt.Fprintf(out, "  hooks: %s (%s)\n", hooks.HookDir, strings.Join(result.HooksWritten, ", "))
 			fmt.Fprintf(out, "  binary: %s\n", result.Executable)
 			switch {
@@ -35,6 +38,25 @@ func newInitCmd() *cobra.Command {
 			default:
 				fmt.Fprintln(out, "  attributes: unchanged")
 			}
+
+			topos, err := snapshot.FindTopologies(result.Root)
+			if err != nil {
+				return err
+			}
+			for _, t := range topos {
+				fullPktPath := filepath.Join(result.Root, t)
+				destRel := snapshot.DefaultSnapshotDir(t)
+				destDir := filepath.Join(result.Root, destRel)
+				expResult, expErr := snapshot.Export(fullPktPath, destDir)
+				if expErr != nil {
+					ui.Warning(out, "failed to auto-export %s: %v", t, expErr)
+					continue
+				}
+				ui.Success(out, "auto-detected %s -> exported to %s", t, destRel)
+				fmt.Fprintf(out, "  XML: %d bytes (%s), devices: %d, links: %d, configs: %d\n",
+					expResult.XMLSize, ui.FormatBytes(int64(expResult.XMLSize)), expResult.DeviceCount, expResult.LinkCount, expResult.ConfigCount)
+			}
+
 			return nil
 		},
 	}

@@ -36,11 +36,101 @@ func TestExportCommand(t *testing.T) {
 }
 
 func TestExportCommandUsage(t *testing.T) {
+	code, _, stderr := runCLI("export", "1", "2", "3")
+	if code != 2 {
+		t.Fatalf("exit code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr, "expected at most 2 argument") {
+		t.Fatalf("stderr = %q", stderr)
+	}
+}
+
+func TestExportCommandDefaultDestination(t *testing.T) {
+	dir := t.TempDir()
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
+	pktPath := filepath.Join(dir, "mylab.pkt")
+	writeCLIFile(t, pktPath, encodeCLI(t, minimalCLIXML))
+
+	code, stdout, stderr := runCLI("export", pktPath)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "[ok] exported") {
+		t.Fatalf("stdout = %q", stdout)
+	}
+	wantDir := filepath.Join("snapshot", "mylab")
+	if _, err := os.Stat(filepath.Join(dir, wantDir, "base.snapshot.xml")); err != nil {
+		t.Fatalf("missing expected snapshot file: %v", err)
+	}
+
+	_ = os.RemoveAll(filepath.Join(dir, "snapshot"))
+	code, stdout, stderr = runCLI("export")
+	if code != 0 {
+		t.Fatalf("0-arg exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "[ok] exported") {
+		t.Fatalf("stdout = %q", stdout)
+	}
+	if _, err := os.Stat(filepath.Join(dir, wantDir, "base.snapshot.xml")); err != nil {
+		t.Fatalf("missing auto-detected snapshot file: %v", err)
+	}
+}
+
+func TestExportCommandMultipleTopologies(t *testing.T) {
+	dir := t.TempDir()
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
+	writeCLIFile(t, filepath.Join(dir, "lab1.pkt"), encodeCLI(t, minimalCLIXML))
+	writeCLIFile(t, filepath.Join(dir, "lab2.pkt"), encodeCLI(t, minimalCLIXML))
+
 	code, _, stderr := runCLI("export")
 	if code != 2 {
 		t.Fatalf("exit code = %d, want 2", code)
 	}
-	if !strings.Contains(stderr, "expected 2 argument") {
+	if !strings.Contains(stderr, "multiple topologies found") {
+		t.Fatalf("stderr = %q", stderr)
+	}
+
+	code, stdout, stderr := runCLI("export", "--all")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if strings.Count(stdout, "[ok] exported") != 2 {
+		t.Fatalf("expected 2 exports in stdout, got:\n%s", stdout)
+	}
+}
+
+func TestExportCommandNoTopologies(t *testing.T) {
+	dir := t.TempDir()
+	origDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(origDir) }()
+
+	code, _, stderr := runCLI("export")
+	if code != 2 {
+		t.Fatalf("exit code = %d, want 2", code)
+	}
+	if !strings.Contains(stderr, "no .pkt or .pka files found") {
 		t.Fatalf("stderr = %q", stderr)
 	}
 }
@@ -130,6 +220,34 @@ func TestInspectCommandUsage(t *testing.T) {
 	}
 	if !strings.Contains(stderr, "expected 1 argument") {
 		t.Fatalf("stderr = %q", stderr)
+	}
+}
+
+func TestInspectCommandFilter(t *testing.T) {
+	dir := t.TempDir()
+	pktPath := filepath.Join(dir, "project.pkt")
+	writeCLIFile(t, pktPath, encodeCLI(t, minimalCLIXML))
+
+	code, stdout, stderr := runCLI("inspect", pktPath, "--type", "Switch")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "R1") || !strings.Contains(stdout, "Switch") {
+		t.Fatalf("expected R1 and Switch in filtered output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "matching \"Switch\"") {
+		t.Fatalf("expected filter notice in stdout:\n%s", stdout)
+	}
+
+	code, stdout, stderr = runCLI("inspect", pktPath, "--type", "Router")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if strings.Contains(stdout, "R1") {
+		t.Fatalf("did not expect R1 in Router-filtered output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "0 device(s) matching \"Router\"") {
+		t.Fatalf("expected 0 matching devices notice:\n%s", stdout)
 	}
 }
 

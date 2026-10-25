@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/codec"
 )
 
@@ -25,15 +26,16 @@ func newVerifyCmd() *cobra.Command {
 				return fmt.Errorf("verify: %s: %w; check the producing Packet Tracer version (tested: %s)", args[0], err, codec.SupportedVersion)
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "binary size        : %d\n", result.BinarySize)
-			fmt.Fprintf(out, "extracted XML      : %d\n", result.XMLSize)
-			fmt.Fprintf(out, "rebuilt binary     : %d\n", result.RebuiltSize)
+			fmt.Fprintf(out, "binary size        : %d (%s)\n", result.BinarySize, ui.FormatBytes(int64(result.BinarySize)))
+			fmt.Fprintf(out, "extracted XML      : %d (%s)\n", result.XMLSize, ui.FormatBytes(int64(result.XMLSize)))
+			fmt.Fprintf(out, "rebuilt binary     : %d (%s)\n", result.RebuiltSize, ui.FormatBytes(int64(result.RebuiltSize)))
 			fmt.Fprintf(out, "XML is a document  : %t\n", result.XMLIsDocument)
 			fmt.Fprintf(out, "XML round trip     : %t\n", result.XMLRoundTrip)
 			fmt.Fprintf(out, "byte-identical     : %t\n", result.ByteIdentical)
 			if !result.XMLIsDocument || !result.XMLRoundTrip {
 				return errors.New("verify: XML document or round trip check failed")
 			}
+			ui.Success(out, "container round trip verified")
 			return nil
 		},
 	}

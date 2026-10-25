@@ -2,15 +2,19 @@ package cli
 
 import (
 	"fmt"
-	"text/tabwriter"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
 func newInspectCmd() *cobra.Command {
-	return &cobra.Command{
+	var typeFilter string
+
+	cmd := &cobra.Command{
 		Use:   "inspect <project.pkt>",
 		Short: "Show a read-only topology summary for a binary",
 		Args:  exactArgs(1),
@@ -20,13 +24,51 @@ func newInspectCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "%s: %d device(s), %d link(s)\n", result.Name, len(result.Devices), result.Links)
-			writer := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
-			fmt.Fprintln(writer, "NAME\tTYPE\tMODEL\tCONFIG LINES")
-			for _, device := range result.Devices {
-				fmt.Fprintf(writer, "%s\t%s\t%s\t%d\n", device.Name, device.Type, device.Model, device.ConfigLines)
+
+			var filtered []snapshot.InspectDevice
+			typeCounts := make(map[string]int)
+			for _, d := range result.Devices {
+				typeCounts[d.Type]++
+				if typeFilter == "" || strings.EqualFold(d.Type, typeFilter) || strings.Contains(strings.ToLower(d.Type), strings.ToLower(typeFilter)) {
+					filtered = append(filtered, d)
+				}
 			}
-			return writer.Flush()
+
+			if typeFilter != "" {
+				fmt.Fprintf(out, "%s: %d device(s) matching %q (of %d total), %d link(s)\n",
+					result.Name, len(filtered), typeFilter, len(result.Devices), result.Links)
+			} else {
+				fmt.Fprintf(out, "%s: %d device(s), %d link(s)\n", result.Name, len(result.Devices), result.Links)
+			}
+
+			headers := []string{"NAME", "TYPE", "MODEL", "CONFIG LINES"}
+			rows := make([][]string, 0, len(filtered))
+			for _, device := range filtered {
+				rows = append(rows, []string{
+					device.Name,
+					ui.DeviceBadge(out, device.Type),
+					device.Model,
+					strconv.Itoa(device.ConfigLines),
+				})
+			}
+
+			fmt.Fprintln(out, ui.RenderTable(out, headers, rows))
+
+			// Category Rollup
+			var breakdown []string
+			for _, cat := range []string{"Router", "Switch", "MultiLayerSwitch", "Server", "AccessPoint", "Pc", "Laptop"} {
+				if count := typeCounts[cat]; count > 0 {
+					breakdown = append(breakdown, fmt.Sprintf("%s: %d", cat, count))
+				}
+			}
+			if len(breakdown) > 0 {
+				fmt.Fprintf(out, "Breakdown: %s\n", strings.Join(breakdown, ", "))
+			}
+
+			return nil
 		},
 	}
+
+	cmd.Flags().StringVarP(&typeFilter, "type", "t", "", "Filter devices by type (e.g. Router, Switch, Server)")
+	return cmd
 }
