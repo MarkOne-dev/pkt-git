@@ -36,12 +36,15 @@ pkt-git/
 ├── cmd/pkt/main.go              # Process entry point and exit-code handoff
 ├── internal/
 │   ├── cli/                     # Cobra commands, flags, help, exit codes
+│   │   └── ui/                  # Lipgloss styling, terminal widgets, animations
 │   ├── config/                  # Build metadata and repository config keys
 │   ├── codec/                   # .pkt container: decode, encode, verify
 │   ├── crypto/
 │   │   ├── cmac/                # CMAC/OMAC1 (NIST SP 800-38B)
 │   │   ├── eax/                 # EAX mode and tag verification
 │   │   └── twofish/             # x/crypto Twofish boundary
+│   ├── i18n/                    # go-i18n internationalization and locale catalogs
+│   ├── ptdetect/                # Cross-platform Cisco Packet Tracer detection
 │   ├── topology/                # XML -> devices, links, config lines, JSON
 │   ├── snapshot/                # export, build, sync, inspect orchestration
 │   ├── xmledit/                 # Byte-offset XML index and span edits

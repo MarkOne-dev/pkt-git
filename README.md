@@ -114,7 +114,7 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 | [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
 | [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
 | [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
-| [Use Cases & Tested Flows](docs/use-cases.md) | Ten concrete, project-validated flows: bootstrap → gitflow → conflicts. |
+| [Use Cases & Tested Flows](docs/use-cases.md) | Twelve concrete, project-validated flows: bootstrap → onboarding → gitflow → localization → conflicts. |
 | [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
 | [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
 | [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
