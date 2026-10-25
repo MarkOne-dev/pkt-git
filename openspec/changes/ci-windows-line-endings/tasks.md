@@ -2,7 +2,7 @@
 
 ## 1. Configure Git Line Endings
 
-- [ ] 1.1 Update `.gitattributes` with normalization (`* text=auto`) and enforce LF on Go (`*.go text eol=lf`), shell scripts (`*.sh text eol=lf`), Markdown, and YAML files, while preserving Packet Tracer binary and snapshot rules; verify using `git check-attr text eol internal/cli/root.go`.
+- [x] 1.1 Update `.gitattributes` with normalization (`* text=auto`) and enforce LF on Go (`*.go text eol=lf`), shell scripts (`*.sh text eol=lf`), Markdown, and YAML files, while preserving Packet Tracer binary and snapshot rules; verify using `git check-attr text eol internal/cli/root.go`.
 - [ ] 1.2 Ensure checkout configuration in `.github/workflows/ci.yml` cleanly supports cross-platform line endings and verify workflow validity.
 
 ## 2. Verification and Formatting

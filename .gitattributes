@@ -1,3 +1,16 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Enforce LF line endings for Go source, shell scripts, and configuration
+*.go text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Enforce CRLF line endings for PowerShell scripts
+*.ps1 text eol=crlf
+
 # pkt-git ownership: the binary is an artifact; the snapshot is the source of truth.
 *.pkt binary
 *.pka binary
