@@ -7,6 +7,9 @@ const (
 	// the installed pkt executable.
 	GitConfigBinary = "pktgit.bin"
 
+	// GitConfigLanguage is the git config key holding the user's preferred language.
+	GitConfigLanguage = "pkt.language"
+
 	// Legacy keys written by the Python implementation. They are read only to
 	// migrate or explain old installations.
 	GitConfigLegacyPython = "pktgit.py"

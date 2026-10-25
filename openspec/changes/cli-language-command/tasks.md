@@ -2,7 +2,7 @@
 
 ## 1. Core Persistence & Detection Integration
 
-- [ ] 1.1 Add `GitConfigLanguage` constant in `internal/config/config.go` and update `internal/i18n.DetectLanguage()` to inspect `git config pkt.language`; verify with unit tests in `internal/i18n/i18n_test.go`.
+- [x] 1.1 Add `GitConfigLanguage` constant in `internal/config/config.go` and update `internal/i18n.DetectLanguage()` to inspect `git config pkt.language`; verify with unit tests in `internal/i18n/i18n_test.go`.
 
 ## 2. Language Command Implementation
 
