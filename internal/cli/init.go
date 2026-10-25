@@ -52,7 +52,7 @@ func newInitCmd() *cobra.Command {
 					ui.Warning(out, "failed to auto-export %s: %v", t, expErr)
 					continue
 				}
-				ui.Success(out, "auto-detected %s -> exported to %s", t, destRel)
+				ui.Success(out, "auto-detected %s -> exported to %s", filepath.ToSlash(t), filepath.ToSlash(destRel))
 				fmt.Fprintf(out, "  XML: %d bytes (%s), devices: %d, links: %d, configs: %d\n",
 					expResult.XMLSize, ui.FormatBytes(int64(expResult.XMLSize)), expResult.DeviceCount, expResult.LinkCount, expResult.ConfigCount)
 			}
