@@ -1,0 +1,119 @@
+{
+  "BannerSubtitle": {
+    "other": "Cisco Packet Tracer ⇄ Control de versiones Git"
+  },
+  "WelcomeVerifying": {
+    "other": "Verificando prerrequisitos del entorno..."
+  },
+  "WelcomeReady": {
+    "other": "Entorno listo (Git instalado, pkt-git {{.Version}})"
+  },
+  "WelcomeQuickstartTitle": {
+    "other": "Guía de inicio rápido:"
+  },
+  "WelcomeStep1Title": {
+    "other": "Inicializa un repositorio de Packet Tracer:"
+  },
+  "WelcomeStep1Comment": {
+    "other": "# conecta git hooks y exporta la topología existente"
+  },
+  "WelcomeStep2Title": {
+    "other": "Commits normales de Git:"
+  },
+  "WelcomeStep2Comment": {
+    "other": "# sincroniza automáticamente XML y archivos .cfg"
+  },
+  "WelcomeStep3Title": {
+    "other": "Diagnósticos y habilidades de agentes IA:"
+  },
+  "WelcomeStep3Doctor": {
+    "other": "# inspecciona la salud del entorno"
+  },
+  "WelcomeStep3Skills": {
+    "other": "# activa la habilidad de asistente IA en Claude/Gemini"
+  },
+  "WelcomeRunHelp": {
+    "other": "Ejecuta {{.Command}} para ver todos los comandos."
+  },
+  "DoctorGitMissing": {
+    "other": "Git: no encontrado en PATH (requerido)"
+  },
+  "DoctorGitRemediation": {
+    "other": "Solución: instala Git a través del gestor de paquetes de tu sistema (ej. apt, dnf, brew, winget)."
+  },
+  "DoctorGitIdentityMissing": {
+    "other": "Identidad Git: user.name o user.email no configurados"
+  },
+  "DoctorGitIdentityRemediation": {
+    "other": "Solución: configura la identidad de Git para evitar errores de commit:"
+  },
+  "DoctorBinaryInPath": {
+    "other": "Binario: {{.Path}} (en PATH)"
+  },
+  "DoctorBinaryNotInPath": {
+    "other": "Binario: {{.Path}} (el directorio no está en PATH)"
+  },
+  "DoctorBinaryRemediationUnix": {
+    "other": "Solución: agrega 'export PATH=\"$PATH:{{.Dir}}\"' a tu ~/.bashrc o ~/.zshrc."
+  },
+  "DoctorBinaryRemediationWindows": {
+    "other": "Solución: agrega {{.Dir}} a tu PATH de usuario en Propiedades del Sistema o PowerShell."
+  },
+  "DoctorSkillsInstalled": {
+    "other": "Habilidades de Agente: instaladas para {{.Agents}}"
+  },
+  "DoctorSkillsNone": {
+    "other": "Habilidades de Agente: ninguna instalada (ejecuta 'pkt skills' para instalarlas en OpenCode, Claude, Gemini)"
+  },
+  "DoctorPacketTracerDetected": {
+    "other": "Cisco Packet Tracer: {{.Details}}"
+  },
+  "DoctorPacketTracerMissing": {
+    "other": "Cisco Packet Tracer: no detectado en rutas comunes (opcional para el CLI; requerido para abrir/editar topologías)"
+  },
+  "DoctorGoInstalled": {
+    "other": "SDK de Go: {{.Details}} (opcional para el runtime)"
+  },
+  "DoctorGoMissing": {
+    "other": "SDK de Go: no instalado (opcional; los binarios precompilados no requieren el runtime de Go)"
+  },
+  "DoctorNerdFontDetected": {
+    "other": "Nerd Font: {{.Name}} (detectada)"
+  },
+  "DoctorNerdFontMissing": {
+    "other": "Nerd Font: no detectada (opcional; habilita iconos en el banner de bienvenida y terminal)"
+  },
+  "DoctorAdvisoryWarnings": {
+    "other": "El entorno tiene advertencias; consulta las soluciones arriba."
+  },
+  "DoctorAllPassed": {
+    "other": "¡Todas las comprobaciones pasaron! Tu entorno está listo."
+  },
+  "LanguageCmdShort": {
+    "other": "Ver o configurar el idioma preferido de la interfaz"
+  },
+  "LanguageCurrent": {
+    "other": "Idioma actual: {{.Language}} ({{.Code}})"
+  },
+  "LanguageUpdated": {
+    "other": "Idioma actualizado a {{.Language}} ({{.Code}})"
+  },
+  "LanguagePersistedScope": {
+    "other": "Guardado en: {{.Target}}"
+  },
+  "LanguageInvalidCode": {
+    "other": "código de idioma no soportado \"{{.Code}}\". Idiomas soportados: en (English), es (Español)"
+  },
+  "LanguageMenuTitle": {
+    "other": "Idioma de la interfaz / Interface Language"
+  },
+  "LanguageMenuPrompt": {
+    "other": "Selecciona una opción [1-2] (Enter para mantener actual): "
+  },
+  "LanguageAvailable": {
+    "other": "Idiomas disponibles:"
+  },
+  "LanguageUsage": {
+    "other": "Uso:"
+  }
+}

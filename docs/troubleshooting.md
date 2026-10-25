@@ -6,6 +6,9 @@ from development. Untested areas are flagged as such.
 ## Verification Commands (start here)
 
 ```bash
+# Verify host environment prerequisites, tool installation, and PATH:
+pkt doctor
+
 # Container round trip against the bundled specimen.
 # Expect XML is a document: true and XML round trip: true.
 pkt verify testdata/specimens/Caso1_Grupo09-2.pkt
@@ -169,6 +172,9 @@ then run `pkt sync` and rebuild the binary.
   close Packet Tracer) before committing; Packet Tracer holds the file mid-write.
 - **Assuming hooks exist before running `pkt init`.** A repository without
   `pkt init` silently has no automation.
+- **Assuming hooks activate automatically after `git clone`.** For security reasons,
+  Git never activates hooks on clone; every teammate must run `pkt init` once
+  locally.
 - **Editing `STARTUPCONFIG` when you meant `RUNNINGCONFIG`.** They are separate
   blocks; `pkt edit` only changes the running config.
 

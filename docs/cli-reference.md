@@ -22,7 +22,11 @@ pkt sync   <snapshot-dir|snapshot.xml>
 pkt resolve [--ours|--theirs]
 pkt skills [--remove]
 pkt doctor
+pkt language [code] [--local]
 pkt version
+
+# Global flags:
+#   --lang <en|es>   Override language for CLI output (en, es)
 
 # Hidden hook entry points, invoked by generated hooks:
 pkt pre-commit
@@ -342,6 +346,36 @@ Inspects the host environment prerequisites and reports the status of:
 - Go compiler availability (informational).
 
 Returns exit code 0 when all prerequisites are met or only advisory notices remain, and exit code 1 if Git itself is missing.
+
+## `language`
+
+Views or configures the preferred interface language for pkt-git:
+
+```bash
+pkt language [code] [--local]
+pkt lang [code] [--local]
+```
+
+Aliases: `language`, `lang`.
+
+Supported language codes: `en` (English), `es` (Español).
+
+- When run without arguments in an interactive terminal (TTY), displays a styled Lipgloss interactive menu highlighting the active language and prompting for numeric or code selection.
+- When run without arguments in non-interactive environments (pipes, scripts), prints the current language and available options without blocking.
+- When given a language code argument (`pkt lang es`), updates the preferred language immediately.
+- By default, saves the preference globally in `~/.gitconfig` (`pkt.language`).
+- When `--local` (or `-l`) is provided, saves the preference specifically in the current repository's `.git/config`.
+
+### Global Flag: `--lang`
+
+All `pkt` commands accept the persistent `--lang` flag:
+
+```bash
+pkt doctor --lang es
+pkt version --lang en
+```
+
+Overrides both Git configuration and environment variables for that single command invocation.
 
 ## `version`
 

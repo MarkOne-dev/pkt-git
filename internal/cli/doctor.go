@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
+	"github.com/MarkOne-dev/pkt-git/internal/ptdetect"
 	"github.com/MarkOne-dev/pkt-git/internal/skills"
 )
 
@@ -26,8 +28,8 @@ func newDoctorCmd() *cobra.Command {
 			// 1. Git Installation & Version
 			gitPath, err := exec.LookPath("git")
 			if err != nil {
-				ui.Error(out, "Git: not found in PATH (required)")
-				fmt.Fprintln(out, "  Remediation: install Git via your system package manager (e.g. apt, dnf, brew, winget).")
+				ui.Error(out, "%s", i18n.T("DoctorGitMissing"))
+				fmt.Fprintln(out, "  "+i18n.T("DoctorGitRemediation"))
 				return fmt.Errorf("doctor: git is required but not installed")
 			}
 
@@ -48,8 +50,8 @@ func newDoctorCmd() *cobra.Command {
 				ui.Success(out, "Git Identity: %s <%s>", userName, userEmail)
 			} else {
 				hasWarnings = true
-				ui.Warning(out, "Git Identity: unconfigured user.name or user.email")
-				fmt.Fprintln(out, "  Remediation: configure Git identity to prevent commit errors:")
+				ui.Warning(out, "%s", i18n.T("DoctorGitIdentityMissing"))
+				fmt.Fprintln(out, "  "+i18n.T("DoctorGitIdentityRemediation"))
 				fmt.Fprintln(out, "    git config --global user.name \"Your Name\"")
 				fmt.Fprintln(out, "    git config --global user.email \"you@example.com\"")
 			}
@@ -60,11 +62,15 @@ func newDoctorCmd() *cobra.Command {
 				exeDir := filepath.Dir(exePath)
 				inPath := isDirInPATH(exeDir)
 				if inPath {
-					ui.Success(out, "Binary: %s (in PATH)", exePath)
+					ui.Success(out, "%s", i18n.T("DoctorBinaryInPath", map[string]interface{}{"Path": exePath}))
 				} else {
 					hasWarnings = true
-					ui.Warning(out, "Binary: %s (directory not in PATH)", exePath)
-					fmt.Fprintf(out, "  Remediation: add %s to your PATH in ~/.bashrc or ~/.zshrc.\n", exeDir)
+					ui.Warning(out, "%s", i18n.T("DoctorBinaryNotInPath", map[string]interface{}{"Path": exePath}))
+					if runtime.GOOS == "windows" {
+						fmt.Fprintf(out, "  %s\n", i18n.T("DoctorBinaryRemediationWindows", map[string]interface{}{"Dir": exeDir}))
+					} else {
+						fmt.Fprintf(out, "  %s\n", i18n.T("DoctorBinaryRemediationUnix", map[string]interface{}{"Dir": exeDir}))
+					}
 				}
 			}
 
@@ -79,18 +85,24 @@ func newDoctorCmd() *cobra.Command {
 					}
 				}
 				if len(installed) > 0 {
-					ui.Success(out, "Agent Skills: installed for %s", strings.Join(installed, ", "))
+					ui.Success(out, "%s", i18n.T("DoctorSkillsInstalled", map[string]interface{}{"Agents": strings.Join(installed, ", ")}))
 				} else {
-					ui.Info(out, "Agent Skills: none installed (run 'pkt skills' to install for OpenCode, Claude, Gemini)")
+					ui.Info(out, "%s", i18n.T("DoctorSkillsNone"))
 				}
 			}
 
 			// 5. Cisco Packet Tracer detection
-			ptPath := findPacketTracer()
-			if ptPath != "" {
-				ui.Success(out, "Cisco Packet Tracer: detected at %s", ptPath)
+			ptInst := ptdetect.Find()
+			if ptInst != nil {
+				details := ""
+				if ptInst.Version != "" {
+					details = fmt.Sprintf("v%s (%s via %s)", ptInst.Version, ptInst.Path, ptInst.Method)
+				} else {
+					details = fmt.Sprintf("%s (via %s)", ptInst.Path, ptInst.Method)
+				}
+				ui.Success(out, "%s", i18n.T("DoctorPacketTracerDetected", map[string]interface{}{"Details": details}))
 			} else {
-				ui.Info(out, "Cisco Packet Tracer: not detected in common paths (optional for CLI; required to open/edit topologies)")
+				ui.Info(out, "%s", i18n.T("DoctorPacketTracerMissing"))
 			}
 
 			// 6. Go compiler availability
@@ -98,16 +110,24 @@ func newDoctorCmd() *cobra.Command {
 			if err == nil {
 				goVerBytes, _ := exec.Command("go", "version").Output()
 				goVer := strings.TrimSpace(string(goVerBytes))
-				ui.Info(out, "Go SDK: %s (%s, optional for runtime)", goVer, goPath)
+				ui.Info(out, "%s", i18n.T("DoctorGoInstalled", map[string]interface{}{"Details": fmt.Sprintf("%s (%s)", goVer, goPath)}))
 			} else {
-				ui.Info(out, "Go SDK: not installed (optional; prebuilt binaries require no Go runtime)")
+				ui.Info(out, "%s", i18n.T("DoctorGoMissing"))
+			}
+
+			// 7. Nerd Font Iconography
+			fontName := detectNerdFont()
+			if fontName != "" {
+				ui.Success(out, "%s", i18n.T("DoctorNerdFontDetected", map[string]interface{}{"Name": fontName}))
+			} else {
+				ui.Info(out, "%s", i18n.T("DoctorNerdFontMissing"))
 			}
 
 			fmt.Fprintln(out)
 			if hasWarnings {
-				ui.Warning(out, "Environment has advisory warnings; see above for remediation.")
+				ui.Warning(out, "%s", i18n.T("DoctorAdvisoryWarnings"))
 			} else {
-				ui.Success(out, "All checks passed! Your environment is ready.")
+				ui.Success(out, "%s", i18n.T("DoctorAllPassed"))
 			}
 
 			return nil
@@ -125,45 +145,58 @@ func isDirInPATH(dir string) bool {
 	return false
 }
 
-func findPacketTracer() string {
-	if p, err := exec.LookPath("PacketTracer"); err == nil {
-		return p
-	}
-	if p, err := exec.LookPath("packettracer"); err == nil {
-		return p
-	}
-
-	var candidates []string
-	switch runtime.GOOS {
-	case "linux":
-		candidates = []string{
-			"/opt/pt/bin/PacketTracer",
-			"/usr/local/bin/PacketTracer",
-			"/usr/local/bin/packettracer",
-		}
-	case "darwin":
-		candidates = []string{
-			"/Applications/Cisco Packet Tracer.app",
-		}
-	case "windows":
-		programFiles := os.Getenv("ProgramFiles")
-		programFilesX86 := os.Getenv("ProgramFiles(x86)")
-		if programFiles != "" {
-			candidates = append(candidates,
-				filepath.Join(programFiles, "Cisco Packet Tracer", "bin", "PacketTracer.exe"),
-			)
-		}
-		if programFilesX86 != "" {
-			candidates = append(candidates,
-				filepath.Join(programFilesX86, "Cisco Packet Tracer", "bin", "PacketTracer.exe"),
-			)
+func detectNerdFont() string {
+	if fcPath, err := exec.LookPath("fc-list"); err == nil && fcPath != "" {
+		out, err := exec.Command("fc-list", ":", "family").Output()
+		if err == nil {
+			for _, line := range strings.Split(string(out), "\n") {
+				line = strings.TrimSpace(line)
+				if strings.Contains(strings.ToLower(line), "nerd font") {
+					parts := strings.Split(line, ",")
+					return strings.TrimSpace(parts[0])
+				}
+			}
 		}
 	}
 
-	for _, c := range candidates {
-		if _, err := os.Stat(c); err == nil {
-			return c
+	home, _ := os.UserHomeDir()
+	var searchDirs []string
+	if home != "" {
+		switch runtime.GOOS {
+		case "linux":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, ".local", "share", "fonts"),
+				filepath.Join(home, ".fonts"),
+				"/usr/share/fonts",
+				"/usr/local/share/fonts",
+			)
+		case "darwin":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, "Library", "Fonts"),
+				"/Library/Fonts",
+			)
+		case "windows":
+			localAppData := os.Getenv("LOCALAPPDATA")
+			if localAppData != "" {
+				searchDirs = append(searchDirs, filepath.Join(localAppData, "Microsoft", "Windows", "Fonts"))
+			}
+			winDir := os.Getenv("WINDIR")
+			if winDir != "" {
+				searchDirs = append(searchDirs, filepath.Join(winDir, "Fonts"))
+			}
 		}
 	}
+
+	for _, dir := range searchDirs {
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, e := range entries {
+				lower := strings.ToLower(e.Name())
+				if strings.Contains(lower, "nerd") {
+					return strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
+				}
+			}
+		}
+	}
+
 	return ""
 }

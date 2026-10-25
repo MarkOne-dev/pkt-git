@@ -177,7 +177,7 @@ Top-level help (`pkt --help`) SHALL organize public commands into distinct funct
 
 ### Requirement: Diagnose environment prerequisites with doctor
 
-The CLI SHALL expose a `doctor` command that inspects the host environment and reports the status of Git installation, configured Git user identity (`user.name` and `user.email`), binary availability on `PATH`, terminal color support, and agent skills.
+The CLI SHALL expose a `doctor` command that inspects the host environment and reports the status of Git installation, configured Git user identity (`user.name` and `user.email`), binary availability on `PATH`, terminal color support, agent skills, and a comprehensive discovery of installed Cisco Packet Tracer instances across Linux (AppImage, XDG desktop entries, Flatpak, Snap, standard paths), Windows (Registry and versioned directories), and macOS (Spotlight and Applications).
 
 #### Scenario: Run doctor in a healthy environment
 - **WHEN** a user runs `pkt doctor` on a fully configured machine
@@ -189,3 +189,101 @@ The CLI SHALL expose a `doctor` command that inspects the host environment and r
 - **THEN** the command outputs an advisory warning indicating the missing configuration
 - **AND** it displays remediation guidance for `git config`
 - **AND** it exits with status 0
+
+#### Scenario: Detect Cisco Packet Tracer from AppImage and desktop entries on Linux
+- **WHEN** a user runs `pkt doctor` on a Linux system where Cisco Packet Tracer is installed as an AppImage or registered via XDG `.desktop` file
+- **THEN** the command parses the executable path and detected version
+- **AND** it displays a success indicator with the path and version details without false negative warnings
+
+#### Scenario: Detect Cisco Packet Tracer from versioned install paths or Windows registry
+- **WHEN** a user runs `pkt doctor` on a Windows system where Cisco Packet Tracer is installed in a versioned folder (e.g. `Cisco Packet Tracer 8.2.2`) or registered in Windows App Paths/Uninstall registry keys
+- **THEN** the command discovers the executable path through dynamic globbing and registry lookups
+- **AND** it displays a success indicator with the detected executable location
+
+#### Scenario: Verify and advise on binary PATH inclusion
+- **WHEN** a user runs `pkt doctor` and the current `pkt` binary directory is not present in the user's `$PATH`
+- **THEN** the command displays an advisory warning and shell-specific remediation commands
+
+### Requirement: Display welcome onboarding screen
+
+`pkt welcome` SHALL display an onboarding overview comprising an ASCII art branding banner, current binary version, agent skills status, and a 3-step quickstart guide. The command MUST exit with code 0 on completion and MUST be advertised in the top-level help menu.
+
+#### Scenario: Interactive welcome execution
+- **WHEN** a user runs `pkt welcome` in an interactive terminal
+- **THEN** the command renders the styled ASCII banner with brand color
+- **AND** it displays the version and 3-step quickstart guidance
+- **AND** it exits with status 0
+
+#### Scenario: Non-interactive or NO_COLOR welcome execution
+- **WHEN** `pkt welcome` is piped, redirected, or executed with `NO_COLOR=1`
+- **THEN** it outputs plain text and an unstyled banner without ANSI escape codes
+- **AND** it exits with status 0
+
+### Requirement: Render animated terminal progress indicators
+
+The CLI SHALL provide an animated terminal spinner for long-running operations when executing in an interactive TTY without `NO_COLOR`. In non-interactive environments, pipelines, or when `NO_COLOR` is active, the CLI MUST omit spinner animation frames and print only the static operation message and completion status.
+
+#### Scenario: Interactive spinner execution
+- **WHEN** an operation with a spinner executes in an interactive terminal
+- **THEN** animated spinner frames update in place until the operation completes
+- **AND** a success or failure completion symbol is rendered upon completion
+
+#### Scenario: Non-interactive execution suppresses animation
+- **WHEN** an operation with a spinner executes with output redirected or under `NO_COLOR=1`
+- **THEN** no animation escape sequences or carriage returns are emitted
+- **AND** only the initial message and final status are written to output
+
+### Requirement: Use Nerd Font iconography with diagnostic reporting
+
+The CLI SHALL use Nerd Font glyphs rather than color emojis for UI icons when executing in an interactive TTY without `NO_COLOR`. In non-interactive or uncolored environments, the CLI MUST fall back to plain text labels (e.g. `[ok]`, `[warn]`, `[error]`). The `doctor` command MUST verify and report whether a Nerd Font is installed in the host system.
+
+#### Scenario: Interactive execution displays Nerd Font glyphs
+- **WHEN** commands execute in an interactive terminal with color enabled
+- **THEN** output icons use Nerd Font glyphs
+- **AND** standard emojis are omitted
+
+#### Scenario: Doctor reports Nerd Font status
+- **WHEN** a user runs `pkt doctor`
+- **THEN** the output includes an entry indicating whether a Nerd Font is detected on the host
+
+### Requirement: Support multi-language internationalization (i18n)
+
+The CLI SHALL localize user-facing messages, command summaries, banners, and diagnostic statuses according to the user's preferred language. The system MUST support English (`en`) and Spanish (`es`), detecting the initial locale from standard environment variables (`LC_ALL`, `LC_MESSAGES`, `LANG`), and MUST provide a persistent global flag (`--lang`) to override the language explicitly.
+
+#### Scenario: Default language resolution from system environment
+- **WHEN** a user with Spanish locale (`LANG=es_ES.UTF-8`) runs `pkt welcome` without explicit language flags
+- **THEN** the CLI renders the welcome guide and status messages in Spanish
+
+#### Scenario: Explicit language override flag
+- **WHEN** a user runs `pkt --lang es doctor` or `pkt --lang en doctor`
+- **THEN** the CLI displays diagnostic output localized in the requested language regardless of environment variables
+
+#### Scenario: Fallback to English for unknown locales
+- **WHEN** a user runs the CLI with an unsupported or unconfigured locale
+- **THEN** the CLI falls back gracefully to English without errors or missing translation keys
+
+### Requirement: Manage interface language with language command
+
+The CLI SHALL expose a `language` command (with alias `lang`) to view, switch, and persist the preferred interface language. The command MUST accept an optional language code argument (`en`, `es`), support `--global` (default) and `--local` scope flags, and persist the preference in Git configuration (`pkt.language`). When run interactively without arguments in a TTY, it MUST present an interactive selection menu.
+
+#### Scenario: View current language in non-interactive environment
+- **WHEN** a user or script runs `pkt language` in a non-interactive stream
+- **THEN** the command prints the active language code and available languages without waiting for standard input
+- **AND** it exits with status 0
+
+#### Scenario: Set language with direct code argument
+- **WHEN** a user runs `pkt language es` or `pkt lang es`
+- **THEN** the command persists `es` in `git config --global pkt.language`
+- **AND** it displays a confirmation indicating the language was updated
+- **AND** it exits with status 0
+
+#### Scenario: Reject unsupported language code
+- **WHEN** a user runs `pkt language de`
+- **THEN** the command writes an error indicating `de` is not supported
+- **AND** it displays the list of supported language codes (`en`, `es`)
+- **AND** it exits with status 2
+
+#### Scenario: Interactive language selection
+- **WHEN** a user runs `pkt language` in an interactive terminal (TTY)
+- **THEN** the CLI renders an interactive menu displaying available languages and marks the currently active language
+- **AND** it prompts the user to select an option
