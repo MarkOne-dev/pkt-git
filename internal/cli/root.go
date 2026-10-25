@@ -31,17 +31,62 @@ func NewRootCmd() *cobra.Command {
 		return usagef("%v", err)
 	})
 
+	root.AddGroup(
+		&cobra.Group{
+			ID:    "core",
+			Title: "Core Workflow:",
+		},
+		&cobra.Group{
+			ID:    "inspect",
+			Title: "Inspection & Editing:",
+		},
+		&cobra.Group{
+			ID:    "collab",
+			Title: "Git Collaboration & Tools:",
+		},
+	)
+
+	initCmd := newInitCmd()
+	initCmd.GroupID = "core"
+
+	exportCmd := newExportCmd()
+	exportCmd.GroupID = "core"
+
+	buildCmd := newBuildCmd()
+	buildCmd.GroupID = "core"
+
+	syncCmd := newSyncCmd()
+	syncCmd.GroupID = "core"
+
+	inspectCmd := newInspectCmd()
+	inspectCmd.GroupID = "inspect"
+
+	editCmd := newEditCmd()
+	editCmd.GroupID = "inspect"
+
+	verifyCmd := newVerifyCmd()
+	verifyCmd.GroupID = "inspect"
+
+	resolveCmd := newResolveCmd()
+	resolveCmd.GroupID = "collab"
+
+	versionCmd := newVersionCmd()
+	versionCmd.GroupID = "collab"
+
+	skillsCmd := newSkillsCmd()
+	skillsCmd.GroupID = "collab"
+
 	root.AddCommand(
-		newInitCmd(),
-		newExportCmd(),
-		newBuildCmd(),
-		newInspectCmd(),
-		newEditCmd(),
-		newSyncCmd(),
-		newResolveCmd(),
-		newVerifyCmd(),
-		newVersionCmd(),
-		newSkillsCmd(),
+		initCmd,
+		exportCmd,
+		buildCmd,
+		inspectCmd,
+		editCmd,
+		syncCmd,
+		resolveCmd,
+		verifyCmd,
+		versionCmd,
+		skillsCmd,
 		newPreCommitCmd(),
 		newPostMergeCmd(),
 		newPostCheckoutCmd(),

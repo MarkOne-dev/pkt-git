@@ -7,8 +7,8 @@
 
 ## 2. Command Help Organization
 
-- [ ] 2.1 Configure Cobra command groups in `internal/cli/root.go` categorizing commands into Core Workflow, Inspection & Editing, and Git Collaboration & Agents.
-- [ ] 2.2 Update `internal/cli/root_test.go` to verify `pkt --help` outputs grouped sections while maintaining exit code 0.
+- [x] 2.1 Configure Cobra command groups in `internal/cli/root.go` categorizing commands into Core Workflow, Inspection & Editing, and Git Collaboration & Agents.
+- [x] 2.2 Update `internal/cli/root_test.go` to verify `pkt --help` outputs grouped sections while maintaining exit code 0.
 
 ## 3. Tabular Topology Inspection
 
