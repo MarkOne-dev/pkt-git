@@ -1,0 +1,609 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="100%" height="100%">
+  <defs>
+    <style>/* <![CDATA[ */
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .font-title {
+      font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+      font-weight: 800;
+    }
+
+    .font-sans {
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Ambient background grid */
+    .grid-line {
+      stroke: rgba(255, 255, 255, 0.035);
+      stroke-width: 1;
+    }
+
+    /* Animated Outer Frame (Border Beam) */
+    .frame-base {
+      stroke: rgba(255, 255, 255, 0.12);
+      stroke-width: 1.5;
+      fill: none;
+    }
+    
+    .frame-beam {
+      fill: none;
+      stroke: url(#frame-beam-grad);
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-dasharray: 240 3400;
+      animation: borderBeam 14s linear infinite;
+    }
+
+    .frame-glow {
+      animation: framePulse 6s ease-in-out infinite;
+    }
+
+    @keyframes borderBeam {
+      0% {
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dashoffset: -3640;
+      }
+    }
+
+    @keyframes framePulse {
+      0%, 100% {
+        opacity: 0.35;
+      }
+      50% {
+        opacity: 0.85;
+      }
+    }
+
+    /* Floating Cisco Hologram */
+    .hologram-group {
+      animation: holoFloat 5s ease-in-out infinite;
+    }
+
+    @keyframes holoFloat {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    /* Hologram Laser Scanner */
+    .scan-beam {
+      animation: scanMove 3.6s ease-in-out infinite;
+    }
+
+    @keyframes scanMove {
+      0%, 100% {
+        transform: translateY(0px);
+        opacity: 0.85;
+      }
+      50% {
+        transform: translateY(70px);
+        opacity: 0.25;
+      }
+    }
+
+    /* Hologram Router Arrows Pulse */
+    .router-arrow {
+      animation: arrowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes arrowPulse {
+      0%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+      }
+      50% {
+        opacity: 0.45;
+        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
+      }
+    }
+
+    /* Switch Status LEDs Blinking */
+    .led-1 { animation: ledBlink 1.3s infinite; }
+    .led-2 { animation: ledBlink 0.9s infinite 0.2s; }
+    .led-3 { animation: ledBlink 1.8s infinite 0.5s; }
+    .led-4 { animation: ledBlink 1.1s infinite 0.7s; }
+    .led-5 { animation: ledBlink 1.5s infinite 0.3s; }
+    .led-6 { animation: ledBlink 0.8s infinite 0.4s; }
+
+    @keyframes ledBlink {
+      0%, 100% { opacity: 0.2; }
+      25% { opacity: 1; fill: #ffffff; filter: drop-shadow(0 0 3px #fff); }
+      35% { opacity: 0.3; }
+      60% { opacity: 0.95; fill: #ffffff; }
+      75% { opacity: 0.15; }
+    }
+
+    /* Fiber Optic Data Pulses */
+    .data-pulse {
+      stroke-linecap: round;
+      animation: flowData 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+    }
+
+    @keyframes flowData {
+      0% {
+        stroke-dashoffset: 1200;
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+
+    /* Codec Core Pulsing */
+    .codec-core {
+      animation: codecPulse 2.4s ease-in-out infinite;
+      transform-origin: 796px 250px;
+    }
+
+    @keyframes codecPulse {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+      }
+      50% {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.95));
+      }
+    }
+
+    /* Git Node Radar Ping */
+    .ping-ring {
+      animation: pingRadar 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+      transform-origin: center;
+    }
+
+    @keyframes pingRadar {
+      0% {
+        r: 12;
+        opacity: 0.9;
+        stroke-width: 2;
+      }
+      70% {
+        r: 26;
+        opacity: 0;
+        stroke-width: 0.5;
+      }
+      100% {
+        r: 26;
+        opacity: 0;
+        stroke-width: 0;
+      }
+    }
+
+    /* Git Diff Code Lines Shimmer */
+    .diff-line {
+      animation: diffShimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes diffShimmer {
+      0%, 100% {
+        opacity: 0.8;
+      }
+      50% {
+        opacity: 1;
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+      }
+    }
+
+    /* Title Glow Animation */
+    .title-glow {
+      animation: titlePulse 4s ease-in-out infinite;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+      }
+      50% {
+        filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.75));
+      }
+    }
+
+    /* Pill Badges Hover and Glow */
+    .badge-pill {
+      transition: all 0.25s ease;
+    }
+    .badge-pill:hover {
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.45));
+      cursor: pointer;
+    }
+    /* ]]> */</style>
+
+      <!-- Background Radial Gradient -->
+      <radialGradient id="bg-grad" cx="50%" cy="38%" r="65%">
+        <stop offset="0%" stop-color="#14151c" />
+        <stop offset="45%" stop-color="#0a0b0e" />
+        <stop offset="100%" stop-color="#030405" />
+      </radialGradient>
+
+      <!-- Frame Beam Gradient -->
+      <linearGradient id="frame-beam-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+        <stop offset="35%" stop-color="#ffffff" stop-opacity="0.3" />
+        <stop offset="85%" stop-color="#ffffff" stop-opacity="1" />
+        <stop offset="100%" stop-color="#a1a1aa" stop-opacity="0" />
+      </linearGradient>
+
+      <!-- Hologram Cone Gradient -->
+      <linearGradient id="holo-cone-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+        <stop offset="50%" stop-color="#a1a1aa" stop-opacity="0.12" />
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
+      </linearGradient>
+
+      <!-- Hologram Rim Gradient -->
+      <linearGradient id="holo-rim-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#52525b" stop-opacity="0.3" />
+        <stop offset="30%" stop-color="#ffffff" stop-opacity="0.95" />
+        <stop offset="70%" stop-color="#ffffff" stop-opacity="0.95" />
+        <stop offset="100%" stop-color="#52525b" stop-opacity="0.3" />
+      </linearGradient>
+
+      <!-- Switch Top Face Gradient -->
+      <linearGradient id="switch-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#252732" />
+        <stop offset="50%" stop-color="#191a22" />
+        <stop offset="100%" stop-color="#101116" />
+      </linearGradient>
+
+      <!-- Switch Left Face Gradient -->
+      <linearGradient id="switch-left-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#1c1d25" />
+        <stop offset="100%" stop-color="#0a0b0e" />
+      </linearGradient>
+
+      <!-- Switch Right Face Gradient -->
+      <linearGradient id="switch-right-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#111217" />
+        <stop offset="100%" stop-color="#22242f" />
+      </linearGradient>
+
+      <!-- Codec Top Face Gradient -->
+      <linearGradient id="codec-top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#2d303b" />
+        <stop offset="100%" stop-color="#181a21" />
+      </linearGradient>
+
+      <!-- Codec Front-Right Face Gradient -->
+      <linearGradient id="codec-front-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#20222a" />
+        <stop offset="100%" stop-color="#101115" />
+      </linearGradient>
+
+      <!-- Codec Left Face Gradient -->
+      <linearGradient id="codec-left-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1a1c24" />
+        <stop offset="100%" stop-color="#0c0d11" />
+      </linearGradient>
+
+      <!-- Fiber Luminous Base Gradient -->
+      <linearGradient id="fiber-glow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+        <stop offset="25%" stop-color="#ffffff" stop-opacity="0.65" />
+        <stop offset="50%" stop-color="#e4e4e7" stop-opacity="0.5" />
+        <stop offset="75%" stop-color="#ffffff" stop-opacity="0.65" />
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9" />
+      </linearGradient>
+
+      <!-- Glow Filters -->
+      <filter id="glow-white" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <!-- Hologram Footprint Radial Glow -->
+      <radialGradient id="holo-ground-glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35" />
+        <stop offset="45%" stop-color="#a1a1aa" stop-opacity="0.15" />
+        <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+      </radialGradient>
+    
+  </defs>
+  <!-- ==================== BACKGROUND ==================== -->
+  <rect width="1200" height="675" fill="#030405" />
+  <rect x="15" y="15" width="1170" height="645" rx="24" fill="url(#bg-grad)" />
+  <!-- Perspective Background Grid -->
+  <g opacity="0.65">
+    <line x1="40" y1="40" x2="1160" y2="40" stroke="rgba(255,255,255,0.025)" stroke-width="1" />
+    <line x1="40" y1="72" x2="1160" y2="72" stroke="rgba(255,255,255,0.030)" stroke-width="1" />
+    <line x1="40" y1="104" x2="1160" y2="104" stroke="rgba(255,255,255,0.034)" stroke-width="1" />
+    <line x1="40" y1="136" x2="1160" y2="136" stroke="rgba(255,255,255,0.038)" stroke-width="1" />
+    <line x1="40" y1="168" x2="1160" y2="168" stroke="rgba(255,255,255,0.042)" stroke-width="1" />
+    <line x1="40" y1="200" x2="1160" y2="200" stroke="rgba(255,255,255,0.047)" stroke-width="1" />
+    <line x1="40" y1="232" x2="1160" y2="232" stroke="rgba(255,255,255,0.051)" stroke-width="1" />
+    <line x1="40" y1="264" x2="1160" y2="264" stroke="rgba(255,255,255,0.055)" stroke-width="1" />
+    <line x1="40" y1="296" x2="1160" y2="296" stroke="rgba(255,255,255,0.059)" stroke-width="1" />
+    <line x1="40" y1="328" x2="1160" y2="328" stroke="rgba(255,255,255,0.064)" stroke-width="1" />
+    <line x1="40" y1="360" x2="1160" y2="360" stroke="rgba(255,255,255,0.062)" stroke-width="1" />
+    <line x1="40" y1="392" x2="1160" y2="392" stroke="rgba(255,255,255,0.058)" stroke-width="1" />
+    <line x1="40" y1="424" x2="1160" y2="424" stroke="rgba(255,255,255,0.053)" stroke-width="1" />
+    <line x1="40" y1="456" x2="1160" y2="456" stroke="rgba(255,255,255,0.049)" stroke-width="1" />
+    <line x1="40" y1="488" x2="1160" y2="488" stroke="rgba(255,255,255,0.045)" stroke-width="1" />
+    <line x1="40" y1="520" x2="1160" y2="520" stroke="rgba(255,255,255,0.041)" stroke-width="1" />
+    <line x1="40" y1="552" x2="1160" y2="552" stroke="rgba(255,255,255,0.036)" stroke-width="1" />
+    <line x1="40" y1="584" x2="1160" y2="584" stroke="rgba(255,255,255,0.032)" stroke-width="1" />
+    <line x1="40" y1="616" x2="1160" y2="616" stroke="rgba(255,255,255,0.028)" stroke-width="1" />
+    <line x1="48" y1="40" x2="48" y2="635" stroke="rgba(255,255,255,0.024)" stroke-width="1" />
+    <line x1="96" y1="40" x2="96" y2="635" stroke="rgba(255,255,255,0.027)" stroke-width="1" />
+    <line x1="144" y1="40" x2="144" y2="635" stroke="rgba(255,255,255,0.031)" stroke-width="1" />
+    <line x1="192" y1="40" x2="192" y2="635" stroke="rgba(255,255,255,0.034)" stroke-width="1" />
+    <line x1="240" y1="40" x2="240" y2="635" stroke="rgba(255,255,255,0.038)" stroke-width="1" />
+    <line x1="288" y1="40" x2="288" y2="635" stroke="rgba(255,255,255,0.042)" stroke-width="1" />
+    <line x1="336" y1="40" x2="336" y2="635" stroke="rgba(255,255,255,0.045)" stroke-width="1" />
+    <line x1="384" y1="40" x2="384" y2="635" stroke="rgba(255,255,255,0.049)" stroke-width="1" />
+    <line x1="432" y1="40" x2="432" y2="635" stroke="rgba(255,255,255,0.052)" stroke-width="1" />
+    <line x1="480" y1="40" x2="480" y2="635" stroke="rgba(255,255,255,0.056)" stroke-width="1" />
+    <line x1="528" y1="40" x2="528" y2="635" stroke="rgba(255,255,255,0.060)" stroke-width="1" />
+    <line x1="576" y1="40" x2="576" y2="635" stroke="rgba(255,255,255,0.063)" stroke-width="1" />
+    <line x1="624" y1="40" x2="624" y2="635" stroke="rgba(255,255,255,0.063)" stroke-width="1" />
+    <line x1="672" y1="40" x2="672" y2="635" stroke="rgba(255,255,255,0.060)" stroke-width="1" />
+    <line x1="720" y1="40" x2="720" y2="635" stroke="rgba(255,255,255,0.056)" stroke-width="1" />
+    <line x1="768" y1="40" x2="768" y2="635" stroke="rgba(255,255,255,0.052)" stroke-width="1" />
+    <line x1="816" y1="40" x2="816" y2="635" stroke="rgba(255,255,255,0.049)" stroke-width="1" />
+    <line x1="864" y1="40" x2="864" y2="635" stroke="rgba(255,255,255,0.045)" stroke-width="1" />
+    <line x1="912" y1="40" x2="912" y2="635" stroke="rgba(255,255,255,0.042)" stroke-width="1" />
+    <line x1="960" y1="40" x2="960" y2="635" stroke="rgba(255,255,255,0.038)" stroke-width="1" />
+    <line x1="1008" y1="40" x2="1008" y2="635" stroke="rgba(255,255,255,0.034)" stroke-width="1" />
+    <line x1="1056" y1="40" x2="1056" y2="635" stroke="rgba(255,255,255,0.031)" stroke-width="1" />
+    <line x1="1104" y1="40" x2="1104" y2="635" stroke="rgba(255,255,255,0.027)" stroke-width="1" />
+    <line x1="1152" y1="40" x2="1152" y2="635" stroke="rgba(255,255,255,0.024)" stroke-width="1" />
+  </g>
+  <circle cx="600.0" cy="302.5" r="380" fill="url(#holo-ground-glow)" opacity="0.45" pointer-events="none" />
+  <!-- ==================== ANIMATED FRAME ==================== -->
+  <rect x="20" y="20" width="1160" height="635" rx="20" class="frame-base" />
+  <rect x="20" y="20" width="1160" height="635" rx="20" class="frame-beam" />
+  <rect x="20" y="20" width="1160" height="635" rx="20" class="frame-base frame-glow" stroke="rgba(255,255,255,0.18)" stroke-width="2" />
+  <path d="M 26 50 L 26 26 L 50 26" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+  <path d="M 1150 26 L 1174 26 L 1174 50" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+  <path d="M 26 625 L 26 649 L 50 649" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+  <path d="M 1150 649 L 1174 649 L 1174 625" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+  <circle cx="32" cy="32" r="2" fill="#ffffff" opacity="0.7" />
+  <circle cx="1168" cy="32" r="2" fill="#ffffff" opacity="0.7" />
+  <circle cx="32" cy="643" r="2" fill="#ffffff" opacity="0.7" />
+  <circle cx="1168" cy="643" r="2" fill="#ffffff" opacity="0.7" />
+  <!-- ==================== CISCO HARDWARE ==================== -->
+  <polygon points="80,278 190,333 370,248 370,230 250,145 70,230" fill="#000000" opacity="0.65" />
+  <g id="cisco-switch">
+    <polygon points="80,220 190,275 190,323 80,268" fill="url(#switch-left-grad)" stroke="#3f3f46" stroke-width="1.2" />
+    <polygon points="190,275 360,190 360,238 190,323" fill="url(#switch-right-grad)" stroke="#3f3f46" stroke-width="1.2" />
+    <polygon points="250,135 360,190 190,275 80,220" fill="url(#switch-top-grad)" stroke="#52525b" stroke-width="1.5" />
+    <line x1="80" y1="220" x2="190" y2="275" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" />
+    <line x1="190" y1="275" x2="360" y2="190" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" />
+    <line x1="190" y1="275" x2="190" y2="323" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" />
+    <g opacity="0.25">
+      <line x1="125" y1="230" x2="235" y2="250" stroke="#ffffff" stroke-width="0.8" />
+      <line x1="280" y1="155" x2="170" y2="265" stroke="#ffffff" stroke-width="0.8" />
+    </g>
+    <ellipse cx="220.0" cy="205.0" rx="54" ry="24" fill="url(#holo-ground-glow)" opacity="0.95" />
+    <ellipse cx="220.0" cy="205.0" rx="38" ry="17" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="3 3" />
+    <g transform="translate(135.0, 266.5) skewY(26.5) scale(0.65)" opacity="0.8">
+      <rect x="-18" y="-8" width="4" height="8" rx="1.5" fill="#ffffff" />
+      <rect x="-10" y="-14" width="4" height="14" rx="1.5" fill="#ffffff" />
+      <rect x="-2" y="-22" width="4" height="22" rx="1.5" fill="#ffffff" />
+      <rect x="6" y="-14" width="4" height="14" rx="1.5" fill="#ffffff" />
+      <rect x="14" y="-8" width="4" height="8" rx="1.5" fill="#ffffff" />
+      <text x="0" y="12" font-family="Inter" font-size="9" font-weight="700" fill="#a1a1aa" text-anchor="middle" letter-spacing="2">CISCO</text>
+    </g>
+    <polygon points="202.14285714285714,284.92857142857144 209.14285714285714,281.42857142857144 209.14285714285714,293.92857142857144 202.14285714285714,297.42857142857144" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="204.14285714285714" y1="287.92857142857144" x2="207.14285714285714" y2="286.42857142857144" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="205.64285714285714" cy="279.92857142857144" r="1.4" class="led-2" fill="#ffffff" opacity="0.6" />
+    <polygon points="214.28571428571428,278.85714285714283 221.28571428571428,275.35714285714283 221.28571428571428,287.85714285714283 214.28571428571428,291.35714285714283" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="216.28571428571428" y1="281.85714285714283" x2="219.28571428571428" y2="280.35714285714283" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="217.78571428571428" cy="273.85714285714283" r="1.4" class="led-3" fill="#ffffff" opacity="0.6" />
+    <polygon points="226.42857142857144,272.7857142857143 233.42857142857144,269.2857142857143 233.42857142857144,281.7857142857143 226.42857142857144,285.2857142857143" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="228.42857142857144" y1="275.7857142857143" x2="231.42857142857144" y2="274.2857142857143" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="229.92857142857144" cy="267.7857142857143" r="1.4" class="led-4" fill="#ffffff" opacity="0.6" />
+    <polygon points="238.57142857142856,266.7142857142857 245.57142857142856,263.2142857142857 245.57142857142856,275.7142857142857 238.57142857142856,279.2142857142857" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="240.57142857142856" y1="269.7142857142857" x2="243.57142857142856" y2="268.2142857142857" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="242.07142857142856" cy="261.7142857142857" r="1.4" class="led-5" fill="#ffffff" opacity="0.6" />
+    <polygon points="250.71428571428572,260.6428571428571 257.7142857142857,257.1428571428571 257.7142857142857,269.6428571428571 250.71428571428572,273.1428571428571" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="252.71428571428572" y1="263.6428571428571" x2="255.71428571428572" y2="262.1428571428571" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="254.21428571428572" cy="255.6428571428571" r="1.4" class="led-6" fill="#ffffff" opacity="0.6" />
+    <polygon points="262.8571428571429,254.57142857142856 269.8571428571429,251.07142857142856 269.8571428571429,263.57142857142856 262.8571428571429,267.07142857142856" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="264.8571428571429" y1="257.57142857142856" x2="267.8571428571429" y2="256.07142857142856" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="266.3571428571429" cy="249.57142857142856" r="1.4" class="led-1" fill="#ffffff" opacity="0.6" />
+    <polygon points="275.0,248.5 282.0,245.0 282.0,257.5 275.0,261.0" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="277.0" y1="251.5" x2="280.0" y2="250.0" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="278.5" cy="243.5" r="1.4" class="led-2" fill="#ffffff" opacity="0.6" />
+    <polygon points="287.1428571428571,242.42857142857144 294.1428571428571,238.92857142857144 294.1428571428571,251.42857142857144 287.1428571428571,254.92857142857144" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="289.1428571428571" y1="245.42857142857144" x2="292.1428571428571" y2="243.92857142857144" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="290.6428571428571" cy="237.42857142857144" r="1.4" class="led-3" fill="#ffffff" opacity="0.6" />
+    <polygon points="299.2857142857143,236.35714285714286 306.2857142857143,232.85714285714286 306.2857142857143,245.35714285714286 299.2857142857143,248.85714285714286" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="301.2857142857143" y1="239.35714285714286" x2="304.2857142857143" y2="237.85714285714286" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="302.7857142857143" cy="231.35714285714286" r="1.4" class="led-4" fill="#ffffff" opacity="0.6" />
+    <polygon points="311.42857142857144,230.28571428571428 318.42857142857144,226.78571428571428 318.42857142857144,239.28571428571428 311.42857142857144,242.78571428571428" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="313.42857142857144" y1="233.28571428571428" x2="316.42857142857144" y2="231.78571428571428" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="314.92857142857144" cy="225.28571428571428" r="1.4" class="led-5" fill="#ffffff" opacity="0.6" />
+    <polygon points="323.57142857142856,224.21428571428572 330.57142857142856,220.71428571428572 330.57142857142856,233.21428571428572 323.57142857142856,236.71428571428572" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="325.57142857142856" y1="227.21428571428572" x2="328.57142857142856" y2="225.71428571428572" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="327.07142857142856" cy="219.21428571428572" r="1.4" class="led-6" fill="#ffffff" opacity="0.6" />
+    <polygon points="335.7142857142857,218.14285714285714 342.7142857142857,214.64285714285714 342.7142857142857,227.14285714285714 335.7142857142857,230.64285714285714" fill="#060709" stroke="#3f3f46" stroke-width="0.8" />
+    <line x1="337.7142857142857" y1="221.14285714285714" x2="340.7142857142857" y2="219.64285714285714" stroke="#71717a" stroke-width="0.8" />
+    <circle cx="339.2142857142857" cy="213.14285714285714" r="1.4" class="led-1" fill="#ffffff" opacity="0.6" />
+    <!-- SFP Transceiver Connector -->
+    <polygon points="360,194 384,182 384,206 360,218" fill="#22242e" stroke="#71717a" stroke-width="1.2" />
+    <line x1="384" y1="182" x2="384" y2="206" stroke="#ffffff" stroke-width="2.5" filter="url(#glow-white)" />
+  </g> <!-- End Cisco Switch -->
+  <!-- ==================== HOLOGRAM GROUP ==================== -->
+  <g class="hologram-group">
+    <path d="M 164.0 105.0 L 172.0 205.0 L 268.0 205.0 L 276.0 105.0 Z" fill="url(#holo-cone-grad)" opacity="0.45" />
+    <path d="M 164.0 105.0 A 56 25 0 0 0 276.0 105.0 L 276.0 190.0 A 56 25 0 0 1 164.0 190.0 Z" fill="url(#holo-cone-grad)" opacity="0.7" />
+    <path d="M 164.0 105.0 A 56 25 0 0 0 276.0 105.0 L 276.0 190.0 A 56 25 0 0 1 164.0 190.0 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" />
+    <ellipse cx="220.0" cy="190.0" rx="56" ry="25" fill="none" stroke="url(#holo-rim-grad)" stroke-width="2" />
+    <g class="scan-beam">
+      <ellipse cx="220.0" cy="117.0" rx="53.76" ry="24.0" fill="none" stroke="#ffffff" stroke-width="2" filter="url(#glow-white)" />
+      <ellipse cx="220.0" cy="117.0" rx="44.800000000000004" ry="20.0" fill="rgba(255,255,255,0.12)" />
+    </g>
+    <ellipse cx="220.0" cy="105.0" rx="56" ry="25" fill="#161820" stroke="url(#holo-rim-grad)" stroke-width="2.5" />
+    <ellipse cx="220.0" cy="105.0" rx="49.28" ry="22.0" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="3 3" />
+    <g transform="translate(220.0, 105.0) scale(1, 0.446)" class="router-arrow">
+      <circle cx="0" cy="0" r="7" fill="none" stroke="#ffffff" stroke-width="2" />
+      <line x1="-6" y1="-6" x2="-26" y2="-26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <polygon points="-32,-32 -18,-28 -28,-18" fill="#ffffff" />
+      <line x1="6" y1="6" x2="26" y2="26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <polygon points="32,32 18,28 28,18" fill="#ffffff" />
+      <line x1="28" y1="-28" x2="9" y2="-9" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <polygon points="6,-6 19,-8 8,-19" fill="#ffffff" />
+      <line x1="-28" y1="28" x2="-9" y2="9" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <polygon points="-6,6 -19,8 -8,19" fill="#ffffff" />
+    </g>
+  </g> <!-- End Hologram Group -->
+  <!-- ==================== CODEC BOX ==================== -->
+  <polygon points="735,285 780,307 820,290 820,275 770,195 735,210" fill="#000000" opacity="0.65" />
+  <g id="codec-box">
+    <polygon points="740,205 780,225 780,301 740,281" fill="url(#codec-left-grad)" stroke="#52525b" stroke-width="1.2" />
+    <polygon points="780,225 812,209 812,285 780,301" fill="url(#codec-front-grad)" stroke="#71717a" stroke-width="1.4" />
+    <polygon points="772,189 812,209 780,225 740,205" fill="url(#codec-top-grad)" stroke="#a1a1aa" stroke-width="1.2" />
+    <line x1="780" y1="225" x2="780" y2="301" stroke="#ffffff" stroke-width="1.8" filter="url(#glow-white)" />
+    <line x1="780" y1="225" x2="812" y2="209" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" />
+    <line x1="780" y1="225" x2="740" y2="205" stroke="rgba(255,255,255,0.5)" stroke-width="1.2" />
+    <g class="codec-core">
+      <g transform="translate(796.0, 253.0) skewY(-15)">
+        <ellipse cx="0" cy="0" rx="12" ry="16" fill="#090a0d" stroke="#ffffff" stroke-width="1.5" />
+        <ellipse cx="0" cy="0" rx="7" ry="10" fill="#ffffff" opacity="0.9" filter="url(#glow-white)" />
+        <line x1="0" y1="-16" x2="0" y2="-24" stroke="#ffffff" stroke-width="1.2" />
+        <line x1="0" y1="16" x2="0" y2="24" stroke="#ffffff" stroke-width="1.2" />
+        <line x1="-12" y1="0" x2="-18" y2="0" stroke="#ffffff" stroke-width="1.2" />
+        <line x1="12" y1="0" x2="18" y2="0" stroke="#ffffff" stroke-width="1.2" />
+      </g>
+    </g>
+    <g transform="translate(760.0, 243.0) skewY(26.5)">
+      <rect x="-3" y="-16" width="6" height="32" rx="3" fill="#181a22" stroke="#71717a" stroke-width="1" />
+      <line x1="0" y1="-14" x2="0" y2="14" stroke="#ffffff" stroke-width="2.5" filter="url(#glow-white)" />
+    </g>
+  </g>
+  <!-- ==================== FIBER OPTIC BUS ==================== -->
+  <g opacity="0.65">
+    <path d="M 384.0 184.2 C 481.0 57.0, 602.0 67.0, 760.0 231.8" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+    <path d="M 384.0 188.4 C 493.0 69.0, 614.0 79.0, 760.0 236.6" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+    <path d="M 384.0 192.6 C 505.0 81.0, 626.0 91.0, 760.0 241.4" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+    <path d="M 384.0 196.8 C 517.0 93.0, 638.0 103.0, 760.0 246.2" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+    <path d="M 384.0 201.0 C 529.0 105.0, 650.0 115.0, 760.0 251.0" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+    <path d="M 384.0 205.2 C 541.0 117.0, 662.0 127.0, 760.0 255.8" fill="none" stroke="#2a2c35" stroke-width="2.2" />
+  </g>
+  <!-- Luminous Core Filaments -->
+    <path d="M 384.0 184.2 C 481.0 57.0, 602.0 67.0, 760.0 231.8" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="1.4" opacity="0.55" filter="url(#glow-white)" />
+    <path d="M 384.0 188.4 C 493.0 69.0, 614.0 79.0, 760.0 236.6" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="2.0" opacity="0.9" filter="url(#glow-white)" />
+    <path d="M 384.0 192.6 C 505.0 81.0, 626.0 91.0, 760.0 241.4" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="2.0" opacity="0.9" filter="url(#glow-white)" />
+    <path d="M 384.0 196.8 C 517.0 93.0, 638.0 103.0, 760.0 246.2" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="2.0" opacity="0.9" filter="url(#glow-white)" />
+    <path d="M 384.0 201.0 C 529.0 105.0, 650.0 115.0, 760.0 251.0" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="2.0" opacity="0.9" filter="url(#glow-white)" />
+    <path d="M 384.0 205.2 C 541.0 117.0, 662.0 127.0, 760.0 255.8" fill="none" stroke="url(#fiber-glow-grad)" stroke-width="1.4" opacity="0.55" filter="url(#glow-white)" />
+  <!-- Animated Traveling Data Pulses -->
+  <g filter="url(#glow-white)">
+    <path d="M 384.0 184.2 C 481.0 57.0, 602.0 67.0, 760.0 231.8" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-dasharray="45 800" class="data-pulse" style="animation-delay: 0.0s;" />
+    <path d="M 384.0 188.4 C 493.0 69.0, 614.0 79.0, 760.0 236.6" fill="none" stroke="#ffffff" stroke-width="3.6" stroke-dasharray="60 800" class="data-pulse" style="animation-delay: 0.45s;" />
+    <path d="M 384.0 192.6 C 505.0 81.0, 626.0 91.0, 760.0 241.4" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-dasharray="50 800" class="data-pulse" style="animation-delay: 0.9s;" />
+    <path d="M 384.0 196.8 C 517.0 93.0, 638.0 103.0, 760.0 246.2" fill="none" stroke="#ffffff" stroke-width="3.6" stroke-dasharray="70 800" class="data-pulse" style="animation-delay: 1.35s;" />
+    <path d="M 384.0 201.0 C 529.0 105.0, 650.0 115.0, 760.0 251.0" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-dasharray="55 800" class="data-pulse" style="animation-delay: 0.65s;" />
+    <path d="M 384.0 205.2 C 541.0 117.0, 662.0 127.0, 760.0 255.8" fill="none" stroke="#ffffff" stroke-width="3.6" stroke-dasharray="40 800" class="data-pulse" style="animation-delay: 1.1s;" />
+  </g>
+  <!-- ==================== GIT NODES & BRANCHES ==================== -->
+  <path d="M 812.0 229.0 C 857.0 229.0, 850.0 155.0, 905.0 155.0" fill="none" stroke="#22232a" stroke-width="3.5" />
+  <path d="M 812.0 229.0 C 857.0 229.0, 850.0 155.0, 905.0 155.0" fill="none" stroke="#ffffff" stroke-width="2.2" />
+  <path d="M 812.0 229.0 C 857.0 229.0, 850.0 155.0, 905.0 155.0" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="24 300" class="data-pulse" style="animation-delay: 0.3s;" filter="url(#glow-white)" />
+  <g transform="translate(905, 155)">
+    <circle cx="0" cy="0" r="14" fill="none" stroke="#ffffff" class="ping-ring" style="animation-delay: 0.0s;" />
+    <circle cx="0" cy="0" r="14" fill="#0b0c10" stroke="#ffffff" stroke-width="2" />
+    <circle cx="0" cy="0" r="6" fill="#ffffff" filter="url(#glow-white)" />
+    <path d="M -28 -14 C -18 -14, -12 -5, -4 0" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" stroke-dasharray="2 2" />
+  </g>
+  <path d="M 812.0 249.0 C 857.0 249.0, 850.0 225.0, 905.0 225.0" fill="none" stroke="#22232a" stroke-width="3.5" />
+  <path d="M 812.0 249.0 C 857.0 249.0, 850.0 225.0, 905.0 225.0" fill="none" stroke="#a1a1aa" stroke-width="1.8" />
+  <path d="M 812.0 249.0 C 857.0 249.0, 850.0 225.0, 905.0 225.0" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="24 300" class="data-pulse" style="animation-delay: 0.7s;" filter="url(#glow-white)" />
+  <g transform="translate(905, 225)">
+    <circle cx="0" cy="0" r="14" fill="none" stroke="#ffffff" class="ping-ring" style="animation-delay: 0.65s;" />
+    <circle cx="0" cy="0" r="14" fill="#0b0c10" stroke="#a1a1aa" stroke-width="2" />
+    <circle cx="0" cy="0" r="6" fill="#e4e4e7" filter="url(#glow-white)" />
+  </g>
+  <path d="M 812.0 269.0 C 857.0 269.0, 850.0 295.0, 905.0 295.0" fill="none" stroke="#22232a" stroke-width="3.5" />
+  <path d="M 812.0 269.0 C 857.0 269.0, 850.0 295.0, 905.0 295.0" fill="none" stroke="#71717a" stroke-width="1.6" />
+  <path d="M 812.0 269.0 C 857.0 269.0, 850.0 295.0, 905.0 295.0" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="24 300" class="data-pulse" style="animation-delay: 1.1s;" filter="url(#glow-white)" />
+  <g transform="translate(905, 295)">
+    <circle cx="0" cy="0" r="14" fill="none" stroke="#ffffff" class="ping-ring" style="animation-delay: 1.3s;" />
+    <circle cx="0" cy="0" r="14" fill="#0b0c10" stroke="#71717a" stroke-width="2" />
+    <circle cx="0" cy="0" r="6" fill="#a1a1aa" filter="url(#glow-white)" />
+  </g>
+  <!-- ==================== GIT DIFF CHUNKS ==================== -->
+  <g transform="translate(955, 135)" class="diff-line">
+    <text x="0" y="12" class="font-mono" font-size="16" font-weight="700" fill="#ffffff" letter-spacing="1">Git</text>
+    <text x="0" y="34" class="font-mono" font-size="13" font-weight="700" fill="#ffffff">+</text>
+    <text x="14" y="34" class="font-mono" font-size="13" fill="#52525b">/ /</text>
+    <text x="38" y="34" class="font-mono" font-size="13" font-weight="700" fill="#71717a">- -</text>
+    <text x="0" y="56" class="font-mono" font-size="14" font-weight="700" fill="#ffffff">+</text>
+    <rect x="16" y="47" width="80" height="7" rx="3.5" fill="#ffffff" filter="url(#glow-white)" opacity="0.95" />
+    <text x="16" y="76" class="font-mono" font-size="14" font-weight="700" fill="#71717a">-</text>
+    <rect x="32" y="69" width="58" height="6" rx="3" fill="#3f3f46" opacity="0.8" />
+    <text x="0" y="98" class="font-mono" font-size="13" font-weight="700" fill="#ffffff">+</text>
+    <text x="12" y="98" class="font-mono" font-size="13" fill="#71717a">/</text>
+    <text x="22" y="98" class="font-mono" font-size="13" font-weight="700" fill="#71717a">-</text>
+    <rect x="38" y="91" width="48" height="6" rx="3" fill="#52525b" />
+    <text x="0" y="132" class="font-mono" font-size="13" font-weight="700" fill="#ffffff">+</text>
+    <text x="12" y="132" class="font-mono" font-size="13" fill="#71717a">/</text>
+    <text x="22" y="132" class="font-mono" font-size="13" font-weight="700" fill="#71717a">-</text>
+    <text x="0" y="152" class="font-mono" font-size="14" font-weight="700" fill="#71717a">+</text>
+    <rect x="16" y="145" width="36" height="6" rx="3" fill="#71717a" />
+    <rect x="58" y="145" width="36" height="6" rx="3" fill="#3f3f46" />
+    <text x="0" y="172" class="font-mono" font-size="14" font-weight="700" fill="#ffffff">+</text>
+    <rect x="16" y="165" width="70" height="7" rx="3.5" fill="#ffffff" filter="url(#glow-white)" />
+  </g>
+  <!-- ==================== CENTER TYPOGRAPHY ==================== -->
+  <g transform="translate(550, 385)" text-anchor="middle" class="title-glow">
+    <text x="0" y="0" class="font-title" font-size="78" fill="#ffffff" letter-spacing="-1.5">pkt-git</text>
+    <text x="0" y="38" class="font-sans" font-size="20" font-weight="500" fill="#a1a1aa" letter-spacing="0.2">Git-style version control for Cisco Packet Tracer</text>
+  </g>
+  <!-- Description Glass Card -->
+  <g transform="translate(265.0, 455)">
+    <rect width="670" height="72" rx="14" fill="#0e0f14" fill-opacity="0.85" stroke="#27272a" stroke-width="1.2" />
+    <line x1="16" y1="1" x2="654" y2="1" stroke="rgba(255,255,255,0.18)" stroke-width="1" />
+    <text x="335" y="30" class="font-sans" font-size="15" text-anchor="middle" fill="#a1a1aa">
+      Reversible encryption codec that turns opaque <tspan font-weight="700" fill="#ffffff">.pkt</tspan> binaries into
+    </text>
+    <text x="335" y="52" class="font-sans" font-size="15" text-anchor="middle" fill="#a1a1aa">
+      <tspan font-weight="700" fill="#ffffff">human-readable XML</tspan> and textual IOS configs for Git diffs &amp; PRs.
+    </text>
+  </g>
+  <!-- ==================== FEATURE BADGES ==================== -->
+  <g transform="translate(70.0, 560)" class="badge-pill">
+    <rect width="236" height="38" rx="19" fill="#0b0c10" stroke="#52525b" stroke-width="1.2" />
+    <circle cx="20" cy="19" r="3.5" fill="#ffffff" filter="url(#glow-white)" />
+    <text x="32" y="24" class="font-sans" font-size="12" font-weight="600" fill="#e4e4e7" letter-spacing="0.2">Built with Go 1.27+</text>
+  </g>
+  <g transform="translate(344.7, 560)" class="badge-pill">
+    <rect width="236" height="38" rx="19" fill="#0b0c10" stroke="#3f3f46" stroke-width="1.2" />
+    <circle cx="20" cy="19" r="3.5" fill="#a1a1aa" filter="url(#glow-white)" />
+    <text x="32" y="24" class="font-sans" font-size="12" font-weight="600" fill="#e4e4e7" letter-spacing="0.2">For Cisco Packet Tracer v9.0.1+</text>
+  </g>
+  <g transform="translate(619.3, 560)" class="badge-pill">
+    <rect width="236" height="38" rx="19" fill="#0b0c10" stroke="#71717a" stroke-width="1.2" />
+    <circle cx="20" cy="19" r="3.5" fill="#ffffff" filter="url(#glow-white)" />
+    <text x="32" y="24" class="font-sans" font-size="12" font-weight="600" fill="#e4e4e7" letter-spacing="0.2">Native Twofish-EAX Codec</text>
+  </g>
+  <g transform="translate(894.0, 560)" class="badge-pill">
+    <rect width="236" height="38" rx="19" fill="#0b0c10" stroke="#a1a1aa" stroke-width="1.2" />
+    <circle cx="20" cy="19" r="3.5" fill="#ffffff" filter="url(#glow-white)" />
+    <text x="32" y="24" class="font-sans" font-size="12" font-weight="600" fill="#e4e4e7" letter-spacing="0.2">Zero Plugins • Pure Git Hooks</text>
+  </g>
+</svg>

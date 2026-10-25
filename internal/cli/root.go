@@ -3,6 +3,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -152,6 +153,11 @@ func ExecuteArgs(args []string, out, errOut io.Writer) int {
 		ui.Error(errOut, "%s", err)
 		return 2
 	}
-	ui.Error(errOut, "%s", err)
+
+	msg, hint := localizeCLIError(err)
+	ui.Error(errOut, "%s", msg)
+	if hint != "" {
+		fmt.Fprintf(errOut, "  %s\n", i18n.T("ErrHintPrefix", map[string]interface{}{"Hint": hint}))
+	}
 	return 1
 }

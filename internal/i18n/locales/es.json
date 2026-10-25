@@ -115,5 +115,47 @@
   },
   "LanguageUsage": {
     "other": "Uso:"
+  },
+  "ErrNotGitRepository": {
+    "other": "no es un repositorio git"
+  },
+  "ErrNotGitRepositoryHint": {
+    "other": "ejecuta primero 'git init' para inicializar un repositorio Git"
+  },
+  "ErrPktNotInitialized": {
+    "other": "repositorio no inicializado con pkt-git"
+  },
+  "ErrPktNotInitializedHint": {
+    "other": "ejecuta 'pkt init' para vincular los hooks y configuración"
+  },
+  "ErrContainerTruncated": {
+    "other": "el contenedor de Packet Tracer está truncado o corrupto"
+  },
+  "ErrLengthMismatch": {
+    "other": "la longitud descomprimida no coincide con la cabecera declarada"
+  },
+  "ErrInvalidXML": {
+    "other": "documento XML inválido o malformado"
+  },
+  "ErrRebuildFailed": {
+    "other": "uno o más binarios de Packet Tracer no pudieron ser reconstruidos"
+  },
+  "ErrDeviceNotFound": {
+    "other": "dispositivo \"{{.Device}}\" no encontrado en el snapshot de topología"
+  },
+  "ErrInterfaceNotFound": {
+    "other": "interfaz \"{{.Interface}}\" no encontrada en el dispositivo \"{{.Device}}\""
+  },
+  "ErrConflictResolutionFailed": {
+    "other": "falló la resolución de conflictos; aún quedan marcadores de conflicto sin resolver"
+  },
+  "ErrNoTopologiesFound": {
+    "other": "no se encontraron archivos .pkt o .pka en el repositorio; especifica un archivo"
+  },
+  "ErrMultipleTopologiesFound": {
+    "other": "múltiples topologías encontradas ({{.Topologies}}); especifica una o usa --all"
+  },
+  "ErrHintPrefix": {
+    "other": "Consejo: {{.Hint}}"
   }
 }
