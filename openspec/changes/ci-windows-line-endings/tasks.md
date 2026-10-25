@@ -7,7 +7,7 @@
 
 ## 2. Verification and Formatting
 
-- [ ] 2.1 Run `gofmt -l .`, `go test ./...`, and `make lint` to verify that all Go files comply with LF formatting checks.
+- [x] 2.1 Run `gofmt -l .`, `go test ./...`, and `make lint` to verify that all Go files comply with LF formatting checks.
 
 ## Workflow follow-up
 
