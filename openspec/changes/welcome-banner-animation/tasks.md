@@ -2,7 +2,7 @@
 
 ## 1. UI Components (Banner and Animated Spinner)
 
-- [ ] 1.1 Implement styled ASCII art banner and subtitle in `internal/cli/ui/banner.go` with Lipgloss styling and plain text fallback; verify with unit tests in `internal/cli/ui/banner_test.go`.
+- [x] 1.1 Implement styled ASCII art banner and subtitle in `internal/cli/ui/banner.go` with Lipgloss styling and plain text fallback; verify with unit tests in `internal/cli/ui/banner_test.go`.
 - [ ] 1.2 Implement `ui.Spinner` in `internal/cli/ui/spinner.go` with goroutine animation, braille frames, clean completion symbols, and TTY/NO_COLOR fallback; verify with unit tests in `internal/cli/ui/spinner_test.go`.
 
 ## 2. Welcome Command and Installer Integration
