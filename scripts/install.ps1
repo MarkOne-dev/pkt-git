@@ -192,13 +192,10 @@ try {
     }
 
     $state = if ($changed) { "installed" } else { "unchanged" }
-    Write-Host "`nRunning environment diagnostics:"
-    & $target doctor
+    Write-Host ""
+    & $target welcome
 
     Write-Host "`npkt-git $state at $target."
-    Write-Host "In any Git repository run:"
-    Write-Host "    pkt init          # wire hooks and auto-export existing topology"
-    Write-Host "    pkt --help        # full command list"
 }
 finally {
     if ($tmpTarget -and (Test-Path -LiteralPath $tmpTarget)) {

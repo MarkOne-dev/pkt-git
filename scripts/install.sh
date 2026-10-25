@@ -147,11 +147,7 @@ fi
 configure_path_if_needed
 
 echo ""
-echo "Running environment diagnostics:"
-"${TARGET}" doctor || true
+"${TARGET}" welcome || true
 
 echo ""
 echo "pkt-git successfully installed at ${TARGET}."
-echo "In any Git repository run:"
-echo "    pkt init          # wire hooks and auto-export existing topology"
-echo "    pkt --help        # full command list"
