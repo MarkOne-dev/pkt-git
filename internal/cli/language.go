@@ -179,11 +179,11 @@ func renderNonInteractive(w io.Writer, current string) {
 		"Code":     current,
 	}))
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Available languages:")
+	fmt.Fprintln(w, i18n.T("LanguageAvailable"))
 	for _, opt := range supportedLanguages {
 		fmt.Fprintf(w, "  • %-4s %s\n", opt.Code, opt.Name)
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Usage:")
+	fmt.Fprintln(w, i18n.T("LanguageUsage"))
 	fmt.Fprintln(w, "  pkt language <en|es> [--local]")
 }

@@ -109,5 +109,11 @@
   },
   "LanguageMenuPrompt": {
     "other": "Selecciona una opción [1-2] (Enter para mantener actual): "
+  },
+  "LanguageAvailable": {
+    "other": "Idiomas disponibles:"
+  },
+  "LanguageUsage": {
+    "other": "Uso:"
   }
 }
