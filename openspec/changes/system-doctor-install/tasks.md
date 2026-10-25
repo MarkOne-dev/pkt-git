@@ -15,8 +15,8 @@
 
 ## 4. Verification and Documentation
 
-- [ ] 4.1 Run the full test suite with `go test -count=1 ./...` and verify `make lint` passes.
-- [ ] 4.2 Update `docs/cli-reference.md`, `docs/installation.md`, and `README.md` documenting `pkt doctor` and installer prerequisite automation.
+- [x] 4.1 Run the full test suite with `go test -count=1 ./...` and verify `make lint` passes.
+- [x] 4.2 Update `docs/cli-reference.md`, `docs/installation.md`, and `README.md` documenting `pkt doctor` and installer prerequisite automation.
 
 ## Workflow follow-up
 
