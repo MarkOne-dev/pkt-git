@@ -20,6 +20,9 @@ func TestWelcomeCommand(t *testing.T) {
 	if !strings.Contains(stdout, "pkt init") {
 		t.Fatalf("stdout missing pkt init step: %q", stdout)
 	}
+	if strings.Contains(stdout, "🚀") {
+		t.Fatalf("stdout must not contain color emoji: %q", stdout)
+	}
 }
 
 func TestWelcomeCommandRejectsExtraArguments(t *testing.T) {

@@ -61,7 +61,7 @@ func renderQuickstart(w io.Writer) {
 		codeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
 		commentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))
 
-		fmt.Fprintln(w, titleStyle.Render("🚀 Quickstart Guide:"))
+		fmt.Fprintln(w, titleStyle.Render(ui.IconRocket+" Quickstart Guide:"))
 		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("1."), "Initialize a Packet Tracer project repository:")
 		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt init"), commentStyle.Render("# wires git hooks & exports existing topology"))
 		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("2."), "Normal Git commits:")
