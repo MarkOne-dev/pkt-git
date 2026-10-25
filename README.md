@@ -22,11 +22,11 @@
 - [The Problem vs. The Solution](#the-problem-vs-the-solution)
 - [Key Features](#key-features)
 - [How It Works](#how-it-works)
-- [Documentation](#documentation)
-- [Quickstart & Installation](#quickstart--installation)
 - [Everyday Use Cases & Recipes](#everyday-use-cases--recipes)
+- [Quickstart & Installation](#quickstart--installation)
 - [The Collaborative Workflow](#the-collaborative-workflow)
 - [CLI Reference](#cli-reference)
+- [Documentation Index](#documentation-index)
 - [Reverse Engineering & Binary Format](#reverse-engineering--binary-format)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
@@ -105,99 +105,6 @@ flowchart LR
 
 The binary file is a **regenerable artifact**; the human-readable text snapshot
 is the true versioned source of truth.
-
----
-
-## Documentation
-
-Detailed documentation lives in [`docs/`](docs/README.md):
-
-| Document | Covers |
-|---|---|
-| [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
-| [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
-| [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
-| [Use Cases & Tested Flows](docs/use-cases.md) | Twelve concrete, project-validated flows: bootstrap → onboarding → gitflow → localization → conflicts. |
-| [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
-| [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
-| [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
-| [Troubleshooting & Pitfalls](docs/troubleshooting.md) | Failure modes, dangerous patterns, compatibility limits. |
-
----
-
-## Quickstart & Installation
-
-### Prerequisites
-
-- **Go 1.27+** to build from source (prebuilt release binaries need no Go).
-- **Git 2.x**.
-- **Cisco Packet Tracer 9.0.1+** only to edit and run topologies; not required
-  to review diffs or run CI.
-
-### Install the binary
-
-Linux / macOS, from a clone:
-
-```bash
-git clone https://github.com/MarkOne-dev/pkt-git.git
-cd pkt-git
-./scripts/install.sh
-pkt --version
-```
-
-Windows (PowerShell), from a clone:
-
-```powershell
-git clone https://github.com/MarkOne-dev/pkt-git.git
-cd pkt-git
-powershell -ExecutionPolicy Bypass -File scripts/install.ps1
-pkt.exe --version
-```
-
-The scripts automatically install Git if missing, configure your Git identity,
-configure `PATH` in your shell, install the binary into `~/.local/bin`, install the
-agent skills, and run `pkt doctor` to verify your environment. See
-[Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`, `PKTG_SOURCE`, and
-manual build options.
-
-Manual build:
-
-```bash
-make build
-install -m 0755 bin/pkt ~/.local/bin/pkt
-```
-
-On Windows, use `CGO_ENABLED=0 go build -o pkt.exe ./cmd/pkt`. `make dist`
-produces self-contained release artifacts for Linux, macOS, and Windows; place
-the artifact for your platform on `PATH`.
-
-### Wiring a repository (once per project)
-
-```bash
-cd /path/to/your-pt-project
-pkt init
-```
-
-`pkt init` writes the thin hooks into `.githooks/`, records the absolute binary
-path in repository-local `pktgit.bin`, activates `core.hooksPath`, and merges
-the required `.gitattributes` rules. It is idempotent and refuses to modify a
-directory that is not a Git repository.
-
-### Agent skills (OpenCode / Claude Code / Gemini CLI)
-
-The binary embeds the pkt-git skill. Install it into the three global skill
-directories with:
-
-```bash
-pkt skills              # ~/.config/opencode, ~/.claude, ~/.gemini
-pkt skills --remove     # remove only the pkt-git skill
-```
-
-| Skill installed at agent | Agent picks it up |
-|---|---|
-| `~/.config/opencode/skills/pkt-git/` | OpenCode (global scope) |
-| `~/.claude/skills/pkt-git/` | Claude Code |
-| `~/.gemini/skills/pkt-git/` | Gemini CLI |
 
 ---
 
@@ -302,6 +209,82 @@ pkt lang es --local   # Set language to Spanish only for current repository
 
 ---
 
+## Quickstart & Installation
+
+### Prerequisites
+
+- **Go 1.27+** to build from source (prebuilt release binaries need no Go).
+- **Git 2.x**.
+- **Cisco Packet Tracer 9.0.1+** only to edit and run topologies; not required
+  to review diffs or run CI.
+
+### Install the binary
+
+Linux / macOS, from a clone:
+
+```bash
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git
+./scripts/install.sh
+pkt --version
+```
+
+Windows (PowerShell), from a clone:
+
+```powershell
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+pkt.exe --version
+```
+
+The scripts automatically install Git if missing, configure your Git identity,
+configure `PATH` in your shell, install the binary into `~/.local/bin`, install the
+agent skills, and run `pkt doctor` to verify your environment. See
+[Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`, `PKTG_SOURCE`, and
+manual build options.
+
+Manual build:
+
+```bash
+make build
+install -m 0755 bin/pkt ~/.local/bin/pkt
+```
+
+On Windows, use `CGO_ENABLED=0 go build -o pkt.exe ./cmd/pkt`. `make dist`
+produces self-contained release artifacts for Linux, macOS, and Windows; place
+the artifact for your platform on `PATH`.
+
+### Wiring a repository (once per project)
+
+```bash
+cd /path/to/your-pt-project
+pkt init
+```
+
+`pkt init` writes the thin hooks into `.githooks/`, records the absolute binary
+path in repository-local `pktgit.bin`, activates `core.hooksPath`, and merges
+the required `.gitattributes` rules. It is idempotent and refuses to modify a
+directory that is not a Git repository.
+
+### Agent skills (OpenCode / Claude Code / Gemini CLI)
+
+The binary embeds the pkt-git skill. Install it into the three global skill
+directories with:
+
+```bash
+pkt skills              # ~/.config/opencode, ~/.claude, ~/.gemini
+pkt skills --remove     # remove only the pkt-git skill
+```
+
+| Skill installed at agent | Agent picks it up |
+|---|---|
+| `~/.config/opencode/skills/pkt-git/` | OpenCode (global scope) |
+| `~/.claude/skills/pkt-git/` | Claude Code |
+| `~/.gemini/skills/pkt-git/` | Gemini CLI |
+
+---
+
 ## The Collaborative Workflow
 
 With hooks enabled by `pkt init`, the day-to-day workflow requires zero manual
@@ -389,6 +372,23 @@ pkt version                                     # version and build metadata
 `pkt --help` lists the public commands and omits the hidden hook entry points
 (`pre-commit`, `post-merge`, `post-checkout`). Exit codes are `0` for success,
 `1` for runtime failures, and `2` for usage errors.
+
+---
+
+## Documentation Index
+
+Detailed guides and specifications in [`docs/`](docs/README.md):
+
+| Document | Covers |
+|---|---|
+| [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
+| [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
+| [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
+| [Use Cases & Tested Flows](docs/use-cases.md) | Twelve concrete, project-validated flows: bootstrap → onboarding → gitflow → localization → conflicts. |
+| [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
+| [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
+| [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
+| [Troubleshooting & Pitfalls](docs/troubleshooting.md) | Failure modes, dangerous patterns, compatibility limits. |
 
 ---
 
