@@ -17,9 +17,9 @@
 
 ## 4. Modernize Outputs and Error Reporting
 
-- [ ] 4.1 Update `export.go`, `build.go`, `init.go`, `sync.go`, and `verify.go` to use structured status messages and humanized file sizes.
-- [ ] 4.2 Format CLI errors with actionable context and visual indicators while strictly preserving exit codes 0, 1, and 2.
-- [ ] 4.3 Run the full test suite with `go test -count=1 ./...` and run `make lint` to verify zero regressions.
+- [x] 4.1 Update `export.go`, `build.go`, `init.go`, `sync.go`, and `verify.go` to use structured status messages and humanized file sizes.
+- [x] 4.2 Format CLI errors with actionable context and visual indicators while strictly preserving exit codes 0, 1, and 2.
+- [x] 4.3 Run the full test suite with `go test -count=1 ./...` and run `make lint` to verify zero regressions.
 
 ## 5. Documentation
 

@@ -1,10 +1,9 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/editor"
 )
 
@@ -86,7 +85,7 @@ func runEditSetiface(cmd *cobra.Command, xmlPath string, args []string) error {
 	if err := editor.SetInterface(xmlPath, args[0], args[1], args[2:]); err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "[ok] updated %s\n", xmlPath)
+	ui.Success(cmd.OutOrStdout(), "updated %s", xmlPath)
 	return nil
 }
 
@@ -97,7 +96,7 @@ func runEditChgline(cmd *cobra.Command, xmlPath string, args []string) error {
 	if err := editor.ChangeLine(xmlPath, args[0], args[1], args[2], args[3]); err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "[ok] updated %s\n", xmlPath)
+	ui.Success(cmd.OutOrStdout(), "updated %s", xmlPath)
 	return nil
 }
 
@@ -108,6 +107,6 @@ func runEditInsertAfter(cmd *cobra.Command, xmlPath string, args []string) error
 	if err := editor.InsertAfter(xmlPath, args[0], args[1], args[2:]); err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "[ok] updated %s\n", xmlPath)
+	ui.Success(cmd.OutOrStdout(), "updated %s", xmlPath)
 	return nil
 }

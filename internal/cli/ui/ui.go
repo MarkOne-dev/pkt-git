@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	mu         sync.RWMutex
-	forcedTTY  *bool
+	mu            sync.RWMutex
+	forcedTTY     *bool
 	forcedNoColor *bool
 )
 

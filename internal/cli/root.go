@@ -3,12 +3,13 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 )
 
 // NewRootCmd builds the root command and all subcommands.
@@ -123,14 +124,14 @@ func ExecuteArgs(args []string, out, errOut io.Writer) int {
 	var usage *usageError
 	if errors.As(err, &usage) {
 		if usage.message != "" {
-			fmt.Fprintln(errOut, "pkt:", usage.message)
+			ui.Error(errOut, "%s", usage.message)
 		}
 		return 2
 	}
 	if strings.HasPrefix(err.Error(), "unknown command") {
-		fmt.Fprintln(errOut, "pkt:", err)
+		ui.Error(errOut, "%s", err)
 		return 2
 	}
-	fmt.Fprintln(errOut, "pkt:", err)
+	ui.Error(errOut, "%s", err)
 	return 1
 }

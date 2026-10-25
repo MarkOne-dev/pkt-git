@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
@@ -19,9 +20,9 @@ func newExportCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "[ok] exported %s -> %s\n", args[0], args[1])
-			fmt.Fprintf(out, "  XML: %d bytes, devices: %d, links: %d, configs: %d\n",
-				result.XMLSize, result.DeviceCount, result.LinkCount, result.ConfigCount)
+			ui.Success(out, "exported %s -> %s", args[0], args[1])
+			fmt.Fprintf(out, "  XML: %d bytes (%s), devices: %d, links: %d, configs: %d\n",
+				result.XMLSize, ui.FormatBytes(int64(result.XMLSize)), result.DeviceCount, result.LinkCount, result.ConfigCount)
 			return nil
 		},
 	}
