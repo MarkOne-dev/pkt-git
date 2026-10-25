@@ -2,8 +2,8 @@
 
 ## 1. CLI Doctor Command
 
-- [ ] 1.1 Implement `internal/cli/doctor.go` to inspect Git version, identity, PATH, agent skills, and optional tools using `internal/cli/ui`, and register under the `collab` command group.
-- [ ] 1.2 Add test coverage in `internal/cli/doctor_test.go` and update `internal/cli/root_test.go` to verify `pkt doctor` execution and output formatting.
+- [x] 1.1 Implement `internal/cli/doctor.go` to inspect Git version, identity, PATH, agent skills, and optional tools using `internal/cli/ui`, and register under the `collab` command group.
+- [x] 1.2 Add test coverage in `internal/cli/doctor_test.go` and update `internal/cli/root_test.go` to verify `pkt doctor` execution and output formatting.
 
 ## 2. Linux and macOS Installer Enhancements
 
