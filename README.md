@@ -180,6 +180,17 @@ path in repository-local `pktgit.bin`, activates `core.hooksPath`, and merges
 the required `.gitattributes` rules. It is idempotent and refuses to modify a
 directory that is not a Git repository.
 
+### Collaborator onboarding (cloning an existing project)
+
+When a teammate clones an existing repository, they must run `pkt init` once locally:
+
+```bash
+git clone git@github.com:<org>/<repo>.git && cd <repo>
+pkt init
+```
+
+Git deliberately ignores cloned repository hooks by default for security. Running `pkt init` once connects `.githooks/` locally so incoming `git pull` operations automatically rebuild local `.pkt` binaries and outgoing commits auto-export textual snapshots.
+
 ### Agent skills (OpenCode / Claude Code / Gemini CLI)
 
 The binary embeds the pkt-git skill. Install it into the three global skill
@@ -292,6 +303,8 @@ pkt sync  <snapshot-dir|snapshot.xml>           # refresh configs + metadata
 pkt resolve [--ours|--theirs]                   # report or resolve conflicts
 pkt verify <file.pkt>                           # crypto round-trip verification
 pkt skills [--remove]                           # manage the bundled agent skill
+pkt doctor                                      # verify environment & prerequisites
+pkt language [code] [--local]                   # view/set language (en, es)
 pkt version                                     # version and build metadata
 ```
 
