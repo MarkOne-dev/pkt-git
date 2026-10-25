@@ -7,7 +7,7 @@
 
 ## 2. Welcome Command and Installer Integration
 
-- [ ] 2.1 Implement `pkt welcome` command in `internal/cli/welcome.go` displaying banner, animated check, and 3-step quickstart guide; register in root command tree and verify with `internal/cli/welcome_test.go`.
+- [x] 2.1 Implement `pkt welcome` command in `internal/cli/welcome.go` displaying banner, animated check, and 3-step quickstart guide; register in root command tree and verify with `internal/cli/welcome_test.go`.
 - [ ] 2.2 Update `scripts/install.sh` and `scripts/install.ps1` to call `pkt welcome` upon successful installation; verify shell syntax with `bash -n scripts/install.sh` and PowerShell parser.
 
 ## 3. Verification and Quality Checks
