@@ -14,6 +14,17 @@
 
 - [x] 3.1 Run `go test ./...`, `gofmt -l .`, and `make lint` across all packages to verify test suite and formatting pass cleanly.
 
+## 4. Nerd Font Iconography and Cross-Platform Installation
+
+- [ ] 4.1 Update `internal/cli/ui` and `internal/cli/welcome.go` to replace emojis with Nerd Font glyphs and add unit tests verifying no color emojis remain.
+- [ ] 4.2 Add automated Nerd Font download, installation, and terminal configuration to `scripts/install.sh`, and verify syntax with `bash -n scripts/install.sh`.
+- [ ] 4.3 Add automated Nerd Font download, user font registration, and Windows Terminal configuration to `scripts/install.ps1`.
+- [ ] 4.4 Add Nerd Font environment detection to `pkt doctor` in `internal/cli/doctor.go` and verify with `internal/cli/doctor_test.go`.
+
+## 5. Verification and Quality Checks
+
+- [ ] 5.1 Run `go test ./...`, `gofmt -l .`, and `make lint` across all packages to verify test suite and formatting pass cleanly.
+
 ## Workflow follow-up
 
 - Merge into `develop` (DEFERRED per user instruction: do not merge yet).

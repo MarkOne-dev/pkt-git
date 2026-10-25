@@ -30,3 +30,16 @@ The CLI SHALL provide an animated terminal spinner for long-running operations w
 - **WHEN** an operation with a spinner executes with output redirected or under `NO_COLOR=1`
 - **THEN** no animation escape sequences or carriage returns are emitted
 - **AND** only the initial message and final status are written to output
+
+### Requirement: Use Nerd Font iconography with diagnostic reporting
+
+The CLI SHALL use Nerd Font glyphs rather than color emojis for UI icons when executing in an interactive TTY without `NO_COLOR`. In non-interactive or uncolored environments, the CLI MUST fall back to plain text labels (e.g. `[ok]`, `[warn]`, `[error]`). The `doctor` command MUST verify and report whether a Nerd Font is installed in the host system.
+
+#### Scenario: Interactive execution displays Nerd Font glyphs
+- **WHEN** commands execute in an interactive terminal with color enabled
+- **THEN** output icons use Nerd Font glyphs
+- **AND** standard emojis are omitted
+
+#### Scenario: Doctor reports Nerd Font status
+- **WHEN** a user runs `pkt doctor`
+- **THEN** the output includes an entry indicating whether a Nerd Font is detected on the host
