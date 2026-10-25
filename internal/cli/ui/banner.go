@@ -16,7 +16,7 @@ var asciiBannerLines = []string{
 	"▄▄▄▄  ▄  ▄ ▄▄▄▄▄   ▄▄▄▄▄ ▄ ▄▄▄▄▄",
 	"█   █ █▄▀    █     █     █   █  ",
 	"█▀▀▀▀ █ ▀▄   █     █ ▀▀█ █   █  ",
-	"▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀ ▀▀▀▀▀",
+	"▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀   ▀  ",
 }
 
 const bannerSubtitle = "Cisco Packet Tracer ⇄ Git Version Control"
