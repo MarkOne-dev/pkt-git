@@ -197,10 +197,18 @@ pkt skills --remove     # remove only the pkt-git skill
 
 ### Import an existing Packet Tracer project
 
+Simply run `pkt init` inside your repository. If a `.pkt` file is present, it is automatically detected and exported:
+
 ```bash
-pkt export my_project.pkt snapshot/my_project/
-mkdir -p topologia && cp my_project.pkt topologia/
+pkt init
 git add . && git commit -m "chore: import existing PT project"
+```
+
+You can also run `pkt export` anytime; with no arguments it auto-detects the project, or you can specify a file and let the snapshot directory default by convention:
+
+```bash
+pkt export                      # auto-detects .pkt file
+pkt export my_project.pkt       # exports to snapshot/my_project/
 ```
 
 ---

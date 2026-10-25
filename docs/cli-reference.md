@@ -8,7 +8,7 @@ dependency. The command tree is built with Cobra and implemented under
 
 ```bash
 pkt init [dir]
-pkt export <project.pkt> <output_dir>
+pkt export [project.pkt] [output_dir] [--all]
 pkt build  <snapshot.xml> <output.pkt>
 pkt inspect <project.pkt>
 
@@ -68,6 +68,8 @@ pkt init path/to/repository
 - Sets `core.hooksPath` to `.githooks`.
 - Creates or merges `.gitattributes`: `.pkt`/`.pka` are binary; snapshot XML,
   JSON, and config files are text.
+- Auto-detects any existing `.pkt` or `.pka` files in the repository and automatically
+  exports their initial snapshots into `snapshot/<project>/`.
 - Refuses to modify a directory that is not a Git repository.
 - Is idempotent: rerunning it leaves the same usable configuration and does not
   duplicate attribute rules.
@@ -78,7 +80,10 @@ configuration and does not affect other repositories.
 ## `export`
 
 ```bash
-pkt export testdata/specimens/Caso1_Grupo09-2.pkt snapshot/Caso1_Grupo09-2
+pkt export                                                      # auto-detects a single repository .pkt
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt               # destination defaults to snapshot/Caso1_Grupo09-2/
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt custom/dest/  # explicit destination
+pkt export --all                                                # export all discovered topologies
 ```
 
 Creates or refreshes:

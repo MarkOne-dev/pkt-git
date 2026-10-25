@@ -16,8 +16,8 @@
 
 ## 4. Verification and Documentation
 
-- [ ] 4.1 Run the full test suite with `go test -count=1 ./...` and verify `make lint` passes.
-- [ ] 4.2 Update `docs/cli-reference.md`, `docs/workflow.md`, and `README.md` reflecting the simplified single-command onboarding flow.
+- [x] 4.1 Run the full test suite with `go test -count=1 ./...` and verify `make lint` passes.
+- [x] 4.2 Update `docs/cli-reference.md`, `docs/workflow.md`, and `README.md` reflecting the simplified single-command onboarding flow.
 
 ## Workflow follow-up
 
