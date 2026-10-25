@@ -8,9 +8,9 @@
 
 ## 2. CLI Integration (`pkt --lang`)
 
-- [ ] 2.1 Register global persistent flag `--lang` in `internal/cli/root.go` and initialize the active locale in root command pre-run.
-- [ ] 2.2 Localize `pkt welcome` and `ui.Banner` in `internal/cli/welcome.go` and `internal/cli/ui/banner.go`, supporting both Spanish and English; verify with unit tests in `internal/cli/welcome_test.go`.
-- [ ] 2.3 Localize `pkt doctor` diagnostic outputs in `internal/cli/doctor.go`; verify with unit tests in `internal/cli/doctor_test.go`.
+- [x] 2.1 Register global persistent flag `--lang` in `internal/cli/root.go` and initialize the active locale in root command pre-run.
+- [x] 2.2 Localize `pkt welcome` and `ui.Banner` in `internal/cli/welcome.go` and `internal/cli/ui/banner.go`, supporting both Spanish and English; verify with unit tests in `internal/cli/welcome_test.go`.
+- [x] 2.3 Localize `pkt doctor` diagnostic outputs in `internal/cli/doctor.go`; verify with unit tests in `internal/cli/doctor_test.go`.
 
 ## 3. Verification & Quality Checks
 

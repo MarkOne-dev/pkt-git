@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/MarkOne-dev/pkt-git/internal/config"
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
 )
 
 var asciiBannerLines = []string{
@@ -19,7 +20,9 @@ var asciiBannerLines = []string{
 	"▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀   ▀  ",
 }
 
-const bannerSubtitle = "Cisco Packet Tracer ⇄ Git Version Control"
+func subtitleText() string {
+	return i18n.T("BannerSubtitle")
+}
 
 func metadataLine() string {
 	ver := config.Version
@@ -32,9 +35,9 @@ func metadataLine() string {
 	return fmt.Sprintf("%s • %s • %s/%s", ver, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }
 
-func calculateLayout(meta string) (artIndent, subIndent, metaIndent string) {
+func calculateLayout(meta, subtitle string) (artIndent, subIndent, metaIndent string) {
 	artWidth := len([]rune(asciiBannerLines[0]))
-	subWidth := len([]rune(bannerSubtitle))
+	subWidth := len([]rune(subtitle))
 	metaWidth := len([]rune(meta))
 
 	containerWidth := 46
@@ -65,7 +68,8 @@ func calculateLayout(meta string) (artIndent, subIndent, metaIndent string) {
 // Banner writes the centered pkt-git banner, subtitle, and runtime metadata to w.
 func Banner(w io.Writer) {
 	meta := metadataLine()
-	artIndent, subIndent, metaIndent := calculateLayout(meta)
+	sub := subtitleText()
+	artIndent, subIndent, metaIndent := calculateLayout(meta, sub)
 
 	if ColorEnabled(w) {
 		r := rendererFor(w)
@@ -76,13 +80,13 @@ func Banner(w io.Writer) {
 		for _, line := range asciiBannerLines {
 			fmt.Fprintln(w, pktStyle.Render(artIndent+line))
 		}
-		fmt.Fprintln(w, subStyle.Render(subIndent+bannerSubtitle))
+		fmt.Fprintln(w, subStyle.Render(subIndent+sub))
 		fmt.Fprintf(w, "%s\n\n", metaStyle.Render(metaIndent+meta))
 	} else {
 		for _, line := range asciiBannerLines {
 			fmt.Fprintln(w, artIndent+line)
 		}
-		fmt.Fprintln(w, subIndent+bannerSubtitle)
+		fmt.Fprintln(w, subIndent+sub)
 		fmt.Fprintf(w, "%s\n\n", metaIndent+meta)
 	}
 }
@@ -91,7 +95,8 @@ func Banner(w io.Writer) {
 func BannerString(color bool) string {
 	var sb strings.Builder
 	meta := metadataLine()
-	artIndent, subIndent, metaIndent := calculateLayout(meta)
+	sub := subtitleText()
+	artIndent, subIndent, metaIndent := calculateLayout(meta, sub)
 
 	if color {
 		r := rendererFor(&sb)
@@ -102,13 +107,13 @@ func BannerString(color bool) string {
 		for _, line := range asciiBannerLines {
 			fmt.Fprintln(&sb, pktStyle.Render(artIndent+line))
 		}
-		fmt.Fprintln(&sb, subStyle.Render(subIndent+bannerSubtitle))
+		fmt.Fprintln(&sb, subStyle.Render(subIndent+sub))
 		fmt.Fprintf(&sb, "%s\n", metaStyle.Render(metaIndent+meta))
 	} else {
 		for _, line := range asciiBannerLines {
 			fmt.Fprintln(&sb, artIndent+line)
 		}
-		fmt.Fprintln(&sb, subIndent+bannerSubtitle)
+		fmt.Fprintln(&sb, subIndent+sub)
 		fmt.Fprintf(&sb, "%s\n", metaIndent+meta)
 	}
 	return sb.String()

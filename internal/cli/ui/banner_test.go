@@ -5,9 +5,12 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
 )
 
 func TestBannerPlain(t *testing.T) {
+	i18n.Init("en")
 	SetForceTTY(false)
 	SetForceNoColor(true)
 	defer ResetOverrides()
@@ -34,6 +37,7 @@ func TestBannerPlain(t *testing.T) {
 }
 
 func TestBannerColor(t *testing.T) {
+	i18n.Init("en")
 	SetForceTTY(true)
 	SetForceNoColor(false)
 	defer ResetOverrides()
@@ -62,5 +66,18 @@ func TestBannerString(t *testing.T) {
 	colored := BannerString(true)
 	if !strings.Contains(colored, "Cisco Packet Tracer") {
 		t.Fatalf("BannerString(true) missing text: %q", colored)
+	}
+}
+
+func TestBannerSpanish(t *testing.T) {
+	i18n.Init("es")
+	defer i18n.Init("en")
+
+	var buf bytes.Buffer
+	Banner(&buf)
+	got := buf.String()
+
+	if !strings.Contains(got, "Cisco Packet Tracer ⇄ Control de versiones Git") {
+		t.Fatalf("Banner missing Spanish subtitle: %q", got)
 	}
 }
