@@ -139,6 +139,26 @@ func TestMissingAssetPreservesExistingInstall(t *testing.T) {
 	}
 }
 
+func TestSkillGuardrailInvariants(t *testing.T) {
+	asset := string(Asset())
+	requiredInvariants := []string{
+		"Operator-only role & zero code modification",
+		"Never edit Go, Python, or",
+		"Never write ad-hoc scripts",
+		"pkt resolve --theirs",
+		"pkt resolve --ours",
+		"Plain-Language Human Mediation",
+		"The text is the source of truth; the binary is an artifact",
+		"Never global find-replace or `sed` over snapshot XML",
+	}
+
+	for _, req := range requiredInvariants {
+		if !strings.Contains(asset, req) {
+			t.Errorf("Asset() missing required invariant or directive: %q", req)
+		}
+	}
+}
+
 func writeTestFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

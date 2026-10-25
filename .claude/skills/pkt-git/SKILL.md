@@ -1,6 +1,6 @@
 ---
 name: pkt-git
-description: Version Cisco Packet Tracer (.pkt) projects with Git/GitHub using the Go pkt-git CLI. Use when importing a .pkt project into a repository, committing or pulling changes around Packet Tracer topologies, resolving merge conflicts in network snapshots, or explaining/reviewing network changes from textual diffs. Covers installation, `pkt init`, daily flows, `pkt resolve`, and the invariants (binary = artifact, snapshot = source of truth).
+description: Version Cisco Packet Tracer (.pkt) projects with Git/GitHub using the Go pkt-git CLI. The agent acts strictly as a CLI operator and Git assistant: never edit codebase internals or author ad-hoc scripts; interact exclusively through official `pkt` commands and mediate merge conflicts with human confirmation.
 ---
 
 # pkt-git
@@ -11,18 +11,26 @@ there is no Python, virtualenv, or per-repository tool copy.
 
 ## Invariants (never violate)
 
-1. **The text is the source of truth; the binary is an artifact.**
+1. **Operator-only role & zero code modification:**
+   You are an autonomous network operator and Git workflow assistant, NOT a
+   software engineer for pkt-git or this repository. Never edit Go, Python, or
+   shell code. Never write ad-hoc scripts to parse or manipulate Packet Tracer
+   files. Perform all operations exclusively through the official `pkt` CLI commands.
+2. **The text is the source of truth; the binary is an artifact.**
    `snapshot/<Project>/` (XML + per-device `.cfg` + `metadata/topology.json`)
    is authoritative; `topologia/<Project>.pkt` is regenerated from it and is
    never text-merged (`.gitattributes` marks it binary).
-2. **Never global find-replace or `sed` over snapshot XML** (multi-MB; this has
+3. **Never global find-replace or `sed` over snapshot XML** (multi-MB; this has
    caused a real duplicated-VLAN incident). Edits are device-scoped via
    `pkt edit` only.
-3. Every commit containing a `.pkt` must contain its fresh snapshot. The
+4. **Every commit containing a `.pkt` must contain its fresh snapshot.** The
    pre-commit hook normally does this automatically; never bypass hooks with
    `--no-verify` to "fix" binary/text mismatches.
-4. Fix conflicts one of two ways only: `pkt resolve --theirs|--ours`, or
-   device-scoped manual edits, then `pkt build` + scoped `git add`.
+5. **Human-in-the-loop conflict resolution only.**
+   Never guess or silently force conflict resolution. Conflicts must follow the
+   guided mediation workflow: inspect config diffs, explain differences in
+   plain network engineering terms, and obtain explicit user confirmation before
+   running `pkt resolve --ours` or `pkt resolve --theirs`.
 
 ## Detecting the environment
 
@@ -60,6 +68,7 @@ pkt verify <file.pkt>                           # crypto round-trip verification
 pkt skills [--remove]                           # install/remove this skill
 pkt doctor                                      # verify environment & prerequisites
 pkt language [code] [--local]                   # view/set language (en, es)
+pkt welcome                                     # onboarding banner & quickstart
 ```
 
 The edit subcommands also accept the subcommand-first order
@@ -110,16 +119,24 @@ output; do not run `pkt build` manually unless the hook is missing.
 
 ### "There is a merge conflict in the snapshot"
 
-```bash
-pkt resolve                  # report mode; exits non-zero after printing
-pkt resolve --theirs         # accept incoming
-pkt resolve --ours           # keep current
-```
+Follow this mandatory 4-step mediation protocol:
 
-Never auto-pick a side in a real conflict without asking the user; two branches
-editing the same line means someone's work will be dropped. The resolver
-refreshes derived files, rebuilds conflicted binaries from the snapshot, and
-stages only the paths involved.
+1. **Step 1 - Detection**: Run `pkt resolve` (report mode). It identifies the conflicted snapshot directories and exits non-zero without altering files.
+   ```bash
+   pkt resolve
+   ```
+2. **Step 2 - Network Diff Inspection**: Inspect the textual differences in the per-device configs and metadata rather than the raw multi-MB XML:
+   ```bash
+   git diff -- 'snapshot/**/configs/*.cfg' 'snapshot/**/metadata/topology.json'
+   ```
+3. **Step 3 - Plain-Language Human Mediation**: Present a concise summary of the conflict to the user in network engineering terms (e.g., *"Branch A set Router1 FastEthernet0/0 to 192.168.1.1/24, while Branch B set it to 10.0.0.1/24"*). Ask the user which branch or configuration intent should be preserved.
+4. **Step 4 - Safe Resolution**: Once the user instructs which version to accept, execute the corresponding flag:
+   ```bash
+   pkt resolve --theirs   # accept incoming changes from the merge/rebase branch
+   # OR
+   pkt resolve --ours     # keep the current branch's changes
+   ```
+   The resolver automatically rebuilds the affected `.pkt` binaries from the resolved text, synchronizes metadata, and stages only the resolved paths.
 
 ### "Change the network without opening Packet Tracer"
 
