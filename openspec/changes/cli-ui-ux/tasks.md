@@ -3,7 +3,7 @@
 ## 1. Dependencies and UI Foundation
 
 - [x] 1.1 Add `github.com/charmbracelet/lipgloss` and `github.com/dustin/go-humanize` to `go.mod` and verify with `go mod tidy`.
-- [ ] 1.2 Create `internal/cli/ui` package with TTY detection, `NO_COLOR`/`TERM=dumb` handling, semantic status markers (`✔`, `⚠`, `✖`), and verify with unit tests in `internal/cli/ui/ui_test.go`.
+- [x] 1.2 Create `internal/cli/ui` package with TTY detection, `NO_COLOR`/`TERM=dumb` handling, semantic status markers (`✔`, `⚠`, `✖`), and verify with unit tests in `internal/cli/ui/ui_test.go`.
 
 ## 2. Command Help Organization
 
