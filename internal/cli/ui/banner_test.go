@@ -15,7 +15,7 @@ func TestBannerPlain(t *testing.T) {
 	Banner(&buf)
 	got := buf.String()
 
-	if !strings.Contains(got, "____  __ _____") {
+	if !strings.Contains(got, "▄▄▄▄  ▄  ▄ ▄▄▄▄▄") {
 		t.Fatalf("Banner missing ASCII art: %q", got)
 	}
 	if !strings.Contains(got, "Cisco Packet Tracer ⇄ Git Version Control") {

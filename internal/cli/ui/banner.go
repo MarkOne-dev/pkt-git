@@ -9,11 +9,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const asciiBanner = `    ____  __ _____       _____________
-   / __ \/ //_/_  __    / ____/  _/_  __/
-  / /_/ / ,<   / /____ / / __ / /  / /   
- / ____/ /| | / //___// /_/ // /  / /    
-/_/   /_/ |_|/_/      \____/___/ /_/     `
+const asciiBanner = `▄▄▄▄  ▄  ▄ ▄▄▄▄▄   ▄▄▄▄▄ ▄ ▄▄▄▄▄
+█   █ █▄▀    █     █     █   █
+█▀▀▀▀ █ ▀▄   █     █ ▀▀█ █   █
+▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀ ▀▀▀▀▀`
 
 const bannerSubtitle = "Cisco Packet Tracer ⇄ Git Version Control"
 
