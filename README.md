@@ -64,7 +64,9 @@ binary; nothing is installed inside Packet Tracer.
 - 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the binary anytime with `pkt build`.
 - 🪝 **Transparent Git Hooks:** `pre-commit` exports snapshots on commit; `post-merge` and `post-checkout` rebuild binaries on pull or branch change.
 - 🛡️ **Safe CLI Editing:** `pkt edit` updates one device's interface or config lines with byte-offset edits and full XML validation.
-- 🎨 **Modern CLI UX:** Grouped help navigation, Unicode tabular topology inspection with role badges, humanized file sizes, and full `NO_COLOR` / TTY compliance.
+- 🌐 **Internationalization (i18n):** Full multilingual CLI support in English and Spanish with persistent Git configuration (`pkt.language`) and interactive selection (`pkt language`).
+- 🩺 **Environment Doctor:** Diagnostic command (`pkt doctor`) checking Git identity, PATH configuration, agent skills, and performing deep cross-platform searches for Cisco Packet Tracer installations.
+- 🎨 **Modern CLI UX:** Grouped help navigation, progressive animated welcome banner (`pkt welcome`), Unicode tabular topology inspection with role badges, humanized file sizes, and full `NO_COLOR` / TTY compliance.
 - 🤖 **Agent Skills:** Bundled skill for OpenCode, Claude Code, and Gemini CLI, installable with `pkt skills`.
 - 💻 **Cross-Platform:** Linux, macOS, and Windows; no cgo or C runtime.
 
@@ -223,6 +225,17 @@ pkt export                      # auto-detects .pkt file
 pkt export my_project.pkt       # exports to snapshot/my_project/
 ```
 
+### Language preferences
+
+Switch the CLI language globally or per repository:
+
+```bash
+pkt language          # Interactive selection (TTY)
+pkt lang es           # Set language to Spanish globally
+pkt lang en           # Set language to English globally
+pkt lang es --local   # Set language to Spanish for current repository
+```
+
 ---
 
 ## The Collaborative Workflow
@@ -304,7 +317,8 @@ pkt resolve [--ours|--theirs]                   # report or resolve conflicts
 pkt verify <file.pkt>                           # crypto round-trip verification
 pkt skills [--remove]                           # manage the bundled agent skill
 pkt doctor                                      # verify environment & prerequisites
-pkt language [code] [--local]                   # view/set language (en, es)
+pkt language [code] [--local]                   # view/set language (alias: pkt lang)
+pkt welcome                                     # show animated welcome banner
 pkt version                                     # version and build metadata
 ```
 
