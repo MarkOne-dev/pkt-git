@@ -133,6 +133,34 @@ func TestInspectCommandUsage(t *testing.T) {
 	}
 }
 
+func TestInspectCommandFilter(t *testing.T) {
+	dir := t.TempDir()
+	pktPath := filepath.Join(dir, "project.pkt")
+	writeCLIFile(t, pktPath, encodeCLI(t, minimalCLIXML))
+
+	code, stdout, stderr := runCLI("inspect", pktPath, "--type", "Switch")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "R1") || !strings.Contains(stdout, "Switch") {
+		t.Fatalf("expected R1 and Switch in filtered output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "matching \"Switch\"") {
+		t.Fatalf("expected filter notice in stdout:\n%s", stdout)
+	}
+
+	code, stdout, stderr = runCLI("inspect", pktPath, "--type", "Router")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if strings.Contains(stdout, "R1") {
+		t.Fatalf("did not expect R1 in Router-filtered output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "0 device(s) matching \"Router\"") {
+		t.Fatalf("expected 0 matching devices notice:\n%s", stdout)
+	}
+}
+
 func encodeCLI(t *testing.T, xml string) []byte {
 	t.Helper()
 	data, err := codec.Encode([]byte(xml))

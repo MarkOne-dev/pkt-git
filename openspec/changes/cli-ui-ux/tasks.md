@@ -12,8 +12,8 @@
 
 ## 3. Tabular Topology Inspection
 
-- [ ] 3.1 Refactor `internal/cli/inspect.go` to use Unicode-bordered tables, device role badges, category summary rollups, and add the `--type` filter flag.
-- [ ] 3.2 Add test cases in `internal/cli/commands_test.go` verifying table output formatting and `--type` filtering.
+- [x] 3.1 Refactor `internal/cli/inspect.go` to use Unicode-bordered tables, device role badges, category summary rollups, and add the `--type` filter flag.
+- [x] 3.2 Add test cases in `internal/cli/commands_test.go` verifying table output formatting and `--type` filtering.
 
 ## 4. Modernize Outputs and Error Reporting
 
