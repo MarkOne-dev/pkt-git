@@ -23,7 +23,7 @@
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `docs/cli-reference.md` and `README.md` reflecting the new help groups, `inspect --type` flag, and `NO_COLOR` compliance.
+- [x] 5.1 Update `docs/cli-reference.md` and `README.md` reflecting the new help groups, `inspect --type` flag, and `NO_COLOR` compliance.
 
 ## Workflow follow-up
 
