@@ -93,6 +93,16 @@ configure_path_if_needed() {
         echo "  Added ${BIN_DIR} to ~/.zshrc"
         profile_updated=1
     fi
+    if [[ -f "${HOME}/.bash_profile" ]] && ! grep -Fq "${BIN_DIR}" "${HOME}/.bash_profile"; then
+        printf '\n# Added by pkt-git installer\n%s\n' "${export_line}" >> "${HOME}/.bash_profile"
+        echo "  Added ${BIN_DIR} to ~/.bash_profile"
+        profile_updated=1
+    fi
+    if [[ -f "${HOME}/.profile" ]] && ! grep -Fq "${BIN_DIR}" "${HOME}/.profile"; then
+        printf '\n# Added by pkt-git installer\n%s\n' "${export_line}" >> "${HOME}/.profile"
+        echo "  Added ${BIN_DIR} to ~/.profile"
+        profile_updated=1
+    fi
 
     if [[ "${profile_updated}" -eq 0 ]]; then
         echo "      Add 'export PATH=\"\$PATH:${BIN_DIR}\"' to your shell profile." >&2

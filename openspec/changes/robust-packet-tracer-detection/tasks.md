@@ -9,8 +9,8 @@
 
 ## 2. Doctor CLI Integration & PATH Verification
 
-- [ ] 2.1 Refactor `findPacketTracer()` in `internal/cli/doctor.go` to use `ptdetect.Find()`, displaying detailed path, version, and discovery method in `pkt doctor`; verify with updated tests in `internal/cli/doctor_test.go`.
-- [ ] 2.2 Verify PATH remediation guidance in `internal/cli/doctor.go` and ensure `scripts/install.sh` and `scripts/install.ps1` reliably persist the binary location in user shell profiles; verify shell syntax with `bash -n scripts/install.sh`.
+- [x] 2.1 Refactor `findPacketTracer()` in `internal/cli/doctor.go` to use `ptdetect.Find()`, displaying detailed path, version, and discovery method in `pkt doctor`; verify with updated tests in `internal/cli/doctor_test.go`.
+- [x] 2.2 Verify PATH remediation guidance in `internal/cli/doctor.go` and ensure `scripts/install.sh` and `scripts/install.ps1` reliably persist the binary location in user shell profiles; verify shell syntax with `bash -n scripts/install.sh`.
 
 ## 3. Verification & Quality Checks
 
