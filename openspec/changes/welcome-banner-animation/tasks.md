@@ -23,7 +23,7 @@
 
 ## 5. Verification and Quality Checks
 
-- [ ] 5.1 Run `go test ./...`, `gofmt -l .`, and `make lint` across all packages to verify test suite and formatting pass cleanly.
+- [x] 5.1 Run `go test ./...`, `gofmt -l .`, and `make lint` across all packages to verify test suite and formatting pass cleanly.
 
 ## Workflow follow-up
 
