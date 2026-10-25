@@ -24,6 +24,7 @@
 - [How It Works](#how-it-works)
 - [Documentation](#documentation)
 - [Quickstart & Installation](#quickstart--installation)
+- [Everyday Use Cases & Recipes](#everyday-use-cases--recipes)
 - [The Collaborative Workflow](#the-collaborative-workflow)
 - [CLI Reference](#cli-reference)
 - [Reverse Engineering & Binary Format](#reverse-engineering--binary-format)
@@ -182,17 +183,6 @@ path in repository-local `pktgit.bin`, activates `core.hooksPath`, and merges
 the required `.gitattributes` rules. It is idempotent and refuses to modify a
 directory that is not a Git repository.
 
-### Collaborator onboarding (cloning an existing project)
-
-When a teammate clones an existing repository, they must run `pkt init` once locally:
-
-```bash
-git clone git@github.com:<org>/<repo>.git && cd <repo>
-pkt init
-```
-
-Git deliberately ignores cloned repository hooks by default for security. Running `pkt init` once connects `.githooks/` locally so incoming `git pull` operations automatically rebuild local `.pkt` binaries and outgoing commits auto-export textual snapshots.
-
 ### Agent skills (OpenCode / Claude Code / Gemini CLI)
 
 The binary embeds the pkt-git skill. Install it into the three global skill
@@ -209,32 +199,106 @@ pkt skills --remove     # remove only the pkt-git skill
 | `~/.claude/skills/pkt-git/` | Claude Code |
 | `~/.gemini/skills/pkt-git/` | Gemini CLI |
 
-### Import an existing Packet Tracer project
+---
 
-Simply run `pkt init` inside your repository. If a `.pkt` file is present, it is automatically detected and exported:
+## Everyday Use Cases & Recipes
+
+A 30-second cheat sheet for the most common network engineering flows:
+
+| Scenario | What to run |
+|---|---|
+| 🚀 **1. Starting a New Repo** | `git init` ➔ `pkt init` ➔ save in Packet Tracer (`Ctrl+S`) ➔ `git commit` |
+| 👥 **2. Joining a Teammate's Repo** | `git clone <url>` ➔ `cd <repo>` ➔ **`pkt init`** *(one-time hook setup)* |
+| 💾 **3. Daily Working & Saving** | Edit in Packet Tracer ➔ `Ctrl+S` ➔ `git add .` ➔ `git commit -m "..."` |
+| 📥 **4. Pulling Updates from Team** | `git pull` *(hooks rebuild your local `.pkt` binary automatically)* |
+| ⚔️ **5. Resolving Merge Conflicts** | `pkt resolve --theirs` (or `--ours`, or manual edit) |
+| 🌐 **6. Switching Language** | `pkt lang es` (Spanish) or `pkt lang en` (English) |
+| 🩺 **7. System Health Check** | `pkt doctor` *(inspects Git identity, Packet Tracer installation, and PATH)* |
+| 📦 **8. Batch Multi-Project Export** | `pkt export --all` *(exports all topologies in workspace)* |
+
+<details open>
+<summary><strong>Case 1: Starting a New Repository or Importing a .pkt</strong></summary>
+
+When putting a local Packet Tracer project under Git version control:
 
 ```bash
-pkt init
-git add . && git commit -m "chore: import existing PT project"
+cd my-project && git init -b main
+# Place your topology file inside (e.g., topologia/network.pkt)
+pkt init                                            # auto-detects .pkt, wires hooks, exports snapshot
+git add . && git commit -m "chore: import PT project"
+git remote add origin git@github.com:<you>/my-project.git
+git push -u origin main
 ```
+`pkt init` discovers any `.pkt`/`.pka` files and creates the initial `snapshot/<project>/` automatically.
+</details>
 
-You can also run `pkt export` anytime; with no arguments it auto-detects the project, or you can specify a file and let the snapshot directory default by convention:
+<details open>
+<summary><strong>Case 2: Joining an Existing Project (Teammate Onboarding)</strong></summary>
+
+When cloning a repository already using pkt-git:
 
 ```bash
-pkt export                      # auto-detects .pkt file
-pkt export my_project.pkt       # exports to snapshot/my_project/
+git clone git@github.com:<org>/my-project.git
+cd my-project
+pkt init                                            # MANDATORY: wires local hooks and sets binary path
 ```
 
-### Language preferences
+> [!IMPORTANT]
+> **Why `pkt init` is required after cloning:**  
+> For security reasons, Git **never** activates hooks automatically upon `git clone`. Running `pkt init` once links `.githooks/` locally and registers your machine's `pkt` executable path, ensuring incoming pulls rebuild `.pkt` binaries and commits auto-export snapshots.
+</details>
 
-Switch the CLI language globally or per repository:
+<details open>
+<summary><strong>Case 3: The Daily 3-Command Loop</strong></summary>
+
+The everyday workflow while editing in Cisco Packet Tracer:
 
 ```bash
-pkt language          # Interactive selection (TTY)
-pkt lang es           # Set language to Spanish globally
-pkt lang en           # Set language to English globally
-pkt lang es --local   # Set language to Spanish for current repository
+# 1. In Packet Tracer: edit interfaces, routers, VLANs -> Ctrl+S
+# 2. In your terminal:
+git add .
+git commit -m "feat: configure OSPF and vlan 20 on core router"
+git push
 ```
+The `pre-commit` hook automatically detects the modified `.pkt`, extracts the updated XML, device `.cfg` files, and `topology.json`, and stages them alongside the commit.
+</details>
+
+<details open>
+<summary><strong>Case 4: Receiving Remote Updates</strong></summary>
+
+When your teammates push changes to the repository:
+
+```bash
+git pull
+```
+The `post-merge` hook runs automatically, detects snapshot text changes, and rebuilds the local `.pkt` binary. When you open Packet Tracer, all team changes are already in place.
+</details>
+
+<details>
+<summary><strong>Case 5: Resolving Merge Conflicts</strong></summary>
+
+When two branches modify the same device configuration line:
+
+```bash
+git merge feature/branch                # Git reports conflict in snapshot text
+pkt resolve                             # reports exact conflicting files and lines
+pkt resolve --theirs                    # accept incoming branch version
+# or: pkt resolve --ours                # keep current branch version
+git commit -m "merge: resolve conflict" # hook re-exports and finishes
+```
+`pkt resolve` updates the XML, regenerates `.cfg` files, rebuilds the binary, and stages the resolved files.
+</details>
+
+<details>
+<summary><strong>Case 6: Changing CLI Language</strong></summary>
+
+```bash
+pkt language          # Interactive menu in your terminal (TTY)
+pkt lang es           # Set language to Spanish globally (~/.gitconfig)
+pkt lang en           # Set language to English globally (~/.gitconfig)
+pkt lang es --local   # Set language to Spanish only for current repository
+```
+</details>
 
 ---
 
