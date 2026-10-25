@@ -2,7 +2,7 @@
 
 ## 1. Topology Discovery and Path Helpers
 
-- [ ] 1.1 Implement `FindTopologies` and `DefaultSnapshotDir` helpers in `internal/snapshot/` and verify with unit tests in `internal/snapshot/export_test.go`.
+- [x] 1.1 Implement `FindTopologies` and `DefaultSnapshotDir` helpers in `internal/snapshot/` and verify with unit tests in `internal/snapshot/export_test.go`.
 
 ## 2. Conventional and Zero-Argument Export
 

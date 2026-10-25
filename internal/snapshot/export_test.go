@@ -15,6 +15,68 @@ import (
 	"github.com/MarkOne-dev/pkt-git/internal/topology"
 )
 
+func TestDefaultSnapshotDir(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"network.pkt", filepath.Join("snapshot", "network")},
+		{"topologia/network.pkt", filepath.Join("snapshot", "network")},
+		{"lab_v1.pka", filepath.Join("snapshot", "lab_v1")},
+		{"/abs/path/to/my_topology.PKT", filepath.Join("snapshot", "my_topology")},
+	}
+	for _, tt := range tests {
+		got := DefaultSnapshotDir(tt.input)
+		if got != tt.want {
+			t.Errorf("DefaultSnapshotDir(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestFindTopologies(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create root topology
+	if err := os.WriteFile(filepath.Join(dir, "root.pkt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Create subfolder topology
+	topoDir := filepath.Join(dir, "topologia")
+	if err := os.MkdirAll(topoDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(topoDir, "branch.pka"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Create ignored files/dirs
+	gitDir := filepath.Join(dir, ".git")
+	if err := os.MkdirAll(gitDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(gitDir, "ignored.pkt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	snapDir := filepath.Join(dir, "snapshot")
+	if err := os.MkdirAll(snapDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(snapDir, "ignored.pkt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "temp.rebuilt.pkt"), []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	found, err := FindTopologies(dir)
+	if err != nil {
+		t.Fatalf("FindTopologies: %v", err)
+	}
+	want := []string{"root.pkt", filepath.Join("topologia", "branch.pka")}
+	if !reflect.DeepEqual(found, want) {
+		t.Fatalf("FindTopologies(%q) = %v, want %v", dir, found, want)
+	}
+}
+
 func TestExportSpecimen(t *testing.T) {
 	pktPath := specimenPath(t)
 	outputDir := filepath.Join(t.TempDir(), "snapshot")
