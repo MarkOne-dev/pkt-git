@@ -10,16 +10,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
 )
 
 // NewRootCmd builds the root command and all subcommands.
 func NewRootCmd() *cobra.Command {
+	var langFlag string
+
 	root := &cobra.Command{
 		Use:           "pkt",
 		Short:         "Git-native version control for Cisco Packet Tracer projects",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Args:          rootArgs,
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			i18n.Init(langFlag)
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			_ = cmd.Help()
 			return &usageError{}
@@ -28,6 +35,7 @@ func NewRootCmd() *cobra.Command {
 	root.CompletionOptions.DisableDefaultCmd = true
 	root.Version = versionString()
 	root.SetVersionTemplate("{{.Version}}\n")
+	root.PersistentFlags().StringVar(&langFlag, "lang", "", "Language for CLI output (en, es)")
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
 		return usagef("%v", err)
 	})

@@ -6,7 +6,7 @@ import (
 )
 
 func TestWelcomeCommand(t *testing.T) {
-	code, stdout, stderr := runCLI("welcome")
+	code, stdout, stderr := runCLI("--lang", "en", "welcome")
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
 	}
@@ -22,6 +22,23 @@ func TestWelcomeCommand(t *testing.T) {
 	}
 	if strings.Contains(stdout, "🚀") {
 		t.Fatalf("stdout must not contain color emoji: %q", stdout)
+	}
+}
+
+func TestWelcomeCommandSpanish(t *testing.T) {
+	code, stdout, stderr := runCLI("--lang", "es", "welcome")
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+
+	if !strings.Contains(stdout, "Cisco Packet Tracer ⇄ Control de versiones Git") {
+		t.Fatalf("stdout missing Spanish banner: %q", stdout)
+	}
+	if !strings.Contains(stdout, "Guía de inicio rápido:") {
+		t.Fatalf("stdout missing Spanish quickstart: %q", stdout)
+	}
+	if !strings.Contains(stdout, "Inicializa un repositorio de Packet Tracer:") {
+		t.Fatalf("stdout missing Spanish step 1: %q", stdout)
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 )
 
 func TestDoctorCommand(t *testing.T) {
-	code, stdout, stderr := runCLI("doctor")
+	code, stdout, stderr := runCLI("--lang", "en", "doctor")
 	if code != 0 {
 		t.Fatalf("exit code = %d, want 0; stderr=%q", code, stderr)
 	}
@@ -37,5 +37,21 @@ func TestDoctorCommandRejectsExtraArguments(t *testing.T) {
 	}
 	if !strings.Contains(stderr, "expected 0 argument") {
 		t.Fatalf("stderr = %q", stderr)
+	}
+}
+
+func TestDoctorCommandSpanish(t *testing.T) {
+	code, stdout, stderr := runCLI("--lang", "es", "doctor")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0; stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "Git:") {
+		t.Fatalf("expected Git in Spanish doctor output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "Cisco Packet Tracer:") {
+		t.Fatalf("expected Cisco Packet Tracer in Spanish doctor output:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "Binario:") {
+		t.Fatalf("expected 'Binario:' in Spanish doctor output:\n%s", stdout)
 	}
 }

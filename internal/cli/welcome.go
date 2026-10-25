@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/config"
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
 )
 
 func newWelcomeCmd() *cobra.Command {
@@ -25,7 +27,7 @@ func newWelcomeCmd() *cobra.Command {
 			ui.Banner(out)
 
 			// 2. Animated environment check
-			spinner := ui.NewSpinner(out, "Verifying environment prerequisites...")
+			spinner := ui.NewSpinner(out, i18n.T("WelcomeVerifying"))
 			spinner.Start()
 
 			// Check Git
@@ -40,9 +42,16 @@ func newWelcomeCmd() *cobra.Command {
 			}
 
 			if gitReady {
-				spinner.Success("Environment ready (Git installed, pkt-git v%s)", config.Version)
+				ver := config.Version
+				if ver == "" {
+					ver = "dev"
+				}
+				if !strings.HasPrefix(ver, "v") && ver != "dev" {
+					ver = "v" + ver
+				}
+				spinner.Success("%s", i18n.T("WelcomeReady", map[string]interface{}{"Version": ver}))
 			} else {
-				spinner.Fail("Git not found on PATH. Run 'pkt doctor' for remediation instructions.")
+				spinner.Fail("%s", i18n.T("DoctorGitMissing"))
 			}
 
 			// 3. Quickstart guide
@@ -55,32 +64,41 @@ func newWelcomeCmd() *cobra.Command {
 
 func renderQuickstart(w io.Writer) {
 	fmt.Fprintln(w)
+	title := i18n.T("WelcomeQuickstartTitle")
+	step1Title := i18n.T("WelcomeStep1Title")
+	step1Comment := i18n.T("WelcomeStep1Comment")
+	step2Title := i18n.T("WelcomeStep2Title")
+	step2Comment := i18n.T("WelcomeStep2Comment")
+	step3Title := i18n.T("WelcomeStep3Title")
+	step3Doctor := i18n.T("WelcomeStep3Doctor")
+	step3Skills := i18n.T("WelcomeStep3Skills")
+
 	if ui.ColorEnabled(w) {
 		titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("39"))
 		stepNumStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("14"))
 		codeStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Bold(true)
 		commentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))
 
-		fmt.Fprintln(w, titleStyle.Render(ui.IconRocket+" Quickstart Guide:"))
-		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("1."), "Initialize a Packet Tracer project repository:")
-		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt init"), commentStyle.Render("# wires git hooks & exports existing topology"))
-		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("2."), "Normal Git commits:")
-		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("git add . && git commit -m \"update lab\""), commentStyle.Render("# auto-syncs XML and .cfg files"))
-		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("3."), "Diagnostics & AI Agent Skills:")
-		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt doctor"), commentStyle.Render("# inspect environment health"))
-		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt skills"), commentStyle.Render("# enable AI assistant skill in Claude/Gemini"))
+		fmt.Fprintln(w, titleStyle.Render(ui.IconRocket+" "+title))
+		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("1."), step1Title)
+		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt init"), commentStyle.Render(step1Comment))
+		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("2."), step2Title)
+		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("git add . && git commit -m \"update lab\""), commentStyle.Render(step2Comment))
+		fmt.Fprintf(w, "  %s %s\n", stepNumStyle.Render("3."), step3Title)
+		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt doctor"), commentStyle.Render(step3Doctor))
+		fmt.Fprintf(w, "     %s %s\n", codeStyle.Render("pkt skills"), commentStyle.Render(step3Skills))
 		fmt.Fprintln(w)
-		fmt.Fprintf(w, "  Run %s for all commands.\n", codeStyle.Render("pkt --help"))
+		fmt.Fprintf(w, "  %s\n", i18n.T("WelcomeRunHelp", map[string]interface{}{"Command": codeStyle.Render("pkt --help")}))
 	} else {
-		fmt.Fprintln(w, "Quickstart Guide:")
-		fmt.Fprintln(w, "  1. Initialize a Packet Tracer project repository:")
-		fmt.Fprintln(w, "     pkt init          # wires git hooks & exports existing topology")
-		fmt.Fprintln(w, "  2. Normal Git commits:")
-		fmt.Fprintln(w, "     git add . && git commit -m \"update lab\"  # auto-syncs XML and .cfg files")
-		fmt.Fprintln(w, "  3. Diagnostics & AI Agent Skills:")
-		fmt.Fprintln(w, "     pkt doctor        # inspect environment health")
-		fmt.Fprintln(w, "     pkt skills        # enable AI assistant skill in Claude/Gemini")
+		fmt.Fprintln(w, title)
+		fmt.Fprintf(w, "  1. %s\n", step1Title)
+		fmt.Fprintf(w, "     pkt init          %s\n", step1Comment)
+		fmt.Fprintf(w, "  2. %s\n", step2Title)
+		fmt.Fprintf(w, "     git add . && git commit -m \"update lab\"  %s\n", step2Comment)
+		fmt.Fprintf(w, "  3. %s\n", step3Title)
+		fmt.Fprintf(w, "     pkt doctor        %s\n", step3Doctor)
+		fmt.Fprintf(w, "     pkt skills        %s\n", step3Skills)
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  Run 'pkt --help' for all commands.")
+		fmt.Fprintf(w, "  %s\n", i18n.T("WelcomeRunHelp", map[string]interface{}{"Command": "'pkt --help'"}))
 	}
 }

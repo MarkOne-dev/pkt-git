@@ -1,0 +1,92 @@
+{
+  "BannerSubtitle": {
+    "other": "Cisco Packet Tracer ⇄ Git Version Control"
+  },
+  "WelcomeVerifying": {
+    "other": "Verifying environment prerequisites..."
+  },
+  "WelcomeReady": {
+    "other": "Environment ready (Git installed, pkt-git {{.Version}})"
+  },
+  "WelcomeQuickstartTitle": {
+    "other": "Quickstart Guide:"
+  },
+  "WelcomeStep1Title": {
+    "other": "Initialize a Packet Tracer project repository:"
+  },
+  "WelcomeStep1Comment": {
+    "other": "# wires git hooks & exports existing topology"
+  },
+  "WelcomeStep2Title": {
+    "other": "Normal Git commits:"
+  },
+  "WelcomeStep2Comment": {
+    "other": "# auto-syncs XML and .cfg files"
+  },
+  "WelcomeStep3Title": {
+    "other": "Diagnostics & AI Agent Skills:"
+  },
+  "WelcomeStep3Doctor": {
+    "other": "# inspect environment health"
+  },
+  "WelcomeStep3Skills": {
+    "other": "# enable AI assistant skill in Claude/Gemini"
+  },
+  "WelcomeRunHelp": {
+    "other": "Run {{.Command}} for all commands."
+  },
+  "DoctorGitMissing": {
+    "other": "Git: not found in PATH (required)"
+  },
+  "DoctorGitRemediation": {
+    "other": "Remediation: install Git via your system package manager (e.g. apt, dnf, brew, winget)."
+  },
+  "DoctorGitIdentityMissing": {
+    "other": "Git Identity: unconfigured user.name or user.email"
+  },
+  "DoctorGitIdentityRemediation": {
+    "other": "Remediation: configure Git identity to prevent commit errors:"
+  },
+  "DoctorBinaryInPath": {
+    "other": "Binary: {{.Path}} (in PATH)"
+  },
+  "DoctorBinaryNotInPath": {
+    "other": "Binary: {{.Path}} (directory not in PATH)"
+  },
+  "DoctorBinaryRemediationUnix": {
+    "other": "Remediation: add 'export PATH=\"$PATH:{{.Dir}}\"' to your ~/.bashrc or ~/.zshrc."
+  },
+  "DoctorBinaryRemediationWindows": {
+    "other": "Remediation: add {{.Dir}} to your user PATH via System Properties or PowerShell."
+  },
+  "DoctorSkillsInstalled": {
+    "other": "Agent Skills: installed for {{.Agents}}"
+  },
+  "DoctorSkillsNone": {
+    "other": "Agent Skills: none installed (run 'pkt skills' to install for OpenCode, Claude, Gemini)"
+  },
+  "DoctorPacketTracerDetected": {
+    "other": "Cisco Packet Tracer: {{.Details}}"
+  },
+  "DoctorPacketTracerMissing": {
+    "other": "Cisco Packet Tracer: not detected in common paths (optional for CLI; required to open/edit topologies)"
+  },
+  "DoctorGoInstalled": {
+    "other": "Go SDK: {{.Details}} (optional for runtime)"
+  },
+  "DoctorGoMissing": {
+    "other": "Go SDK: not installed (optional; prebuilt binaries require no Go runtime)"
+  },
+  "DoctorNerdFontDetected": {
+    "other": "Nerd Font: {{.Name}} (detected)"
+  },
+  "DoctorNerdFontMissing": {
+    "other": "Nerd Font: not detected (optional; enables rich icons in welcome banner & terminal)"
+  },
+  "DoctorAdvisoryWarnings": {
+    "other": "Environment has advisory warnings; see above for remediation."
+  },
+  "DoctorAllPassed": {
+    "other": "All checks passed! Your environment is ready."
+  }
+}
