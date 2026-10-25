@@ -11,7 +11,7 @@
 
 ## 3. Windows Installer Enhancements
 
-- [ ] 3.1 Enhance `scripts/install.ps1` to detect and install Git via `winget`, prompt for Git identity if missing, and run `pkt.exe doctor`.
+- [x] 3.1 Enhance `scripts/install.ps1` to detect and install Git via `winget`, prompt for Git identity if missing, and run `pkt.exe doctor`.
 
 ## 4. Verification and Documentation
 
