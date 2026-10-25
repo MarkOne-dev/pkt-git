@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 
@@ -26,8 +27,24 @@ func init() {
 	Init("")
 }
 
-// DetectLanguage returns the best language code ("en", "es") based on environment variables.
+// GitConfigLanguageFunc retrieves the configured language from git config (overridable in tests).
+var GitConfigLanguageFunc = func() string {
+	out, err := exec.Command("git", "config", "pkt.language").Output()
+	if err == nil {
+		val := strings.ToLower(strings.TrimSpace(string(out)))
+		if val == "es" || val == "en" {
+			return val
+		}
+	}
+	return ""
+}
+
+// DetectLanguage returns the best language code ("en", "es") based on git config and environment variables.
 func DetectLanguage() string {
+	if cfg := GitConfigLanguageFunc(); cfg != "" {
+		return cfg
+	}
+
 	for _, env := range []string{"LC_ALL", "LC_MESSAGES", "LANG"} {
 		val := strings.TrimSpace(os.Getenv(env))
 		if val != "" {

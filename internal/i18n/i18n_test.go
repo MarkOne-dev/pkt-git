@@ -56,11 +56,22 @@ func TestI18nFallback(t *testing.T) {
 func TestDetectLanguage(t *testing.T) {
 	origLang := os.Getenv("LANG")
 	origLCAll := os.Getenv("LC_ALL")
+	oldGitCfg := GitConfigLanguageFunc
 	defer func() {
 		os.Setenv("LANG", origLang)
 		os.Setenv("LC_ALL", origLCAll)
+		GitConfigLanguageFunc = oldGitCfg
 	}()
 
+	// 1. Test Git config precedence
+	GitConfigLanguageFunc = func() string { return "es" }
+	os.Setenv("LANG", "en_US.UTF-8")
+	if got := DetectLanguage(); got != "es" {
+		t.Errorf("DetectLanguage() with git config 'es' = %q, want 'es'", got)
+	}
+
+	// 2. Test environment fallback when git config is empty
+	GitConfigLanguageFunc = func() string { return "" }
 	os.Unsetenv("LC_ALL")
 	os.Setenv("LANG", "es_ES.UTF-8")
 	if got := DetectLanguage(); got != "es" {

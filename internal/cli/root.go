@@ -91,6 +91,9 @@ func NewRootCmd() *cobra.Command {
 	welcomeCmd := newWelcomeCmd()
 	welcomeCmd.GroupID = "core"
 
+	languageCmd := newLanguageCmd()
+	languageCmd.GroupID = "collab"
+
 	root.AddCommand(
 		welcomeCmd,
 		initCmd,
@@ -104,6 +107,7 @@ func NewRootCmd() *cobra.Command {
 		versionCmd,
 		skillsCmd,
 		doctorCmd,
+		languageCmd,
 		newPreCommitCmd(),
 		newPostMergeCmd(),
 		newPostCheckoutCmd(),
