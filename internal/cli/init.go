@@ -27,7 +27,8 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			ui.Success(out, "initialized %s", result.Root)
+			displayRoot := ui.TruncatePath(filepath.ToSlash(result.Root), 48)
+			ui.Success(out, "initialized %s", displayRoot)
 			fmt.Fprintf(out, "  hooks: %s (%s)\n", hooks.HookDir, strings.Join(result.HooksWritten, ", "))
 			fmt.Fprintf(out, "  binary: %s\n", result.Executable)
 			switch {
