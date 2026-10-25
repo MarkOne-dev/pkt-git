@@ -25,6 +25,9 @@ func TestDoctorCommand(t *testing.T) {
 	if !strings.Contains(stdout, "Go SDK:") {
 		t.Fatalf("expected Go SDK check in doctor output:\n%s", stdout)
 	}
+	if !strings.Contains(stdout, "Nerd Font:") {
+		t.Fatalf("expected Nerd Font check in doctor output:\n%s", stdout)
+	}
 }
 
 func TestDoctorCommandRejectsExtraArguments(t *testing.T) {

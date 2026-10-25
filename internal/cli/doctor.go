@@ -103,6 +103,14 @@ func newDoctorCmd() *cobra.Command {
 				ui.Info(out, "Go SDK: not installed (optional; prebuilt binaries require no Go runtime)")
 			}
 
+			// 7. Nerd Font Iconography
+			fontName := detectNerdFont()
+			if fontName != "" {
+				ui.Success(out, "Nerd Font: %s (detected)", fontName)
+			} else {
+				ui.Info(out, "Nerd Font: not detected (optional; enables rich icons in welcome banner & terminal)")
+			}
+
 			fmt.Fprintln(out)
 			if hasWarnings {
 				ui.Warning(out, "Environment has advisory warnings; see above for remediation.")
@@ -165,5 +173,61 @@ func findPacketTracer() string {
 			return c
 		}
 	}
+	return ""
+}
+
+func detectNerdFont() string {
+	if fcPath, err := exec.LookPath("fc-list"); err == nil && fcPath != "" {
+		out, err := exec.Command("fc-list", ":", "family").Output()
+		if err == nil {
+			for _, line := range strings.Split(string(out), "\n") {
+				line = strings.TrimSpace(line)
+				if strings.Contains(strings.ToLower(line), "nerd font") {
+					parts := strings.Split(line, ",")
+					return strings.TrimSpace(parts[0])
+				}
+			}
+		}
+	}
+
+	home, _ := os.UserHomeDir()
+	var searchDirs []string
+	if home != "" {
+		switch runtime.GOOS {
+		case "linux":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, ".local", "share", "fonts"),
+				filepath.Join(home, ".fonts"),
+				"/usr/share/fonts",
+				"/usr/local/share/fonts",
+			)
+		case "darwin":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, "Library", "Fonts"),
+				"/Library/Fonts",
+			)
+		case "windows":
+			localAppData := os.Getenv("LOCALAPPDATA")
+			if localAppData != "" {
+				searchDirs = append(searchDirs, filepath.Join(localAppData, "Microsoft", "Windows", "Fonts"))
+			}
+			winDir := os.Getenv("WINDIR")
+			if winDir != "" {
+				searchDirs = append(searchDirs, filepath.Join(winDir, "Fonts"))
+			}
+		}
+	}
+
+	for _, dir := range searchDirs {
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, e := range entries {
+				lower := strings.ToLower(e.Name())
+				if strings.Contains(lower, "nerd") {
+					return strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
+				}
+			}
+		}
+	}
+
 	return ""
 }
