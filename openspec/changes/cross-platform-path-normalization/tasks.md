@@ -7,7 +7,7 @@
 
 ## 2. Verification and Quality Checks
 
-- [ ] 2.1 Run `go test ./...`, `gofmt -l .`, and `make lint` to verify all unit tests and quality checks pass.
+- [x] 2.1 Run `go test ./...`, `gofmt -l .`, and `make lint` to verify all unit tests and quality checks pass.
 
 ## Workflow follow-up
 
