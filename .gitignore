@@ -1,5 +1,23 @@
-.venv/
-__pycache__/
-out/
+# Build artifacts
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+coverage.out
+
+# Local scratch output
+/out/
 *.rebuilt.pkt
-*.pyc
+
+# Go workspace files
+go.work
+go.work.sum
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Local agent skills and tooling
+.agents/

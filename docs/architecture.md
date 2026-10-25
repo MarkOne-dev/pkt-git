@@ -33,33 +33,56 @@ If the `.pkt` binary and the text ever disagree, the rules are:
 
 ```
 pkt-git/
-├── tools/
-│   ├── spike_roundtrip.py   # Codec: decode/encode .pkt <-> XML + crypto core
-│   ├── ptg.py               # CLI: export / build / inspect + topology parser
-│   ├── edit_config.py       # Device-scoped surgical XML editor
-│   └── cli.py               # Global `pkt` hub: init, thin-hook entries, sync
-├── .githooks/               # Development-clone hooks (self-hosted variant)
-├── install.sh               # Global one-machine install (Linux/macOS/Git Bash)
-├── install.ps1              # Global one-machine install (Windows PowerShell)
-├── setup.sh                 # Legacy per-repository installer (repo self-hosted)
-├── setup.ps1                # Legacy per-repository installer (Windows)
-├── topologia/               # Canonical binary artifacts in the repo
-└── snapshot/                # Textual snapshots (the source of truth)
+├── cmd/pkt/main.go              # Process entry point and exit-code handoff
+├── internal/
+│   ├── cli/                     # Cobra commands, flags, help, exit codes
+│   ├── config/                  # Build metadata and repository config keys
+│   ├── codec/                   # .pkt container: decode, encode, verify
+│   ├── crypto/
+│   │   ├── cmac/                # CMAC/OMAC1 (NIST SP 800-38B)
+│   │   ├── eax/                 # EAX mode and tag verification
+│   │   └── twofish/             # x/crypto Twofish boundary
+│   ├── topology/                # XML -> devices, links, config lines, JSON
+│   ├── snapshot/                # export, build, sync, inspect orchestration
+│   ├── xmledit/                 # Byte-offset XML index and span edits
+│   ├── editor/                  # show/setiface/chgline/insertafter policies
+│   ├── security/                # Credential redaction policy
+│   ├── gitx/                    # Git command wrapper and path handling
+│   ├── hooks/                   # pre-commit, post-merge, post-checkout logic
+│   ├── skills/                  # Embedded agent skill asset and installer
+│   └── fsx/                     # Atomic writes and safe file helpers
+├── testdata/specimens/          # Real .pkt regression inputs
+├── scripts/                     # install.sh, install.ps1
+├── docs/                        # User and architecture documentation
+├── openspec/                    # Specs and change history
+├── Makefile
+├── go.mod
+└── go.sum
 ```
 
 ### Layering
 
-1. **Crypto layer** (`spike_roundtrip.py`) — knows nothing about networks.
-   Pure byte pipeline: file bytes ↔ UTF-8 XML text. Also implements CMAC/OMAC1
-   and EAX in-house (the `twofish` block cipher binding is used as a validation
-   reference only).
-2. **Topology layer** (`ptg.py`) — parses the XML document into dataclasses
-   (`Device`, `Link`, `Endpoint`), producing the per-device configs and the JSON
-   catalog. Knows nothing about crypto.
-3. **Editing layer** (`edit_config.py`) — device-scoped string surgery on the
-   snapshot with XML validation before every write. Never touches bin.
-4. **Automation layer** (hooks) — glues the layers to Git events so the common
-   user never invokes the CLI manually.
+1. **Crypto and codec layer** (`internal/codec`, `internal/crypto/*`) — knows
+   nothing about networks. Pure byte pipeline: `.pkt` bytes ↔ UTF-8 XML. CMAC
+   and EAX are implemented in-house; Twofish comes from
+   `golang.org/x/crypto/twofish` behind a small internal wrapper. Decode treats
+   authentication and declared-length mismatches as hard failures.
+2. **Topology layer** (`internal/topology`) — parses the XML document into
+   ordered `Device`, `Link`, and `Endpoint` values, produces per-device config
+   bytes and the deterministic JSON catalog. Knows nothing about crypto or the
+   filesystem.
+3. **Snapshot layer** (`internal/snapshot`) — owns the filesystem contract:
+   `Export` decodes and parses before writing, `Build` validates and encodes
+   atomically, `Sync` regenerates derived files and prunes stale configs, and
+   `Inspect` is read-only.
+4. **Editing layer** (`internal/xmledit`, `internal/editor`,
+   `internal/security`) — device-scoped byte-span edits on the snapshot with
+   whole-document validation before write. Never touches the binary.
+5. **Automation layer** (`internal/gitx`, `internal/hooks`) — glues the layers
+   to Git events so the common user never invokes the CLI manually.
+6. **CLI layer** (`internal/cli`) — Cobra command tree, argument validation, and
+   explicit exit codes. It depends on the feature packages; they do not depend
+   on it.
 
 ## Data Flow
 
@@ -87,7 +110,7 @@ flowchart LR
 2. The **post-merge** / **post-checkout** hook diffs the incoming commits for
    `snapshot/*/base.snapshot.xml` changes.
 3. For every changed snapshot it runs `pkt build`, regenerating
-   `topologia/<Project>.pkt`.
+   `topologia/<Project>.pkt` atomically.
 4. The engineer opens Packet Tracer and the network is already there — zero
    manual conversion steps in the daily loop.
 
@@ -101,24 +124,30 @@ situation in the daily life of the team where a manual conversion command exists
 ## Why Hooks Instead of Wrapper Commands
 
 The project deliberately chose **versioned hooks inside the repository**
-(`.githooks/` activated via `git config core.hooksPath .githooks` by `setup`)
-over installing global tooling:
+(`.githooks/`, activated with `git config core.hooksPath .githooks` by
+`pkt init`) over installing global tooling:
 
-- The automation travels with the repository — cloning it plus running setup
-  gives any teammate the full pipeline.
+- The automation travels with the repository — cloning it plus running
+  `pkt init` gives any teammate the full pipeline.
 - No global state is touched: other unrelated Git repositories on the same
   machine behave 100% conventionally (hooks only act on `.pkt`/snapshot paths).
 - Naming and shelving stay standard Git; pkt-git adds no new VCS vocabulary.
 
-## In-House-Only Policy
+`pkt init` writes thin POSIX shell hooks that execute the running binary
+recorded in the repository-local `pktgit.bin` key. The old `pktgit.py`,
+`pktgit.script`, and `setup.sh`/`setup.ps1` flow is retired.
 
-No third-party core dependency is used for the actual work:
+## Pure-Go Dependency Policy
 
-- CMAC/OMAC1 (NIST SP 800-38B) and EAX mode: implemented from the standard, in
-  `spike_roundtrip.py`.
-- Twofish block cipher: used through the `twofish` package strictly as a
-  validation oracle; shipping a pure-Python implementation is the planned step
-  to remove the only C-compiled dependency (relevant on Windows where a compiler
-  may be missing — see `installation.md`).
-- XML parsing: Python standard library (`xml.etree.ElementTree`).
-- Compression: Python standard library (`zlib`, matching Qt's `qCompress`).
+The shipped tool has no Python, virtualenv, cgo, or C toolchain dependency:
+
+- CMAC/OMAC1 (NIST SP 800-38B) and EAX mode are implemented from the standard
+  in `internal/crypto`.
+- Twofish is the maintained pure-Go implementation from
+  `golang.org/x/crypto/twofish`.
+- XML parsing uses the Go standard library (`encoding/xml`), including
+  `InputOffset()` for byte-preserving edits.
+- Compression uses the Go standard library (`compress/zlib`, level 9) with the
+  Qt `qCompress` size header.
+- Filesystem writes go through `internal/fsx`: same-directory temporary file,
+  sync, close, and rename over the destination.

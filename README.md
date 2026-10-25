@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="demo/banner.jpg" alt="pkt-git Banner" width="100%">
+  <img src="docs/assets/banner.jpg" alt="pkt-git Banner" width="100%">
 </p>
 
 <p align="center">
@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg?logo=python&logoColor=white" alt="Python 3.12+"></a>
+  <a href="https://go.dev/dl/"><img src="https://img.shields.io/badge/go-1.27+-00ADD8.svg?logo=go&logoColor=white" alt="Go 1.27+"></a>
   <a href="#compatibility"><img src="https://img.shields.io/badge/Cisco%20Packet%20Tracer-9.0.1+-049fd9.svg?logo=cisco&logoColor=white" alt="Cisco Packet Tracer 9.0.1+"></a>
   <a href="#license--disclaimer"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"></a>
   <a href="#quickstart--installation"><img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="Platforms"></a>
@@ -24,15 +24,8 @@
 - [How It Works](#how-it-works)
 - [Documentation](#documentation)
 - [Quickstart & Installation](#quickstart--installation)
-  - [Linux (Debian / Ubuntu / Arch / Fedora)](#linux-debian--ubuntu--arch--fedora)
-  - [macOS](#macos)
-  - [Windows (PowerShell)](#windows-powershell)
-  - [Tarball Bootstrap (No Git)](#tarball-bootstrap-curl-only)
 - [The Collaborative Workflow](#the-collaborative-workflow)
 - [CLI Reference](#cli-reference)
-  - [`ptg.py` — Core Converter](#toolsptgpy)
-  - [`edit_config.py` — Safe CLI Editor](#toolsedit_configpy)
-  - [`spike_roundtrip.py` — Cryptographic Verifier](#toolsspike_roundtrippy)
 - [Reverse Engineering & Binary Format](#reverse-engineering--binary-format)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
@@ -42,9 +35,15 @@
 
 ## Overview
 
-**pkt-git** bridges the gap between network engineering and modern software collaboration practices. It unpacks proprietary, reversibly-encrypted Cisco Packet Tracer binaries (`.pkt` / `.pka`) into structured XML, individual Cisco IOS device configurations (`.cfg`), and topology metadata.
+**pkt-git** bridges network engineering and modern software collaboration. It
+unpacks the proprietary, reversibly encrypted Cisco Packet Tracer binaries
+(`.pkt` / `.pka`) into structured XML, individual Cisco IOS device
+configurations (`.cfg`), and topology metadata.
 
-With **pkt-git**, network topologies become Git-native: inspect line-by-line diffs, review Pull Requests on GitHub, branch freely without losing work, and rebuild valid Packet Tracer files automatically.
+With **pkt-git**, network topologies become Git-native: inspect line-by-line
+diffs, review Pull Requests on GitHub, branch freely without losing work, and
+rebuild valid Packet Tracer files automatically. The tool is a single Go
+binary; nothing is installed inside Packet Tracer.
 
 ---
 
@@ -61,11 +60,12 @@ With **pkt-git**, network topologies become Git-native: inspect line-by-line dif
 
 ## Key Features
 
-- ⚡ **Zero-Footprint in Packet Tracer:** Nothing to install inside Packet Tracer. Works externally on files, even when PT is closed.
-- 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the exact binary anytime with `pkt build`.
-- 🪝 **Transparent Git Hooks:** Automatic `pre-commit` hook extracts snapshots on commit; automatic `post-merge` and `post-checkout` hooks rebuild `.pkt` binaries on branch change or pull.
-- 🛡️ **Safe CLI Editing:** Built-in `edit_config.py` allows updating interfaces and commands directly from the terminal without breaking the XML schema.
-- 💻 **Cross-Platform:** Tested and supported natively on **Linux**, **macOS**, and **Windows**.
+- ⚡ **Zero-Footprint in Packet Tracer:** Works externally on files, even when PT is closed.
+- 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the binary anytime with `pkt build`.
+- 🪝 **Transparent Git Hooks:** `pre-commit` exports snapshots on commit; `post-merge` and `post-checkout` rebuild binaries on pull or branch change.
+- 🛡️ **Safe CLI Editing:** `pkt edit` updates one device's interface or config lines with byte-offset edits and full XML validation.
+- 🤖 **Agent Skills:** Bundled skill for OpenCode, Claude Code, and Gemini CLI, installable with `pkt skills`.
+- 💻 **Cross-Platform:** Linux, macOS, and Windows; no cgo or C runtime.
 
 ---
 
@@ -99,7 +99,8 @@ flowchart LR
     BLD -->|"Encode"| PKT
 ```
 
-The binary file is treated as a **regenerable artifact**, while the human-readable text snapshot acts as the true versioned source of truth.
+The binary file is a **regenerable artifact**; the human-readable text snapshot
+is the true versioned source of truth.
 
 ---
 
@@ -112,10 +113,10 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 | [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
 | [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
 | [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
-| [Use Cases & Tested Flows](docs/use-cases.md) | Ten concrete, project-validated flows: bootstrap → gitflow y conflictos. |
+| [Use Cases & Tested Flows](docs/use-cases.md) | Ten concrete, project-validated flows: bootstrap → gitflow → conflicts. |
 | [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
-| [CLI Reference](docs/cli-reference.md) | Every command of `ptg.py`, `edit_config.py`, `spike_roundtrip.py`. |
-| [Installation & Setup](docs/installation.md) | What the installers do step by step, platform matrix. |
+| [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
+| [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
 | [Troubleshooting & Pitfalls](docs/troubleshooting.md) | Failure modes, dangerous patterns, compatibility limits. |
 
 ---
@@ -123,76 +124,68 @@ Detailed documentation lives in [`docs/`](docs/README.md):
 ## Quickstart & Installation
 
 ### Prerequisites
-- **Python 3.12+**
-- **Git** and **curl**
-- *Cisco Packet Tracer 9.0.1+* (only needed to edit and run topologies; not required to review diffs or run CI).
 
-### Download per OS (then a single installer)
+- **Go 1.27+** to build from source (prebuilt release binaries need no Go).
+- **Git 2.x**.
+- **Cisco Packet Tracer 9.0.1+** only to edit and run topologies; not required
+  to review diffs or run CI.
 
-**Linux**
+### Install the binary
 
-```bash
-# Debian / Ubuntu
-sudo apt update && sudo apt install -y python3 python3-venv git curl
-# Arch
-sudo pacman -S --needed python git curl
-# Fedora
-sudo dnf install -y python3 git curl
-
-git clone https://github.com/MarkOne-dev/pkt-git.git
-cd pkt-git && ./install.sh
-```
-
-**macOS**
+Linux / macOS, from a clone:
 
 ```bash
-brew install git python
 git clone https://github.com/MarkOne-dev/pkt-git.git
-cd pkt-git && ./install.sh
+cd pkt-git
+./scripts/install.sh
+pkt --version
 ```
 
-**Windows**
+Windows (PowerShell), from a clone:
 
 ```powershell
-winget install -e --id Git.Git
-winget install -e --id Python.Python.3.13
-git clone https://github.com/MarkOne-dev/pkt-git.git ; cd pkt-git
-powershell -ExecutionPolicy Bypass -File install.ps1
+git clone https://github.com/MarkOne-dev/pkt-git.git
+cd pkt-git
+powershell -ExecutionPolicy Bypass -File scripts/install.ps1
+pkt.exe --version
 ```
 
-> **Windows note:** Git hooks run under Git Bash, which ships with Git for Windows.
+The scripts install into `~/.local/bin`, build a static binary when `bin/pkt`
+is absent, report `PATH` problems, install the agent skill, and are safe to
+rerun. See [Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`,
+`PKTG_SOURCE`, and manual build options.
 
-### Download without Git (curl-only, any POSIX OS)
-
-The `curl` way — no clone needed, one line:
+Manual build:
 
 ```bash
-curl -fsSL https://github.com/MarkOne-dev/pkt-git/archive/refs/heads/main.tar.gz | tar xz \
-  && cd pkt-git-main && ./install.sh
+make build
+install -m 0755 bin/pkt ~/.local/bin/pkt
 ```
 
-### Wiring a repository (once per project)
+On Windows, use `CGO_ENABLED=0 go build -o pkt.exe ./cmd/pkt`. `make dist`
+produces self-contained release artifacts for Linux, macOS, and Windows; place
+the artifact for your platform on `PATH`.
 
-With `pkt` installed globally (above), wire **any** repository — new or
-existing PT project — with one command:
+### Wiring a repository (once per project)
 
 ```bash
 cd /path/to/your-pt-project
 pkt init
 ```
 
-`pkt init` writes the thin hooks, the `*.pkt binary` rules and the per-repo
-configuration automatically.
+`pkt init` writes the thin hooks into `.githooks/`, records the absolute binary
+path in repository-local `pktgit.bin`, activates `core.hooksPath`, and merges
+the required `.gitattributes` rules. It is idempotent and refuses to modify a
+directory that is not a Git repository.
 
-### Agent skills (OpenCode / Claude Code / Gemini CLI) — installed automatically
+### Agent skills (OpenCode / Claude Code / Gemini CLI)
 
-The installer (`install.sh` / `install.ps1`) **bundles the agent skills too** —
-OpenCode, Claude Code and Gemini CLI pick them up globally right after
-installation. Manage them manually any time:
+The binary embeds the pkt-git skill. Install it into the three global skill
+directories with:
 
 ```bash
-pkt skills              # install into ~/.config/opencode, ~/.claude, ~/.gemini
-pkt skills --remove     # uninstall from all three agents
+pkt skills              # ~/.config/opencode, ~/.claude, ~/.gemini
+pkt skills --remove     # remove only the pkt-git skill
 ```
 
 | Skill installed at agent | Agent picks it up |
@@ -213,7 +206,8 @@ git add . && git commit -m "chore: import existing PT project"
 
 ## The Collaborative Workflow
 
-With hooks enabled by `setup.sh` / `setup.ps1`, the team's day-to-day workflow requires zero manual exports:
+With hooks enabled by `pkt init`, the day-to-day workflow requires zero manual
+exports:
 
 ```mermaid
 sequenceDiagram
@@ -228,7 +222,7 @@ sequenceDiagram
     DevA->>PT: Edit topology and save project.pkt
     DevA->>Git: git add . and git commit
     activate Hook
-    Hook->>Hook: pre-commit triggers: pkt export project.pkt
+    Hook->>Hook: pre-commit: pkt export staged .pkt
     Hook->>Git: Auto-stages XML, configs/*.cfg and topology.json
     deactivate Hook
     DevA->>Hub: git push origin feature/vlan-update
@@ -238,15 +232,21 @@ sequenceDiagram
 
     DevB->>Git: git pull origin main
     activate Hook
-    Hook->>Hook: post-merge triggers: pkt build snapshot to project.pkt
-    Hook->>PT: Restores updated .pkt binary locally
+    Hook->>Hook: post-merge: pkt build changed snapshots
+    Hook->>PT: Rebuilds the updated .pkt binary locally
     deactivate Hook
-    DevB->>PT: Open project.pkt (Seamlessly updated)
+    DevB->>PT: Open project.pkt (seamlessly updated)
 ```
+
+A text-only snapshot change (for example, a resolved merge) is allowed by
+`pre-commit` but produces a warning: rebuild the binary with `pkt build` before
+opening it in Packet Tracer. Squash merges are handled from the staged index
+because `HEAD` does not move; branch checkouts rebuild only changed projects.
 
 ### Real-World Git Diff Example
 
-When you change an interface configuration or VLAN in Packet Tracer and commit, GitHub shows clean text diffs:
+When you change an interface configuration or VLAN in Packet Tracer and commit,
+GitHub shows clean text diffs:
 
 ```diff
 --- a/snapshot/topologia/configs/SW_ACC_ADMIN_PUNO.cfg
@@ -266,36 +266,35 @@ When you change an interface configuration or VLAN in Packet Tracer and commit, 
 
 ## CLI Reference
 
-All scripts run inside the project virtual environment (`.venv`).
-
-### `pkt` — global CLI
-One command surface for everything (after the global install):
+`pkt` is a single Go binary. The full reference is in
+[`docs/cli-reference.md`](docs/cli-reference.md).
 
 ```bash
-# Export a .pkt into base.snapshot.xml, configs/*.cfg, and topology.json
-pkt export "project.pkt" snapshot/project/
-
-# Rebuild a working .pkt from a modified XML snapshot
-pkt build snapshot/project/base.snapshot.xml topologia/project.pkt
-
-# Inspect devices, interfaces, and connections directly in your terminal
-pkt inspect "project.pkt"
-
-# Safe per-device editing of a snapshot (XML validated on every write)
-pkt edit snapshot/project/base.snapshot.xml chgline SW1_LIMA FastEthernet0/1 "vlan 10" "vlan 20"
-
-# Keep derived configs/metadata in sync after manual text edits
-pkt sync snapshot/project/
-
-# Verify the crypto round trip against any specimen
-pkt verify "project.pkt"
+pkt init [dir]                                  # wire hooks + .gitattributes
+pkt export <project.pkt> <output_dir>           # binary -> textual snapshot
+pkt build  <snapshot.xml> <output.pkt>          # snapshot -> valid binary
+pkt inspect <project.pkt>                       # devices/links summary
+pkt edit  <xml> show <DEVICE>                   # redacted running config
+pkt edit  <xml> chgline <DEV> <IFACE> <old> <new>
+pkt edit  <xml> setiface <DEV> <IFACE> "line"...
+pkt edit  <xml> insertafter <DEV> <phrase> "line"...
+pkt sync  <snapshot-dir|snapshot.xml>           # refresh configs + metadata
+pkt resolve [--ours|--theirs]                   # report or resolve conflicts
+pkt verify <file.pkt>                           # crypto round-trip verification
+pkt skills [--remove]                           # manage the bundled agent skill
+pkt version                                     # version and build metadata
 ```
+
+`pkt --help` lists the public commands and omits the hidden hook entry points
+(`pre-commit`, `post-merge`, `post-checkout`). Exit codes are `0` for success,
+`1` for runtime failures, and `2` for usage errors.
 
 ---
 
 ## Reverse Engineering & Binary Format
 
-The `.pkt` and `.pka` files created by Cisco Packet Tracer (validated against version `9.0.1.0858`) are structured with a reversible 4-layer cryptographic pipeline:
+The `.pkt` and `.pka` files created by Cisco Packet Tracer (validated against
+version `9.0.1.0858`) use a reversible 4-layer cryptographic pipeline:
 
 ```mermaid
 flowchart TD
@@ -318,8 +317,11 @@ flowchart TD
     end
 ```
 
-- **Decoding:** Inverts the encoding process strictly: $4 \rightarrow 3 \rightarrow 2 \rightarrow 1$.
-- **Twofish Implementation:** The core cryptographic operations use pure Python with standard C-level bindings (`twofish` + `pycryptodome`), patched automatically by `setup.sh` / `setup.ps1` for Python 3.12+ compatibility.
+- **Decoding:** Inverts the encoding process strictly: `4 -> 3 -> 2 -> 1`.
+- **Implementation:** Go standard-library zlib, `golang.org/x/crypto/twofish`,
+  and in-house CMAC/EAX under `internal/crypto`. No cgo or Python runtime is
+  involved. Authentication-tag and declared-length mismatches are hard
+  failures.
 
 ---
 
@@ -328,8 +330,10 @@ flowchart TD
 | Component | Tested Version | Status |
 |---|---|---|
 | **Cisco Packet Tracer** | `9.0.1.0858` | Fully supported and verified |
-| **Python** | `3.12+` / `3.13` | Supported (Linux, macOS, Windows) |
+| **Go** | `1.27+` | Build requirement; prebuilt binaries need no Go |
 | **Git** | `2.30+` | Supported |
+| **Linux** | Reference environment | Fully tested |
+| **macOS / Windows** | Supported by design | Build or use a release archive |
 
 ---
 
@@ -342,9 +346,11 @@ Contributions from network engineers, developers, and students are welcome!
    ```bash
    git checkout -b feature/awesome-feature
    ```
-3. **Validate changes:**
+3. **Build and validate changes:**
    ```bash
-   pkt verify "your_specimen.pkt"
+   make test
+   make build
+   pkt verify testdata/specimens/Caso1_Grupo09-2.pkt
    ```
 4. **Commit your changes and push:**
    ```bash
