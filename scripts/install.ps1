@@ -42,7 +42,54 @@ function Test-PathEntry {
     return $false
 }
 
+function Install-GitIfMissing {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        return
+    }
+    Write-Host "pkt-git: Git is not installed. Attempting automatic installation via winget..."
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        try {
+            winget install --id Git.Git -e --source winget --accept-source-agreements --accept-package-agreements
+        }
+        catch {
+            Write-Warning "winget failed to install Git. Please install Git manually from https://git-scm.com/."
+        }
+    }
+    else {
+        Write-Warning "winget is not available. Please install Git manually from https://git-scm.com/."
+    }
+}
+
+function Configure-GitIdentityIfMissing {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        return
+    }
+    $userName = & git config user.name 2>$null
+    $userEmail = & git config user.email 2>$null
+
+    if ([string]::IsNullOrWhiteSpace($userName) -or [string]::IsNullOrWhiteSpace($userEmail)) {
+        if ([Environment]::UserInteractive -and $env:CI -ne "1" -and $env:PKTG_NONINTERACTIVE -ne "1") {
+            Write-Host "`nGit identity (user.name / user.email) is not configured."
+            Write-Host "pkt-git requires a configured Git identity to prevent commit errors."
+            if ([string]::IsNullOrWhiteSpace($userName)) {
+                $userName = Read-Host "Enter your full name for Git commits"
+                if (-not [string]::IsNullOrWhiteSpace($userName)) {
+                    & git config --global user.name $userName
+                }
+            }
+            if ([string]::IsNullOrWhiteSpace($userEmail)) {
+                $userEmail = Read-Host "Enter your email for Git commits"
+                if (-not [string]::IsNullOrWhiteSpace($userEmail)) {
+                    & git config --global user.email $userEmail
+                }
+            }
+        }
+    }
+}
+
 try {
+    Install-GitIfMissing
+    Configure-GitIdentityIfMissing
     if (-not $BinDir) {
         if ($env:PKTG_BIN_DIR) {
             $BinDir = $env:PKTG_BIN_DIR
@@ -145,9 +192,12 @@ try {
     }
 
     $state = if ($changed) { "installed" } else { "unchanged" }
-    Write-Host "pkt-git $state at $target."
+    Write-Host "`nRunning environment diagnostics:"
+    & $target doctor
+
+    Write-Host "`npkt-git $state at $target."
     Write-Host "In any Git repository run:"
-    Write-Host "    pkt init          # wire hooks and configuration"
+    Write-Host "    pkt init          # wire hooks and auto-export existing topology"
     Write-Host "    pkt --help        # full command list"
 }
 finally {

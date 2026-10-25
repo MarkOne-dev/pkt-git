@@ -21,6 +21,7 @@ pkt verify <file.pkt>
 pkt sync   <snapshot-dir|snapshot.xml>
 pkt resolve [--ours|--theirs]
 pkt skills [--remove]
+pkt doctor
 pkt version
 
 # Hidden hook entry points, invoked by generated hooks:
@@ -325,6 +326,22 @@ Gemini CLI. Both operations are idempotent and report each agent's outcome.
 Removal targets only the pkt-git skill directories and leaves other skills
 untouched. If the embedded skill asset is unavailable, the command fails with a
 reinstall instruction and does not delete an existing installed skill.
+
+## `doctor`
+
+```bash
+pkt doctor
+```
+
+Inspects the host environment prerequisites and reports the status of:
+- Git binary installation and version.
+- Configured Git user identity (`user.name` and `user.email`).
+- Execution binary and `$PATH` availability.
+- Agent skill installation in the user's home directory.
+- Cisco Packet Tracer installation in standard system paths (informational).
+- Go compiler availability (informational).
+
+Returns exit code 0 when all prerequisites are met or only advisory notices remain, and exit code 1 if Git itself is missing.
 
 ## `version`
 

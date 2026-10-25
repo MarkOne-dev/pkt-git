@@ -77,6 +77,9 @@ func NewRootCmd() *cobra.Command {
 	skillsCmd := newSkillsCmd()
 	skillsCmd.GroupID = "collab"
 
+	doctorCmd := newDoctorCmd()
+	doctorCmd.GroupID = "collab"
+
 	root.AddCommand(
 		initCmd,
 		exportCmd,
@@ -88,6 +91,7 @@ func NewRootCmd() *cobra.Command {
 		verifyCmd,
 		versionCmd,
 		skillsCmd,
+		doctorCmd,
 		newPreCommitCmd(),
 		newPostMergeCmd(),
 		newPostCheckoutCmd(),

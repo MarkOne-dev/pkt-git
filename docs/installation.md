@@ -34,13 +34,18 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 
 The installers:
 
-1. Use `bin/pkt` (or `bin/pkt.exe`) when it already exists, otherwise build a
+1. Automatically detect missing Git and install it via the system package manager
+   (`apt`, `dnf`, `pacman`, `brew`, or `winget` on Windows).
+2. Check for configured Git identity (`user.name` and `user.email`) and prompt to
+   set it globally if unconfigured.
+3. Use `bin/pkt` (or `bin/pkt.exe`) when it already exists, otherwise build a
    static binary with `CGO_ENABLED=0 go build ./cmd/pkt`.
-2. Install `pkt` (or `pkt.exe`) into `~/.local/bin` by default.
-3. Report when that directory is not on `PATH`; the Windows installer adds it
-   to the user `PATH` when needed.
-4. Install the bundled agent skill unless `PKTG_SKIP_SKILLS=1`.
-5. Are idempotent: rerunning them replaces the binary only when it changed.
+4. Install `pkt` (or `pkt.exe`) into `~/.local/bin` by default.
+5. Add the binary directory to your shell profile (`~/.bashrc`, `~/.zshrc`) or
+   Windows user `PATH` when needed.
+6. Install the bundled agent skill unless `PKTG_SKIP_SKILLS=1`.
+7. Run `pkt doctor` to produce an immediate diagnostic verification of the setup.
+8. Are idempotent: rerunning them replaces the binary only when it changed.
 
 Useful overrides:
 

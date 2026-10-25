@@ -151,10 +151,11 @@ powershell -ExecutionPolicy Bypass -File scripts/install.ps1
 pkt.exe --version
 ```
 
-The scripts install into `~/.local/bin`, build a static binary when `bin/pkt`
-is absent, report `PATH` problems, install the agent skill, and are safe to
-rerun. See [Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`,
-`PKTG_SOURCE`, and manual build options.
+The scripts automatically install Git if missing, configure your Git identity,
+configure `PATH` in your shell, install the binary into `~/.local/bin`, install the
+agent skills, and run `pkt doctor` to verify your environment. See
+[Installation & Setup](docs/installation.md) for `PKTG_BIN_DIR`, `PKTG_SOURCE`, and
+manual build options.
 
 Manual build:
 
