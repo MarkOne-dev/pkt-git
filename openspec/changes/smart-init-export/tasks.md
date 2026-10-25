@@ -6,8 +6,8 @@
 
 ## 2. Conventional and Zero-Argument Export
 
-- [ ] 2.1 Update `internal/cli/export.go` to make the destination directory optional and support zero-argument auto-detection.
-- [ ] 2.2 Add tests in `internal/cli/commands_test.go` verifying `pkt export` with 0, 1, and 2 arguments.
+- [x] 2.1 Update `internal/cli/export.go` to make the destination directory optional and support zero-argument auto-detection.
+- [x] 2.2 Add tests in `internal/cli/commands_test.go` verifying `pkt export` with 0, 1, and 2 arguments.
 
 ## 3. Auto-Export on Repository Initialization
 
