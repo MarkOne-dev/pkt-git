@@ -7,7 +7,7 @@
 
 ## 2. Linux and macOS Installer Enhancements
 
-- [ ] 2.1 Enhance `scripts/install.sh` to auto-detect and install missing Git via package managers (`apt`, `dnf`, `pacman`, `brew`), prompt for Git identity when unset, configure PATH in shell profiles, and run `pkt doctor`.
+- [x] 2.1 Enhance `scripts/install.sh` to auto-detect and install missing Git via package managers (`apt`, `dnf`, `pacman`, `brew`), prompt for Git identity when unset, configure PATH in shell profiles, and run `pkt doctor`.
 
 ## 3. Windows Installer Enhancements
 
