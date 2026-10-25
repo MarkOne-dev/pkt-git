@@ -12,7 +12,7 @@ func TestIntegrationHelpListsPublicCommands(t *testing.T) {
 	}
 	for _, command := range []string{
 		"init", "export", "build", "inspect", "edit",
-		"sync", "resolve", "verify", "skills", "version",
+		"sync", "resolve", "verify", "skills", "doctor", "version",
 	} {
 		if !strings.Contains(stdout, command) {
 			t.Fatalf("help does not list %q:\n%s", command, stdout)
@@ -44,6 +44,7 @@ func TestIntegrationMissingArguments(t *testing.T) {
 		{"verify"},
 		{"init", "a", "b"},
 		{"skills", "extra"},
+		{"doctor", "extra"},
 		{"resolve", "--ours", "--theirs"},
 	}
 	for _, args := range tests {

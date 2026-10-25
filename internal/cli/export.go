@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -51,7 +52,7 @@ func newExportCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				ui.Success(out, "exported %s -> %s", src, dest)
+				ui.Success(out, "exported %s -> %s", filepath.ToSlash(src), filepath.ToSlash(dest))
 				fmt.Fprintf(out, "  XML: %d bytes (%s), devices: %d, links: %d, configs: %d\n",
 					result.XMLSize, ui.FormatBytes(int64(result.XMLSize)), result.DeviceCount, result.LinkCount, result.ConfigCount)
 			}

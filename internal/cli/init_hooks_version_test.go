@@ -92,7 +92,7 @@ func TestHelpHidesHookCommands(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
 	}
-	for _, want := range []string{"init", "export", "build", "inspect", "edit", "sync", "resolve", "verify", "version"} {
+	for _, want := range []string{"init", "export", "build", "inspect", "edit", "sync", "resolve", "verify", "doctor", "version"} {
 		if !strings.Contains(stdout, want) {
 			t.Fatalf("help does not list %q:\n%s", want, stdout)
 		}
