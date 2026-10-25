@@ -22,10 +22,11 @@
 - [The Problem vs. The Solution](#the-problem-vs-the-solution)
 - [Key Features](#key-features)
 - [How It Works](#how-it-works)
-- [Documentation](#documentation)
+- [Everyday Use Cases & Recipes](#everyday-use-cases--recipes)
 - [Quickstart & Installation](#quickstart--installation)
 - [The Collaborative Workflow](#the-collaborative-workflow)
 - [CLI Reference](#cli-reference)
+- [Documentation Index](#documentation-index)
 - [Reverse Engineering & Binary Format](#reverse-engineering--binary-format)
 - [Compatibility](#compatibility)
 - [Contributing](#contributing)
@@ -64,7 +65,9 @@ binary; nothing is installed inside Packet Tracer.
 - 🔄 **Fully Bidirectional & Reversible:** Export `.pkt` to structured XML/configs, and rebuild the binary anytime with `pkt build`.
 - 🪝 **Transparent Git Hooks:** `pre-commit` exports snapshots on commit; `post-merge` and `post-checkout` rebuild binaries on pull or branch change.
 - 🛡️ **Safe CLI Editing:** `pkt edit` updates one device's interface or config lines with byte-offset edits and full XML validation.
-- 🎨 **Modern CLI UX:** Grouped help navigation, Unicode tabular topology inspection with role badges, humanized file sizes, and full `NO_COLOR` / TTY compliance.
+- 🌐 **Internationalization (i18n):** Full multilingual CLI support in English and Spanish with persistent Git configuration (`pkt.language`) and interactive selection (`pkt language`).
+- 🩺 **Environment Doctor:** Diagnostic command (`pkt doctor`) checking Git identity, PATH configuration, agent skills, and performing deep cross-platform searches for Cisco Packet Tracer installations.
+- 🎨 **Modern CLI UX:** Grouped help navigation, progressive animated welcome banner (`pkt welcome`), Unicode tabular topology inspection with role badges, humanized file sizes, and full `NO_COLOR` / TTY compliance.
 - 🤖 **Agent Skills:** Bundled skill for OpenCode, Claude Code, and Gemini CLI, installable with `pkt skills`.
 - 💻 **Cross-Platform:** Linux, macOS, and Windows; no cgo or C runtime.
 
@@ -105,20 +108,104 @@ is the true versioned source of truth.
 
 ---
 
-## Documentation
+## Everyday Use Cases & Recipes
 
-Detailed documentation lives in [`docs/`](docs/README.md):
+A 30-second cheat sheet for the most common network engineering flows:
 
-| Document | Covers |
+| Scenario | What to run |
 |---|---|
-| [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
-| [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
-| [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
-| [Use Cases & Tested Flows](docs/use-cases.md) | Ten concrete, project-validated flows: bootstrap → gitflow → conflicts. |
-| [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
-| [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
-| [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
-| [Troubleshooting & Pitfalls](docs/troubleshooting.md) | Failure modes, dangerous patterns, compatibility limits. |
+| 🚀 **1. Starting a New Repo** | `git init` ➔ `pkt init` ➔ save in Packet Tracer (`Ctrl+S`) ➔ `git commit` |
+| 👥 **2. Joining a Teammate's Repo** | `git clone <url>` ➔ `cd <repo>` ➔ **`pkt init`** *(one-time hook setup)* |
+| 💾 **3. Daily Working & Saving** | Edit in Packet Tracer ➔ `Ctrl+S` ➔ `git add .` ➔ `git commit -m "..."` |
+| 📥 **4. Pulling Updates from Team** | `git pull` *(hooks rebuild your local `.pkt` binary automatically)* |
+| ⚔️ **5. Resolving Merge Conflicts** | `pkt resolve --theirs` (or `--ours`, or manual edit) |
+| 🌐 **6. Switching Language** | `pkt lang es` (Spanish) or `pkt lang en` (English) |
+| 🩺 **7. System Health Check** | `pkt doctor` *(inspects Git identity, Packet Tracer installation, and PATH)* |
+| 📦 **8. Batch Multi-Project Export** | `pkt export --all` *(exports all topologies in workspace)* |
+
+<details open>
+<summary><strong>Case 1: Starting a New Repository or Importing a .pkt</strong></summary>
+
+When putting a local Packet Tracer project under Git version control:
+
+```bash
+cd my-project && git init -b main
+# Place your topology file inside (e.g., topologia/network.pkt)
+pkt init                                            # auto-detects .pkt, wires hooks, exports snapshot
+git add . && git commit -m "chore: import PT project"
+git remote add origin git@github.com:<you>/my-project.git
+git push -u origin main
+```
+`pkt init` discovers any `.pkt`/`.pka` files and creates the initial `snapshot/<project>/` automatically.
+</details>
+
+<details open>
+<summary><strong>Case 2: Joining an Existing Project (Teammate Onboarding)</strong></summary>
+
+When cloning a repository already using pkt-git:
+
+```bash
+git clone git@github.com:<org>/my-project.git
+cd my-project
+pkt init                                            # MANDATORY: wires local hooks and sets binary path
+```
+
+> [!IMPORTANT]
+> **Why `pkt init` is required after cloning:**  
+> For security reasons, Git **never** activates hooks automatically upon `git clone`. Running `pkt init` once links `.githooks/` locally and registers your machine's `pkt` executable path, ensuring incoming pulls rebuild `.pkt` binaries and commits auto-export snapshots.
+</details>
+
+<details open>
+<summary><strong>Case 3: The Daily 3-Command Loop</strong></summary>
+
+The everyday workflow while editing in Cisco Packet Tracer:
+
+```bash
+# 1. In Packet Tracer: edit interfaces, routers, VLANs -> Ctrl+S
+# 2. In your terminal:
+git add .
+git commit -m "feat: configure OSPF and vlan 20 on core router"
+git push
+```
+The `pre-commit` hook automatically detects the modified `.pkt`, extracts the updated XML, device `.cfg` files, and `topology.json`, and stages them alongside the commit.
+</details>
+
+<details open>
+<summary><strong>Case 4: Receiving Remote Updates</strong></summary>
+
+When your teammates push changes to the repository:
+
+```bash
+git pull
+```
+The `post-merge` hook runs automatically, detects snapshot text changes, and rebuilds the local `.pkt` binary. When you open Packet Tracer, all team changes are already in place.
+</details>
+
+<details>
+<summary><strong>Case 5: Resolving Merge Conflicts</strong></summary>
+
+When two branches modify the same device configuration line:
+
+```bash
+git merge feature/branch                # Git reports conflict in snapshot text
+pkt resolve                             # reports exact conflicting files and lines
+pkt resolve --theirs                    # accept incoming branch version
+# or: pkt resolve --ours                # keep current branch version
+git commit -m "merge: resolve conflict" # hook re-exports and finishes
+```
+`pkt resolve` updates the XML, regenerates `.cfg` files, rebuilds the binary, and stages the resolved files.
+</details>
+
+<details>
+<summary><strong>Case 6: Changing CLI Language</strong></summary>
+
+```bash
+pkt language          # Interactive menu in your terminal (TTY)
+pkt lang es           # Set language to Spanish globally (~/.gitconfig)
+pkt lang en           # Set language to English globally (~/.gitconfig)
+pkt lang es --local   # Set language to Spanish only for current repository
+```
+</details>
 
 ---
 
@@ -195,22 +282,6 @@ pkt skills --remove     # remove only the pkt-git skill
 | `~/.config/opencode/skills/pkt-git/` | OpenCode (global scope) |
 | `~/.claude/skills/pkt-git/` | Claude Code |
 | `~/.gemini/skills/pkt-git/` | Gemini CLI |
-
-### Import an existing Packet Tracer project
-
-Simply run `pkt init` inside your repository. If a `.pkt` file is present, it is automatically detected and exported:
-
-```bash
-pkt init
-git add . && git commit -m "chore: import existing PT project"
-```
-
-You can also run `pkt export` anytime; with no arguments it auto-detects the project, or you can specify a file and let the snapshot directory default by convention:
-
-```bash
-pkt export                      # auto-detects .pkt file
-pkt export my_project.pkt       # exports to snapshot/my_project/
-```
 
 ---
 
@@ -292,12 +363,32 @@ pkt sync  <snapshot-dir|snapshot.xml>           # refresh configs + metadata
 pkt resolve [--ours|--theirs]                   # report or resolve conflicts
 pkt verify <file.pkt>                           # crypto round-trip verification
 pkt skills [--remove]                           # manage the bundled agent skill
+pkt doctor                                      # verify environment & prerequisites
+pkt language [code] [--local]                   # view/set language (alias: pkt lang)
+pkt welcome                                     # show animated welcome banner
 pkt version                                     # version and build metadata
 ```
 
 `pkt --help` lists the public commands and omits the hidden hook entry points
 (`pre-commit`, `post-merge`, `post-checkout`). Exit codes are `0` for success,
 `1` for runtime failures, and `2` for usage errors.
+
+---
+
+## Documentation Index
+
+Detailed guides and specifications in [`docs/`](docs/README.md):
+
+| Document | Covers |
+|---|---|
+| [Architecture Overview](docs/architecture.md) | Components, artifact-vs-source-of-truth model, full data flow. |
+| [The .pkt Binary Format](docs/packet-tracer-format.md) | The 4-layer crypto pipeline and EAX internals with exact constants. |
+| [Snapshot Format](docs/snapshot-format.md) | `base.snapshot.xml`, per-device `.cfg`, `topology.json` and Git rules. |
+| [Use Cases & Tested Flows](docs/use-cases.md) | Twelve concrete, project-validated flows: bootstrap → onboarding → gitflow → localization → conflicts. |
+| [Collaborative Workflow](docs/workflow.md) | Daily loop, hook automation, PRs, conflict resolution SOP. |
+| [CLI Reference](docs/cli-reference.md) | Every `pkt` command, argument, flag, and output. |
+| [Installation & Setup](docs/installation.md) | Binary install, `pkt init`, migration, platform matrix. |
+| [Troubleshooting & Pitfalls](docs/troubleshooting.md) | Failure modes, dangerous patterns, compatibility limits. |
 
 ---
 

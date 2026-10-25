@@ -30,6 +30,7 @@ Check availability before promising anything:
 
 ```bash
 pkt --version                 # global Go binary
+pkt doctor                    # inspect Git identity, Packet Tracer, and PATH
 git rev-parse --git-dir       # is this a Git repository?
 git config --get pktgit.bin   # hooks wired via `pkt init`?
 ```
@@ -57,12 +58,21 @@ pkt sync  <snapshot-dir|snapshot.xml>           # refresh configs + metadata
 pkt resolve [--ours|--theirs]                   # report or resolve conflicts
 pkt verify <file.pkt>                           # crypto round-trip verification
 pkt skills [--remove]                           # install/remove this skill
+pkt doctor                                      # verify environment & prerequisites
+pkt language [code] [--local]                   # view/set language (en, es)
 ```
 
 The edit subcommands also accept the subcommand-first order
 `pkt edit show <xml> <DEVICE>`.
 
 ## Recipes
+
+### "I'm joining a teammate's Packet Tracer repo"
+
+```bash
+git clone <user-provided-url> && cd <project-dir>
+pkt init                                        # wire local hooks (mandatory once per clone)
+```
 
 ### "I have a .pkt project, put it on GitHub"
 

@@ -32,6 +32,19 @@ git add .
 git commit -m "chore: import PT project"
 ```
 
+### Collaborator Onboarding (Cloning an Existing Project)
+
+When a teammate clones an existing repository, they must run `pkt init` once locally:
+
+```bash
+git clone git@github.com:<org>/<repo>.git
+cd <repo>
+pkt init
+```
+
+> [!NOTE]
+> Git deliberately avoids executing cloned repository hooks by default for security. Running `pkt init` once inside the cloned repository sets `core.hooksPath = .githooks` and records `pktgit.bin` to point to the teammate's local `pkt` binary. From that point forward, all `pull`, `commit`, and `checkout` hook automations work seamlessly.
+
 You can also export manually anytime using convention-based paths:
 
 ```bash
