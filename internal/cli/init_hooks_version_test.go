@@ -42,6 +42,27 @@ func TestInitCommand(t *testing.T) {
 	}
 }
 
+func TestInitCommandAutoExportsTopologies(t *testing.T) {
+	dir := initCLIRepo(t)
+	pktPath := filepath.Join(dir, "network.pkt")
+	writeCLIFile(t, pktPath, encodeCLI(t, minimalCLIXML))
+
+	code, stdout, stderr := runCLI("init", dir)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "[ok] initialized") {
+		t.Fatalf("stdout missing initialized: %q", stdout)
+	}
+	if !strings.Contains(stdout, "auto-detected network.pkt -> exported to snapshot/network") {
+		t.Fatalf("stdout missing auto-detected export: %q", stdout)
+	}
+	snapXML := filepath.Join(dir, "snapshot", "network", "base.snapshot.xml")
+	if _, err := os.Stat(snapXML); err != nil {
+		t.Fatalf("missing auto-exported snapshot XML: %v", err)
+	}
+}
+
 func TestInitCommandRejectsNonRepository(t *testing.T) {
 	dir := t.TempDir()
 	code, _, stderr := runCLI("init", dir)

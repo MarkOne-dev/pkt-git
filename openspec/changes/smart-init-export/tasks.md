@@ -11,8 +11,8 @@
 
 ## 3. Auto-Export on Repository Initialization
 
-- [ ] 3.1 Update `internal/cli/init.go` to discover and export detected topologies during repository initialization.
-- [ ] 3.2 Add test cases in `internal/cli/init_hooks_version_test.go` verifying that `pkt init` auto-exports existing `.pkt` files.
+- [x] 3.1 Update `internal/cli/init.go` to discover and export detected topologies during repository initialization.
+- [x] 3.2 Add test cases in `internal/cli/init_hooks_version_test.go` verifying that `pkt init` auto-exports existing `.pkt` files.
 
 ## 4. Verification and Documentation
 
