@@ -20,10 +20,12 @@ func TestDefaultSnapshotDir(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"network.pkt", filepath.Join("snapshot", "network")},
-		{"topologia/network.pkt", filepath.Join("snapshot", "network")},
-		{"lab_v1.pka", filepath.Join("snapshot", "lab_v1")},
-		{"/abs/path/to/my_topology.PKT", filepath.Join("snapshot", "my_topology")},
+		{"network.pkt", "snapshot/network"},
+		{"topologia/network.pkt", "snapshot/network"},
+		{"topologia\\network.pkt", "snapshot/network"},
+		{"C:\\Users\\runneradmin\\project\\network.pkt", "snapshot/network"},
+		{"lab_v1.pka", "snapshot/lab_v1"},
+		{"/abs/path/to/my_topology.PKT", "snapshot/my_topology"},
 	}
 	for _, tt := range tests {
 		got := DefaultSnapshotDir(tt.input)
@@ -71,7 +73,7 @@ func TestFindTopologies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FindTopologies: %v", err)
 	}
-	want := []string{"root.pkt", filepath.Join("topologia", "branch.pka")}
+	want := []string{"root.pkt", "topologia/branch.pka"}
 	if !reflect.DeepEqual(found, want) {
 		t.Fatalf("FindTopologies(%q) = %v, want %v", dir, found, want)
 	}
