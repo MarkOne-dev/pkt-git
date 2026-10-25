@@ -80,7 +80,11 @@ func NewRootCmd() *cobra.Command {
 	doctorCmd := newDoctorCmd()
 	doctorCmd.GroupID = "collab"
 
+	welcomeCmd := newWelcomeCmd()
+	welcomeCmd.GroupID = "core"
+
 	root.AddCommand(
+		welcomeCmd,
 		initCmd,
 		exportCmd,
 		buildCmd,

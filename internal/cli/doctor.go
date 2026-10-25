@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
+	"github.com/MarkOne-dev/pkt-git/internal/ptdetect"
 	"github.com/MarkOne-dev/pkt-git/internal/skills"
 )
 
@@ -64,7 +65,11 @@ func newDoctorCmd() *cobra.Command {
 				} else {
 					hasWarnings = true
 					ui.Warning(out, "Binary: %s (directory not in PATH)", exePath)
-					fmt.Fprintf(out, "  Remediation: add %s to your PATH in ~/.bashrc or ~/.zshrc.\n", exeDir)
+					if runtime.GOOS == "windows" {
+						fmt.Fprintf(out, "  Remediation: add %s to your user PATH via System Properties or PowerShell.\n", exeDir)
+					} else {
+						fmt.Fprintf(out, "  Remediation: add 'export PATH=\"$PATH:%s\"' to your ~/.bashrc or ~/.zshrc.\n", exeDir)
+					}
 				}
 			}
 
@@ -86,9 +91,13 @@ func newDoctorCmd() *cobra.Command {
 			}
 
 			// 5. Cisco Packet Tracer detection
-			ptPath := findPacketTracer()
-			if ptPath != "" {
-				ui.Success(out, "Cisco Packet Tracer: detected at %s", ptPath)
+			ptInst := ptdetect.Find()
+			if ptInst != nil {
+				if ptInst.Version != "" {
+					ui.Success(out, "Cisco Packet Tracer: v%s (%s via %s)", ptInst.Version, ptInst.Path, ptInst.Method)
+				} else {
+					ui.Success(out, "Cisco Packet Tracer: %s (via %s)", ptInst.Path, ptInst.Method)
+				}
 			} else {
 				ui.Info(out, "Cisco Packet Tracer: not detected in common paths (optional for CLI; required to open/edit topologies)")
 			}
@@ -101,6 +110,14 @@ func newDoctorCmd() *cobra.Command {
 				ui.Info(out, "Go SDK: %s (%s, optional for runtime)", goVer, goPath)
 			} else {
 				ui.Info(out, "Go SDK: not installed (optional; prebuilt binaries require no Go runtime)")
+			}
+
+			// 7. Nerd Font Iconography
+			fontName := detectNerdFont()
+			if fontName != "" {
+				ui.Success(out, "Nerd Font: %s (detected)", fontName)
+			} else {
+				ui.Info(out, "Nerd Font: not detected (optional; enables rich icons in welcome banner & terminal)")
 			}
 
 			fmt.Fprintln(out)
@@ -125,45 +142,58 @@ func isDirInPATH(dir string) bool {
 	return false
 }
 
-func findPacketTracer() string {
-	if p, err := exec.LookPath("PacketTracer"); err == nil {
-		return p
-	}
-	if p, err := exec.LookPath("packettracer"); err == nil {
-		return p
-	}
-
-	var candidates []string
-	switch runtime.GOOS {
-	case "linux":
-		candidates = []string{
-			"/opt/pt/bin/PacketTracer",
-			"/usr/local/bin/PacketTracer",
-			"/usr/local/bin/packettracer",
-		}
-	case "darwin":
-		candidates = []string{
-			"/Applications/Cisco Packet Tracer.app",
-		}
-	case "windows":
-		programFiles := os.Getenv("ProgramFiles")
-		programFilesX86 := os.Getenv("ProgramFiles(x86)")
-		if programFiles != "" {
-			candidates = append(candidates,
-				filepath.Join(programFiles, "Cisco Packet Tracer", "bin", "PacketTracer.exe"),
-			)
-		}
-		if programFilesX86 != "" {
-			candidates = append(candidates,
-				filepath.Join(programFilesX86, "Cisco Packet Tracer", "bin", "PacketTracer.exe"),
-			)
+func detectNerdFont() string {
+	if fcPath, err := exec.LookPath("fc-list"); err == nil && fcPath != "" {
+		out, err := exec.Command("fc-list", ":", "family").Output()
+		if err == nil {
+			for _, line := range strings.Split(string(out), "\n") {
+				line = strings.TrimSpace(line)
+				if strings.Contains(strings.ToLower(line), "nerd font") {
+					parts := strings.Split(line, ",")
+					return strings.TrimSpace(parts[0])
+				}
+			}
 		}
 	}
 
-	for _, c := range candidates {
-		if _, err := os.Stat(c); err == nil {
-			return c
+	home, _ := os.UserHomeDir()
+	var searchDirs []string
+	if home != "" {
+		switch runtime.GOOS {
+		case "linux":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, ".local", "share", "fonts"),
+				filepath.Join(home, ".fonts"),
+				"/usr/share/fonts",
+				"/usr/local/share/fonts",
+			)
+		case "darwin":
+			searchDirs = append(searchDirs,
+				filepath.Join(home, "Library", "Fonts"),
+				"/Library/Fonts",
+			)
+		case "windows":
+			localAppData := os.Getenv("LOCALAPPDATA")
+			if localAppData != "" {
+				searchDirs = append(searchDirs, filepath.Join(localAppData, "Microsoft", "Windows", "Fonts"))
+			}
+			winDir := os.Getenv("WINDIR")
+			if winDir != "" {
+				searchDirs = append(searchDirs, filepath.Join(winDir, "Fonts"))
+			}
 		}
 	}
+
+	for _, dir := range searchDirs {
+		if entries, err := os.ReadDir(dir); err == nil {
+			for _, e := range entries {
+				lower := strings.ToLower(e.Name())
+				if strings.Contains(lower, "nerd") {
+					return strings.TrimSuffix(e.Name(), filepath.Ext(e.Name()))
+				}
+			}
+		}
+	}
+
 	return ""
 }

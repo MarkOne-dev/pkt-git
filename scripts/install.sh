@@ -93,6 +93,16 @@ configure_path_if_needed() {
         echo "  Added ${BIN_DIR} to ~/.zshrc"
         profile_updated=1
     fi
+    if [[ -f "${HOME}/.bash_profile" ]] && ! grep -Fq "${BIN_DIR}" "${HOME}/.bash_profile"; then
+        printf '\n# Added by pkt-git installer\n%s\n' "${export_line}" >> "${HOME}/.bash_profile"
+        echo "  Added ${BIN_DIR} to ~/.bash_profile"
+        profile_updated=1
+    fi
+    if [[ -f "${HOME}/.profile" ]] && ! grep -Fq "${BIN_DIR}" "${HOME}/.profile"; then
+        printf '\n# Added by pkt-git installer\n%s\n' "${export_line}" >> "${HOME}/.profile"
+        echo "  Added ${BIN_DIR} to ~/.profile"
+        profile_updated=1
+    fi
 
     if [[ "${profile_updated}" -eq 0 ]]; then
         echo "      Add 'export PATH=\"\$PATH:${BIN_DIR}\"' to your shell profile." >&2
@@ -109,9 +119,95 @@ find_prebuilt() {
     return 1
 }
 
+install_nerd_font_if_needed() {
+    if [[ "${PKTG_SKIP_FONTS:-0}" == "1" ]]; then
+        return 0
+    fi
+
+    # Check if a Nerd Font is already present
+    if command -v fc-list >/dev/null 2>&1; then
+        if fc-list : family 2>/dev/null | grep -qi "Nerd Font"; then
+            return 0
+        fi
+    fi
+
+    local OS
+    OS="$(uname -s 2>/dev/null || echo "unknown")"
+
+    if [[ "${OS}" == "Darwin" ]]; then
+        if command -v brew >/dev/null 2>&1; then
+            echo "pkt-git: Installing JetBrainsMono Nerd Font via Homebrew..."
+            brew install --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1 || true
+            return 0
+        fi
+        local mac_font_dir="${HOME}/Library/Fonts"
+        if ls "${mac_font_dir}"/*Nerd* >/dev/null 2>&1; then
+            return 0
+        fi
+        echo "pkt-git: Downloading and installing JetBrainsMono Nerd Font..."
+        mkdir -p "${mac_font_dir}"
+        local tmp_font_dir
+        tmp_font_dir="$(mktemp -d "${TMPDIR:-/tmp}/pkt-font.XXXXXX")"
+        local font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+        if curl -fsSL "${font_url}" -o "${tmp_font_dir}/font.tar.xz" 2>/dev/null; then
+            tar -xf "${tmp_font_dir}/font.tar.xz" -C "${tmp_font_dir}" 2>/dev/null || true
+            find "${tmp_font_dir}" -name "*.ttf" -exec cp -f {} "${mac_font_dir}/" \; 2>/dev/null || true
+            echo "pkt-git: JetBrainsMono Nerd Font installed in ~/Library/Fonts."
+        fi
+        rm -rf "${tmp_font_dir}"
+        return 0
+    fi
+
+    # Linux font installation
+    local font_dir="${HOME}/.local/share/fonts/NerdFonts"
+    if [[ -d "${font_dir}" ]] && ls "${font_dir}"/*JetBrainsMono* >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "pkt-git: Installing JetBrainsMono Nerd Font..."
+    mkdir -p "${font_dir}"
+    local tmp_font_dir
+    tmp_font_dir="$(mktemp -d "${TMPDIR:-/tmp}/pkt-font.XXXXXX")"
+    local font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+    local downloaded=0
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "${font_url}" -o "${tmp_font_dir}/font.tar.xz" 2>/dev/null; then
+            downloaded=1
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q "${font_url}" -O "${tmp_font_dir}/font.tar.xz" 2>/dev/null; then
+            downloaded=1
+        fi
+    fi
+
+    if [[ "${downloaded}" -eq 1 ]]; then
+        tar -xf "${tmp_font_dir}/font.tar.xz" -C "${tmp_font_dir}" 2>/dev/null || true
+        find "${tmp_font_dir}" -name "*.ttf" -exec cp -f {} "${font_dir}/" \; 2>/dev/null || true
+        if command -v fc-cache >/dev/null 2>&1; then
+            fc-cache -f "${font_dir}" >/dev/null 2>&1 || true
+        fi
+        echo "pkt-git: JetBrainsMono Nerd Font installed successfully."
+
+        # Configure GNOME Terminal font if profile exists
+        if command -v gsettings >/dev/null 2>&1; then
+            local profile
+            profile="$(gsettings get org.gnome.Terminal.ProfilesList default 2>/dev/null | tr -d \')" || true
+            if [[ -n "${profile}" ]]; then
+                gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:${profile}/" use-system-font false 2>/dev/null || true
+                gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:${profile}/" font 'JetBrainsMono Nerd Font 11' 2>/dev/null || true
+            fi
+        fi
+    else
+        echo "note: could not download JetBrainsMono Nerd Font automatically. You can install it manually from https://www.nerdfonts.com" >&2
+    fi
+    rm -rf "${tmp_font_dir}"
+}
+
 # 1. Ensure prerequisites
 install_git_if_missing
 configure_git_identity_if_needed
+install_nerd_font_if_needed
 
 SOURCE="${PKTG_SOURCE:-}"
 if [[ -z "${SOURCE}" ]]; then
@@ -147,11 +243,7 @@ fi
 configure_path_if_needed
 
 echo ""
-echo "Running environment diagnostics:"
-"${TARGET}" doctor || true
+"${TARGET}" welcome || true
 
 echo ""
 echo "pkt-git successfully installed at ${TARGET}."
-echo "In any Git repository run:"
-echo "    pkt init          # wire hooks and auto-export existing topology"
-echo "    pkt --help        # full command list"
