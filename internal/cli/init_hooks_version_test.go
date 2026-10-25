@@ -69,7 +69,7 @@ func TestInitCommandRejectsNonRepository(t *testing.T) {
 	if code != 1 {
 		t.Fatalf("exit code = %d, want 1", code)
 	}
-	if !strings.Contains(stderr, "not a git repository") {
+	if !strings.Contains(stderr, "not a git repository") && !strings.Contains(stderr, "no es un repositorio git") {
 		t.Fatalf("stderr = %q", stderr)
 	}
 	if _, err := os.Stat(filepath.Join(dir, hooks.HookDir)); !os.IsNotExist(err) {
