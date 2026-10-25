@@ -22,3 +22,10 @@ go.work.sum
 # Local agent skills and tooling
 .agents/
 skills/
+
+# Local agent configuration and OpenSpec
+.claude/
+.gemini/
+.opencode/
+openspec/
+
