@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.jpg" alt="pkt-git Banner" width="100%">
+  <img src="docs/assets/pkt-git-banner.svg" alt="pkt-git Banner" width="100%">
 </p>
 
 <p align="center">
