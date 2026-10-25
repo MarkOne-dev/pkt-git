@@ -12,22 +12,14 @@ import (
 	"github.com/MarkOne-dev/pkt-git/internal/config"
 )
 
-const asciiBanner = `▄▄▄▄  ▄  ▄ ▄▄▄▄▄   ▄▄▄▄▄ ▄ ▄▄▄▄▄
-█   █ █▄▀    █     █     █   █
-█▀▀▀▀ █ ▀▄   █     █ ▀▀█ █   █
-▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀ ▀▀▀▀▀`
+var asciiBannerLines = []string{
+	"▄▄▄▄  ▄  ▄ ▄▄▄▄▄   ▄▄▄▄▄ ▄ ▄▄▄▄▄",
+	"█   █ █▄▀    █     █     █   █  ",
+	"█▀▀▀▀ █ ▀▄   █     █ ▀▀█ █   █  ",
+	"▀     ▀  ▀   ▀     ▀▀▀▀▀ ▀ ▀▀▀▀▀",
+}
 
 const bannerSubtitle = "Cisco Packet Tracer ⇄ Git Version Control"
-
-func centerLine(s string, width int) string {
-	runes := []rune(s)
-	runeLen := len(runes)
-	if runeLen >= width {
-		return s
-	}
-	padding := (width - runeLen) / 2
-	return strings.Repeat(" ", padding) + s
-}
 
 func metadataLine() string {
 	ver := config.Version
@@ -40,19 +32,40 @@ func metadataLine() string {
 	return fmt.Sprintf("%s • %s • %s/%s", ver, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }
 
-func targetWidth(meta string) int {
-	w := 46
-	if runeLen := len([]rune(meta)); runeLen > w {
-		w = runeLen + 4
+func calculateLayout(meta string) (artIndent, subIndent, metaIndent string) {
+	artWidth := len([]rune(asciiBannerLines[0]))
+	subWidth := len([]rune(bannerSubtitle))
+	metaWidth := len([]rune(meta))
+
+	containerWidth := 46
+	if subWidth > containerWidth {
+		containerWidth = subWidth
 	}
-	return w
+	if metaWidth > containerWidth {
+		containerWidth = metaWidth
+	}
+
+	artPad := (containerWidth - artWidth) / 2
+	subPad := (containerWidth - subWidth) / 2
+	metaPad := (containerWidth - metaWidth) / 2
+
+	if artPad < 0 {
+		artPad = 0
+	}
+	if subPad < 0 {
+		subPad = 0
+	}
+	if metaPad < 0 {
+		metaPad = 0
+	}
+
+	return strings.Repeat(" ", artPad), strings.Repeat(" ", subPad), strings.Repeat(" ", metaPad)
 }
 
 // Banner writes the centered pkt-git banner, subtitle, and runtime metadata to w.
 func Banner(w io.Writer) {
-	lines := strings.Split(asciiBanner, "\n")
 	meta := metadataLine()
-	wWidth := targetWidth(meta)
+	artIndent, subIndent, metaIndent := calculateLayout(meta)
 
 	if ColorEnabled(w) {
 		r := rendererFor(w)
@@ -60,26 +73,25 @@ func Banner(w io.Writer) {
 		subStyle := r.NewStyle().Foreground(lipgloss.Color("248"))
 		metaStyle := r.NewStyle().Foreground(lipgloss.Color("243"))
 
-		for _, line := range lines {
-			fmt.Fprintln(w, pktStyle.Render(centerLine(line, wWidth)))
+		for _, line := range asciiBannerLines {
+			fmt.Fprintln(w, pktStyle.Render(artIndent+line))
 		}
-		fmt.Fprintln(w, subStyle.Render(centerLine(bannerSubtitle, wWidth)))
-		fmt.Fprintf(w, "%s\n\n", metaStyle.Render(centerLine(meta, wWidth)))
+		fmt.Fprintln(w, subStyle.Render(subIndent+bannerSubtitle))
+		fmt.Fprintf(w, "%s\n\n", metaStyle.Render(metaIndent+meta))
 	} else {
-		for _, line := range lines {
-			fmt.Fprintln(w, centerLine(line, wWidth))
+		for _, line := range asciiBannerLines {
+			fmt.Fprintln(w, artIndent+line)
 		}
-		fmt.Fprintln(w, centerLine(bannerSubtitle, wWidth))
-		fmt.Fprintf(w, "%s\n\n", centerLine(meta, wWidth))
+		fmt.Fprintln(w, subIndent+bannerSubtitle)
+		fmt.Fprintf(w, "%s\n\n", metaIndent+meta)
 	}
 }
 
 // BannerString returns the centered banner, subtitle, and metadata as a formatted string.
 func BannerString(color bool) string {
 	var sb strings.Builder
-	lines := strings.Split(asciiBanner, "\n")
 	meta := metadataLine()
-	wWidth := targetWidth(meta)
+	artIndent, subIndent, metaIndent := calculateLayout(meta)
 
 	if color {
 		r := rendererFor(&sb)
@@ -87,17 +99,17 @@ func BannerString(color bool) string {
 		subStyle := r.NewStyle().Foreground(lipgloss.Color("248"))
 		metaStyle := r.NewStyle().Foreground(lipgloss.Color("243"))
 
-		for _, line := range lines {
-			fmt.Fprintln(&sb, pktStyle.Render(centerLine(line, wWidth)))
+		for _, line := range asciiBannerLines {
+			fmt.Fprintln(&sb, pktStyle.Render(artIndent+line))
 		}
-		fmt.Fprintln(&sb, subStyle.Render(centerLine(bannerSubtitle, wWidth)))
-		fmt.Fprintf(&sb, "%s\n", metaStyle.Render(centerLine(meta, wWidth)))
+		fmt.Fprintln(&sb, subStyle.Render(subIndent+bannerSubtitle))
+		fmt.Fprintf(&sb, "%s\n", metaStyle.Render(metaIndent+meta))
 	} else {
-		for _, line := range lines {
-			fmt.Fprintln(&sb, centerLine(line, wWidth))
+		for _, line := range asciiBannerLines {
+			fmt.Fprintln(&sb, artIndent+line)
 		}
-		fmt.Fprintln(&sb, centerLine(bannerSubtitle, wWidth))
-		fmt.Fprintf(&sb, "%s\n", centerLine(meta, wWidth))
+		fmt.Fprintln(&sb, subIndent+bannerSubtitle)
+		fmt.Fprintf(&sb, "%s\n", metaIndent+meta)
 	}
 	return sb.String()
 }
