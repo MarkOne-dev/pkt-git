@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/hooks"
 )
 
@@ -24,7 +25,7 @@ func newInitCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "[ok] initialized %s\n", result.Root)
+			ui.Success(out, "initialized %s", result.Root)
 			fmt.Fprintf(out, "  hooks: %s (%s)\n", hooks.HookDir, strings.Join(result.HooksWritten, ", "))
 			fmt.Fprintf(out, "  binary: %s\n", result.Executable)
 			switch {

@@ -1,10 +1,9 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
@@ -18,7 +17,8 @@ func newBuildCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "[ok] built %s (%d bytes)\n", args[1], result.Size)
+			out := cmd.OutOrStdout()
+			ui.Success(out, "built %s (%d bytes, %s)", args[1], result.Size, ui.FormatBytes(int64(result.Size)))
 			return nil
 		},
 	}

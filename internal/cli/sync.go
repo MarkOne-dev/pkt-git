@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
@@ -20,9 +21,9 @@ func newSyncCmd() *cobra.Command {
 				return err
 			}
 			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "[ok] refreshed %s\n", args[0])
-			fmt.Fprintf(out, "  XML: %d bytes, devices: %d, links: %d, configs: %d\n",
-				result.XMLSize, result.DeviceCount, result.LinkCount, result.ConfigCount)
+			ui.Success(out, "refreshed %s", args[0])
+			fmt.Fprintf(out, "  XML: %d bytes (%s), devices: %d, links: %d, configs: %d\n",
+				result.XMLSize, ui.FormatBytes(int64(result.XMLSize)), result.DeviceCount, result.LinkCount, result.ConfigCount)
 			if len(result.Removed) > 0 {
 				fmt.Fprintf(out, "  removed stale configs: %s\n", strings.Join(result.Removed, ", "))
 			}

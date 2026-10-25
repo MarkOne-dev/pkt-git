@@ -3,12 +3,13 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 )
 
 // NewRootCmd builds the root command and all subcommands.
@@ -31,17 +32,62 @@ func NewRootCmd() *cobra.Command {
 		return usagef("%v", err)
 	})
 
+	root.AddGroup(
+		&cobra.Group{
+			ID:    "core",
+			Title: "Core Workflow:",
+		},
+		&cobra.Group{
+			ID:    "inspect",
+			Title: "Inspection & Editing:",
+		},
+		&cobra.Group{
+			ID:    "collab",
+			Title: "Git Collaboration & Tools:",
+		},
+	)
+
+	initCmd := newInitCmd()
+	initCmd.GroupID = "core"
+
+	exportCmd := newExportCmd()
+	exportCmd.GroupID = "core"
+
+	buildCmd := newBuildCmd()
+	buildCmd.GroupID = "core"
+
+	syncCmd := newSyncCmd()
+	syncCmd.GroupID = "core"
+
+	inspectCmd := newInspectCmd()
+	inspectCmd.GroupID = "inspect"
+
+	editCmd := newEditCmd()
+	editCmd.GroupID = "inspect"
+
+	verifyCmd := newVerifyCmd()
+	verifyCmd.GroupID = "inspect"
+
+	resolveCmd := newResolveCmd()
+	resolveCmd.GroupID = "collab"
+
+	versionCmd := newVersionCmd()
+	versionCmd.GroupID = "collab"
+
+	skillsCmd := newSkillsCmd()
+	skillsCmd.GroupID = "collab"
+
 	root.AddCommand(
-		newInitCmd(),
-		newExportCmd(),
-		newBuildCmd(),
-		newInspectCmd(),
-		newEditCmd(),
-		newSyncCmd(),
-		newResolveCmd(),
-		newVerifyCmd(),
-		newVersionCmd(),
-		newSkillsCmd(),
+		initCmd,
+		exportCmd,
+		buildCmd,
+		inspectCmd,
+		editCmd,
+		syncCmd,
+		resolveCmd,
+		verifyCmd,
+		versionCmd,
+		skillsCmd,
 		newPreCommitCmd(),
 		newPostMergeCmd(),
 		newPostCheckoutCmd(),
@@ -78,14 +124,14 @@ func ExecuteArgs(args []string, out, errOut io.Writer) int {
 	var usage *usageError
 	if errors.As(err, &usage) {
 		if usage.message != "" {
-			fmt.Fprintln(errOut, "pkt:", usage.message)
+			ui.Error(errOut, "%s", usage.message)
 		}
 		return 2
 	}
 	if strings.HasPrefix(err.Error(), "unknown command") {
-		fmt.Fprintln(errOut, "pkt:", err)
+		ui.Error(errOut, "%s", err)
 		return 2
 	}
-	fmt.Fprintln(errOut, "pkt:", err)
+	ui.Error(errOut, "%s", err)
 	return 1
 }

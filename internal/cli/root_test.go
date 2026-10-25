@@ -14,6 +14,11 @@ func TestRootHelp(t *testing.T) {
 	if !strings.Contains(stdout, "Usage:") || !strings.Contains(stdout, "version") {
 		t.Fatalf("help output is incomplete:\n%s", stdout)
 	}
+	for _, group := range []string{"Core Workflow:", "Inspection & Editing:", "Git Collaboration & Tools:"} {
+		if !strings.Contains(stdout, group) {
+			t.Fatalf("help output missing group %q:\n%s", group, stdout)
+		}
+	}
 	if stderr != "" {
 		t.Fatalf("stderr = %q, want empty", stderr)
 	}

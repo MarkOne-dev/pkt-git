@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/skills"
 )
 
@@ -30,10 +31,10 @@ func newSkillsCmd() *cobra.Command {
 			errOut := cmd.ErrOrStderr()
 			for _, result := range results {
 				if result.Err != nil {
-					fmt.Fprintf(errOut, "[error] %s: %v\n", result.Target.Agent, result.Err)
+					ui.Error(errOut, "%s: %v", result.Target.Agent, result.Err)
 					continue
 				}
-				fmt.Fprintf(out, "[ok] %s: %s %s\n", result.Target.Agent, result.Action, result.Target.Dir)
+				ui.Success(out, "%s: %s %s", result.Target.Agent, result.Action, result.Target.Dir)
 			}
 			return err
 		},
