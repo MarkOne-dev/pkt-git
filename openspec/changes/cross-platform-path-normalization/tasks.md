@@ -2,7 +2,7 @@
 
 ## 1. Core Path Normalization
 
-- [ ] 1.1 Update `snapshot.DefaultSnapshotDir` and `snapshot.FindTopologies` in `internal/snapshot/snapshot.go` to return canonical forward-slash separated paths, and expand `TestDefaultSnapshotDir` in `internal/snapshot/export_test.go` to verify normalization on Windows backslash input.
+- [x] 1.1 Update `snapshot.DefaultSnapshotDir` and `snapshot.FindTopologies` in `internal/snapshot/snapshot.go` to return canonical forward-slash separated paths, and expand `TestDefaultSnapshotDir` in `internal/snapshot/export_test.go` to verify normalization on Windows backslash input.
 - [ ] 1.2 Ensure `internal/cli/init.go` and `internal/cli/export.go` display canonical forward-slash paths in CLI output, and update `internal/cli/init_hooks_version_test.go` to assert canonical path formatting.
 
 ## 2. Verification and Quality Checks

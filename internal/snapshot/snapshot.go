@@ -144,17 +144,18 @@ func prepareSnapshot(sourceFile string, xmlData []byte) (exportFiles, error) {
 }
 
 // DefaultSnapshotDir returns the conventional snapshot directory for a .pkt file:
-// "snapshot/<stem>".
+// "snapshot/<stem>", using canonical forward slashes on all platforms.
 func DefaultSnapshotDir(pktPath string) string {
-	base := filepath.Base(pktPath)
-	ext := filepath.Ext(base)
+	cleaned := strings.ReplaceAll(pktPath, "\\", "/")
+	base := path.Base(cleaned)
+	ext := path.Ext(base)
 	stem := strings.TrimSuffix(base, ext)
-	return filepath.Join("snapshot", stem)
+	return path.Join("snapshot", stem)
 }
 
 // FindTopologies searches root for .pkt and .pka files, skipping ignored directories
 // such as .git, .githooks, snapshot, bin, dist, node_modules, and skills.
-// It returns sorted relative paths to discovered topology files.
+// It returns sorted, canonical forward-slash relative paths to discovered topology files.
 func FindTopologies(root string) ([]string, error) {
 	if root == "" {
 		root = "."
@@ -180,9 +181,9 @@ func FindTopologies(root string) ([]string, error) {
 			}
 			rel, relErr := filepath.Rel(root, p)
 			if relErr != nil {
-				topologies = append(topologies, filepath.Clean(p))
+				topologies = append(topologies, filepath.ToSlash(filepath.Clean(p)))
 			} else {
-				topologies = append(topologies, filepath.Clean(rel))
+				topologies = append(topologies, filepath.ToSlash(filepath.Clean(rel)))
 			}
 		}
 		return nil
