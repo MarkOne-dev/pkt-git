@@ -142,3 +142,51 @@ func prepareSnapshot(sourceFile string, xmlData []byte) (exportFiles, error) {
 		links:    len(doc.Links),
 	}, nil
 }
+
+// DefaultSnapshotDir returns the conventional snapshot directory for a .pkt file:
+// "snapshot/<stem>".
+func DefaultSnapshotDir(pktPath string) string {
+	base := filepath.Base(pktPath)
+	ext := filepath.Ext(base)
+	stem := strings.TrimSuffix(base, ext)
+	return filepath.Join("snapshot", stem)
+}
+
+// FindTopologies searches root for .pkt and .pka files, skipping ignored directories
+// such as .git, .githooks, snapshot, bin, dist, node_modules, and skills.
+// It returns sorted relative paths to discovered topology files.
+func FindTopologies(root string) ([]string, error) {
+	if root == "" {
+		root = "."
+	}
+	var topologies []string
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			name := d.Name()
+			if strings.HasPrefix(name, ".") || name == "snapshot" || name == "bin" || name == "dist" || name == "node_modules" || name == "skills" {
+				if p != root {
+					return filepath.SkipDir
+				}
+			}
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext == ".pkt" || ext == ".pka" {
+			if strings.HasSuffix(d.Name(), ".rebuilt.pkt") {
+				return nil
+			}
+			rel, relErr := filepath.Rel(root, p)
+			if relErr != nil {
+				topologies = append(topologies, filepath.Clean(p))
+			} else {
+				topologies = append(topologies, filepath.Clean(rel))
+			}
+		}
+		return nil
+	})
+	sort.Strings(topologies)
+	return topologies, err
+}

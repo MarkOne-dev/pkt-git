@@ -19,13 +19,24 @@ the hooks with `core.hooksPath`, and merges the required rules into
 `.gitattributes`. There is no Python, virtualenv, template copy, or per-repo
 tool installation.
 
-To import a project that already exists on disk:
+To import a project that already exists on disk, simply run:
 
 ```bash
-pkt export my_project.pkt snapshot/my_project/
-mkdir -p topologia && cp my_project.pkt topologia/
+pkt init
+```
+
+If an existing `.pkt` or `.pka` file is detected in the repository, `pkt init` automatically generates the initial snapshot in `snapshot/<project>/`. Then save to Git:
+
+```bash
 git add .
 git commit -m "chore: import PT project"
+```
+
+You can also export manually anytime using convention-based paths:
+
+```bash
+pkt export my_project.pkt             # destination defaults to snapshot/my_project/
+pkt export                            # auto-detects the topology in the repository
 ```
 
 ## What `pkt init` Actually Does
