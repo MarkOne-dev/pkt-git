@@ -1,202 +1,352 @@
 # CLI Reference
 
-The command surface is the global **`pkt`** CLI (installed once per machine by
-`install.sh` / `install.ps1`; legacy alias `ptg`); the underlying modules live
-in `tools/`. Both are documented here.
+`pkt` is a single Go binary. It has no Python, virtualenv, cgo, or C runtime
+dependency. The command tree is built with Cobra and implemented under
+`internal/cli`; the feature packages live under `internal/`.
 
-```
-tools/
-├── cli.py               # Global hub: init / hooks entries / dispatch
-├── spike_roundtrip.py   # Codec layer: decode / encode / verify
-├── ptg.py               # Topology layer: export / build / inspect
-└── edit_config.py       # Editing layer: show / setiface / chgline / insertafter
-```
-
----
-
-## `pkt` — global CLI hub
+## Command surface
 
 ```bash
 pkt init [dir]
 pkt export <project.pkt> <output_dir>
 pkt build  <snapshot.xml> <output.pkt>
 pkt inspect <project.pkt>
-pkt edit   <xml> <show|setiface|chgline|insertafter> ...   # forwards to edit_config below
+
+pkt edit <xml> show <DEVICE>
+pkt edit <xml> setiface <DEVICE> <IFACE> "line 1" "line 2" ...
+pkt edit <xml> chgline <DEVICE> <IFACE> <old_line> <new_line>
+pkt edit <xml> insertafter <DEVICE> <phrase> "line 1" ...
+
 pkt verify <file.pkt>
-pkt sync   <snapshot-dir>                                  # refresh configs/*.cfg + metadata from the XML
-pkt pre-commit | post-merge | post-checkout                  # thin-hook entry points (automatic)
+pkt sync   <snapshot-dir|snapshot.xml>
+pkt resolve [--ours|--theirs]
+pkt skills [--remove]
+pkt version
+
+# Hidden hook entry points, invoked by generated hooks:
+pkt pre-commit
+pkt post-merge [squash-flag]
+pkt post-checkout <old> <new> <branch-flag>
 ```
 
-### `init`
+`pkt --help` lists the public commands and omits the hook entry points. The CLI
+never prompts for input: choices such as `resolve --ours` must be explicit.
 
-Wires the tool into any repository (run inside it, or pass a path):
+### Exit codes
 
-- writes thin hooks into `.githooks/{pre-commit,post-merge,post-checkout}` —
-  each one line: `exec "$(git config --get pktgit.py)" "$(git config --get pktgit.script)" <hook>`.
-- writes `.gitattributes` if missing (`*.pkt binary` + snapshot text rules).
-- stores `pktgit.py` / `pktgit.script` in repository-local config and sets
-  `core.hooksPath`.
-
-No template copying, no per-repo venv: one global install serves all
-repositories, so tool updates propagate everywhere automatically.
-
-### `sync`
-
-Text-first edits (conflict resolution, `edit`) change `base.snapshot.xml`;
-`sync` regenerates the derived `configs/*.cfg` and `metadata/topology.json`
-from it so the snapshot never contradicts itself. `pkt edit` calls it
-automatically after every successful write.
-
-### Hook entry points
-
-`pkt pre-commit` and `pkt post-merge|post-checkout [old new]` are called by the
-thin hooks; they implement the same automation described in `workflow.md`
-(auto-export staged `.pkt`, auto-rebuild after merges/pull/checkouts).
-
----
-
-## Module reference (internals)
-
-## `tools/spike_roundtrip.py`
-
-Reversible codec for `.pkt`/`.pka` files. See `packet-tracer-format.md` for the
-format behind it.
-
-```bash
-pkt decode <file.pkt> <out.xml>
-pkt encode <file.xml> <out.pkt>
-pkt verify <file.pkt>
-```
-
-| Command | Behavior |
+| Code | Meaning |
 |---|---|
-| `decode SRC OUT` | Writes the decrypted XML document to `OUT`. Warnings (non-fatal) on EAX tag mismatch or declared-length mismatch. |
-| `encode SRC OUT` | Rebuilds a valid binary from an XML document (deflate level 9, Crypto++-style EAX). |
-| `verify SRC` | Round-trip test: `decode → encode → decode`. Prints a report; exit code 0 only if the XML round trip is exact and the output is a document. |
+| `0` | Success |
+| `1` | Runtime failure (decode, filesystem, Git, validation, synchronization) |
+| `2` | Usage error (missing/invalid argument or unknown command) |
 
-`verify` report fields:
+Errors are written to standard error and identify the failing operation and
+path. No stack traces or credentials are printed.
 
-```
-specimen / binary size / extracted XML / rebuilt binary
-XML is a document : True        # required
-XML ROUND TRIP    : True        # required — project invariant
-byte-identical    : False       # bonus only; needs PT's own zlib emitter
-```
+## `init`
 
-API entry points (importable): `decode(raw: bytes) -> str` and
-`encode(xml_text: str) -> bytes`, plus the in-house `cmac`, `omac`,
-`eax_encrypt`, `eax_decrypt` primitives.
-
----
-
-## `tools/ptg.py`
-
-CLI and topology parser. Works from real binaries; knows nothing about crypto
-beyond calling `decode`/`encode`.
+Wires pkt-git into an existing Git repository:
 
 ```bash
-ptg ptg.py export <project.pkt> <output_dir>
-ptg ptg.py build  <snapshot.xml> <output.pkt>
-ptg ptg.py inspect <project.pkt>
+pkt init
+pkt init path/to/repository
 ```
 
-### `export <project.pkt> <dir>`
+- Writes executable `.githooks/pre-commit`, `.githooks/post-merge`, and
+  `.githooks/post-checkout`.
+- Records the absolute path of the running `pkt` binary in repository-local
+  Git configuration (`pktgit.bin`).
+- Sets `core.hooksPath` to `.githooks`.
+- Creates or merges `.gitattributes`: `.pkt`/`.pka` are binary; snapshot XML,
+  JSON, and config files are text.
+- Refuses to modify a directory that is not a Git repository.
+- Is idempotent: rerunning it leaves the same usable configuration and does not
+  duplicate attribute rules.
 
-Creates (or refreshes) the textual snapshot, printing a per-artifact summary:
+The hooks are repository-local. `pkt init` does not change global Git
+configuration and does not affect other repositories.
 
-```
-[ok] base.snapshot.xml     : 5,891,234 B
-[ok] per-device .cfg files : 34 devices with CLI config
-[ok] metadata/topology.json: 107 devices, 106 links
-```
-
-- `base.snapshot.xml` — full decrypted document.
-- `configs/<Device>.cfg` — one per device with a `RUNNINGCONFIG`.
-- `metadata/topology.json` — device/link catalog.
-
-This is exactly what the pre-commit hook invokes; you only call it directly for
-a first import or a manual re-export.
-
-### `build <snapshot.xml> <output.pkt>`
-
-Re-encrypts the XML into a binary Packet Tracer file ("ready to open in PT").
-Manually required only after textual edits/conflict resolution.
-
-### `inspect <project.pkt>`
-
-Console summary without writing any file:
-
-```
-NAME                        TYPE            MODEL         CLI
-------------------------------------------------------------------
-Sw1_LIMA                    SWITCH          2960          ✔ 342 lines
-```
-
-### Parsing notes
-
-- Devices are read from `.//NETWORK/DEVICES/DEVICE/ENGINE` (`TYPE`, `NAME`,
-  `SAVE_REF_ID`, `RUNNINGCONFIG`, `STARTUPCONFIG`).
-- Links from `LINKS/LINK/CABLE`: endpoints resolved through
-  `save-ref-id:<N>` against the device table; unresolvable refs fall back to a
-  truncated ref name instead of failing.
-- Internal data types are dataclasses: `Device`, `Link`, `Endpoint`.
-
----
-
-## `tools/edit_config.py`
-
-Safe, device-scoped textual editor for snapshots. Every mutating command is
-scoped to a single device's `RUNNINGCONFIG`, and the resulting document is XML
-validated (`ET.fromstring`) **before** the file is written.
+## `export`
 
 ```bash
-# show the running config of one device (password lines hidden)
-edit_config.py <xml> show <DEVICE>
-
-# replace the ENTIRE interface block with the given lines
-edit_config.py <xml> setiface <DEVICE> <IFACE> "line 1" "line 2" ...
-
-# change one line inside an interface block (first occurrence)
-edit_config.py <xml> chgline <DEVICE> <IFACE> <old_text> <new_text>
-
-# insert lines right after the first config line containing <phrase>
-edit_config.py <xml> insertafter <DEVICE> <phrase> "line 1" ...
+pkt export testdata/specimens/Caso1_Grupo09-2.pkt snapshot/Caso1_Grupo09-2
 ```
 
-| Command | Scope | Semantics |
-|---|---|---|
-| `show` | device | Prints the device's `RUNNINGCONFIG`; lines containing `PASSWORD` are suppressed. Read-only. |
-| `setiface` | device + interface | Replaces everything between `interface <IFACE>` and the next `!` line. Blunt but predictable — the whole block becomes exactly the lines you pass. |
-| `chgline` | device + interface | Finds `old_text` **inside that interface block only** and replaces its first occurrence. Fails loudly if the text is not in that block (never edits another interface). |
-| `insertafter` | device | Inserts new lines after the first line containing `phrase`, wherever it appears in the device config. |
+Creates or refreshes:
 
-All failures are explicit and abort before any write (`device not found`,
-`interface not in device RUNNINGCONFIG`, `line not found in <iface>`,
-`has no RUNNINGCONFIG (PC/server?)`).
+```
+snapshot/<Project>/
+├── base.snapshot.xml
+├── configs/<Device>.cfg
+└── metadata/topology.json
+```
 
-### Why device-scoped editing
+- The decoded XML is written unchanged.
+- One `.cfg` is written for each device whose `RUNNINGCONFIG` has at least one
+  line. Configs preserve line order and text and end with a newline.
+- Device names are sanitized to safe file names. Two names that sanitize to the
+  same file name are an error naming both devices.
+- `metadata/topology.json` records the source file, document root, totals, and
+  ordered device/link catalogs. Unresolved cable endpoints get a deterministic
+  fallback name instead of failing the export.
+- The command reports the XML size, config count, device count, and link count.
+- Decoding and parsing finish before any output is written. A failed refresh
+  leaves the previous snapshot readable and unchanged.
 
-Snapshots are large (multi-MB XML). Global replace tools (`sed`, editor-wide
-find-replace) have already caused a real incident (duplicated VLAN assignment)
-— the workflow forbids them. Every change goes through this tool so that:
+## `build`
 
-1. The blast radius is one device block.
-2. The result is validated XML.
-3. The edit is reviewable as a normal text diff.
+```bash
+pkt build snapshot/Caso1_Grupo09-2/base.snapshot.xml \
+    topologia/Caso1_Grupo09-2.pkt
+```
 
----
+Validates the XML, encodes a Packet Tracer binary, and writes it atomically.
+The source snapshot is not modified. If validation or encoding fails, an
+existing binary at the output path remains unchanged.
 
-## `install.sh` / `install.ps1`
+A successful build decodes back to exactly the input XML. Byte-for-byte
+identity with Packet Tracer's own encoder is not required.
 
-Idempotent one-command installer — full details in `installation.md`.
+## `inspect`
+
+```bash
+pkt inspect testdata/specimens/Caso1_Grupo09-2.pkt
+```
+
+Decodes the binary and prints a read-only summary: device and link totals plus
+one row per device with type, model, and CLI line count. It creates or modifies
+no file.
+
+## `edit`
+
+Every mutating edit is scoped to exactly one device, identified by the exact
+`<NAME>` value, and only touches that device's `RUNNINGCONFIG`. There is no
+document-wide replacement.
+
+### `show`
+
+```bash
+pkt edit snapshot/Caso1_Grupo09-2/base.snapshot.xml \
+    show SW_ACC_ADMIN_PUNO
+```
+
+Prints the running config in order without writing any file. Credential values
+are redacted before printing. The redacted text is never written back to the
+snapshot.
+
+Redacted keywords include `password`, `secret`, `community`, `key`,
+`key-string`, `pre-shared-key`, and `wpa-psk`. The value after the keyword is
+replaced with `<redacted>`:
+
+```
+ enable secret <redacted>
+ username admin password <redacted>
+ snmp-server community <redacted>
+```
+
+`no service password-encryption` is not treated as a secret.
+
+### `setiface`
+
+```bash
+pkt edit snapshot/Caso1_Grupo09-2/base.snapshot.xml \
+    setiface SW_ACC_ADMIN_PUNO FastEthernet0/3 \
+    " switchport access vlan 60" \
+    " switchport mode access"
+```
+
+Replaces everything between the exact `interface FastEthernet0/3` line and the
+next `!` line. The block becomes exactly the supplied lines. All content outside
+the block is preserved byte-for-byte.
+
+Use `setiface` when replacing a whole block. For a one-line change, prefer
+`chgline`.
+
+### `chgline`
+
+```bash
+pkt edit snapshot/Caso1_Grupo09-2/base.snapshot.xml \
+    chgline SW_ACC_ADMIN_PUNO FastEthernet0/3 \
+    " switchport access vlan 50" \
+    " switchport access vlan 60"
+```
+
+Replaces one complete `<LINE>` value inside the specified interface block.
+
+- The old value must match the full line text, including leading spaces.
+- A substring match is rejected.
+- Zero matches fail with `line not found`.
+- More than one match fails with `line is ambiguous`; no line is changed.
+- Only the matching line's text changes. Indentation, the `<LINE>` tags, and the
+  line ending are preserved.
+
+### `insertafter`
+
+```bash
+pkt edit snapshot/Caso1_Grupo09-2/base.snapshot.xml \
+    insertafter SW_ACC_ADMIN_PUNO "hostname SW_ACC_ADMIN_PUNO" \
+    " ntp server 1.1.1.1"
+```
+
+Inserts the supplied lines immediately after the first config line containing
+the phrase. The original matching line and every other line remain in place.
+Inserted lines use the matched line's indentation and line-ending convention.
+No match fails with `phrase not found`.
+
+### Editing guarantees
+
+Every mutating command (`setiface`, `chgline`, `insertafter`) follows the same
+pipeline:
+
+1. Build a byte-offset index of the XML and find the exact device and interface.
+2. Compute the new document in memory.
+3. Verify the result is well-formed XML before writing.
+4. Write the snapshot atomically, preserving the file mode.
+5. Refresh `configs/*.cfg` and `metadata/topology.json` from the edited XML.
+
+If the transform fails, validation fails, or the write fails, the original
+snapshot is left byte-for-byte unchanged. If the XML write succeeds but derived
+file synchronization fails, the command exits non-zero and reports that the
+snapshot was changed but derived files may be stale.
+
+Input lines are XML-escaped (`&`, `<`, `>`). A line containing a raw line break
+is rejected. Untouched spans keep their original encoding and line endings,
+including CRLF snapshots.
+
+### Editing errors
+
+| Error | Meaning |
+|---|---|
+| `device not found` | No exact `<NAME>` match. Check `metadata/topology.json`; names are case-sensitive. |
+| `device name is ambiguous` | More than one device has the same exact name. Fix the snapshot first. |
+| `device has no RUNNINGCONFIG` | End devices such as PCs/servers have no CLI config to edit. |
+| `interface not found` | The exact `interface <IFACE>` line is absent from that device's running config. |
+| `interface block has no closing ! line` | The config is malformed; add the closing `!` or fix the snapshot. |
+| `line not found` | `chgline` old value did not match a full line in that interface block. |
+| `line is ambiguous` | More than one line in that block equals the old value. |
+| `phrase not found` | `insertafter` phrase appears in no config line. |
+| `resulting XML is invalid` | The proposed edit would produce malformed XML; the original file was not written. |
+| `derived files may be stale` | The XML was written but `pkt sync` failed. Fix the filesystem issue and run `pkt sync`. |
+
+After a successful textual edit, the `.pkt` binary is stale. Rebuild it with
+`pkt build` before opening Packet Tracer.
+
+## `sync`
+
+```bash
+pkt sync snapshot/Caso1_Grupo09-2
+pkt sync snapshot/Caso1_Grupo09-2/base.snapshot.xml
+```
+
+Regenerates `configs/*.cfg` and `metadata/topology.json` from the snapshot XML.
+
+- Creates missing `configs/` and `metadata/` directories.
+- Writes one config per device with a non-empty running config.
+- Removes stale generated `.cfg` files that no longer correspond to a device.
+- Preserves an existing `source_file` value in `metadata/topology.json`.
+- Never writes `base.snapshot.xml`.
+- Reports refreshed counts and removed config file names.
+
+`pkt edit` runs the same synchronization automatically after a successful
+mutation.
+
+## `verify`
+
+```bash
+pkt verify testdata/specimens/Caso1_Grupo09-2.pkt
+```
+
+Decodes the specimen, re-encodes the decoded XML, decodes the rebuilt binary,
+and reports:
+
+```
+binary size        : 598810
+extracted XML      : 5894851
+rebuilt binary     : 585372
+XML is a document  : true
+XML round trip     : true
+byte-identical     : false
+```
+
+- `XML is a document` and `XML round trip` are required; the command exits `0`
+  only when both are true.
+- `byte-identical` is informational. Packet Tracer's zlib emitter uses
+  different compression parameters; a valid rebuilt file need not match its
+  bytes.
+- Authentication-tag or declared-length mismatches are hard failures. No XML is
+  returned from a failed decode.
+
+## `resolve`
+
+```bash
+pkt resolve            # report mode
+pkt resolve --ours     # accept the current branch
+pkt resolve --theirs   # accept the incoming branch
+```
+
+Report mode lists conflicted text and binary files, including the first conflict
+marker line for text files, without modifying or staging anything. It exits
+non-zero after printing the report; scripts must choose a policy.
+
+With a policy, `pkt resolve` applies the chosen side to conflicted text files,
+verifies that no conflict markers remain, refreshes derived snapshot files,
+rebuilds conflicted binaries from the resolved snapshot, and stages only the
+paths involved in the resolution. It never uses a repository-wide `git add`.
+
+Running `pkt resolve` without an active merge exits non-zero with a
+"nothing to resolve" message.
+
+## `skills`
+
+```bash
+pkt skills
+pkt skills --remove
+```
+
+Installs or removes the bundled pkt-git skill for OpenCode, Claude Code, and
+Gemini CLI. Both operations are idempotent and report each agent's outcome.
+Removal targets only the pkt-git skill directories and leaves other skills
+untouched. If the embedded skill asset is unavailable, the command fails with a
+reinstall instruction and does not delete an existing installed skill.
+
+## `version`
+
+```bash
+pkt version
+pkt --version
+```
+
+Prints the release version plus commit and build date when injected by the
+build. It works outside a Git repository.
 
 ## Hook entry points
 
-Not invoked by users directly; documented in `workflow.md`:
+Generated hooks call these commands; they are hidden from normal help:
 
 ```bash
-.githooks/pre-commit        # .pkt staged  -> export snapshot, stage it
-.githooks/post-merge        # snapshot changed in merge -> build .pkt
-.githooks/post-checkout     # snapshot changed in checkout -> build .pkt
-.githooks/common.sh         # resolve_py(): venv-python path per platform
+pkt pre-commit
+pkt post-merge [squash-flag]
+pkt post-checkout <old> <new> <branch-flag>
 ```
+
+- `pre-commit` exports staged `.pkt`/`.pka` files, stages the regenerated
+  snapshot, and aborts the commit on export failure. A text-only snapshot change
+  is allowed with a warning that the binary is stale.
+- `post-merge` and `post-checkout` detect snapshots changed by incoming history
+  and rebuild the corresponding `topologia/<project>.pkt` atomically. They
+  handle the squash flag and checkout revision pairs and leave unchanged
+  projects alone.
+
+## Why device-scoped editing
+
+Snapshots are multi-megabyte XML documents. Global find-replace tools such as
+`sed` or editor-wide replace have already duplicated a VLAN assignment across a
+real project. Every mutation therefore goes through `pkt edit`, which:
+
+1. Limits the blast radius to one device's running config.
+2. Validates the whole document before writing.
+3. Produces a reviewable text diff.
+4. Refreshes derived files so the snapshot cannot contradict itself.
+
+The editing examples above are exercised against a temporary snapshot by
+`go test ./internal/editor`.
