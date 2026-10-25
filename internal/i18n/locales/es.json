@@ -88,5 +88,26 @@
   },
   "DoctorAllPassed": {
     "other": "¡Todas las comprobaciones pasaron! Tu entorno está listo."
+  },
+  "LanguageCmdShort": {
+    "other": "Ver o configurar el idioma preferido de la interfaz"
+  },
+  "LanguageCurrent": {
+    "other": "Idioma actual: {{.Language}} ({{.Code}})"
+  },
+  "LanguageUpdated": {
+    "other": "Idioma actualizado a {{.Language}} ({{.Code}})"
+  },
+  "LanguagePersistedScope": {
+    "other": "Guardado en: {{.Target}}"
+  },
+  "LanguageInvalidCode": {
+    "other": "código de idioma no soportado \"{{.Code}}\". Idiomas soportados: en (English), es (Español)"
+  },
+  "LanguageMenuTitle": {
+    "other": "Idioma de la interfaz / Interface Language"
+  },
+  "LanguageMenuPrompt": {
+    "other": "Selecciona una opción [1-2] (Enter para mantener actual): "
   }
 }

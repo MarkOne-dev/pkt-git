@@ -6,8 +6,8 @@
 
 ## 2. Language Command Implementation
 
-- [ ] 2.1 Implement `newLanguageCmd()` in `internal/cli/language.go` with Lipgloss styling, interactive prompt, direct argument handling, `--global`/`--local` flags, and register in `internal/cli/root.go`.
-- [ ] 2.2 Add unit tests in `internal/cli/language_test.go` verifying direct argument switching, validation errors on invalid codes, non-interactive output, and help alias registration.
+- [x] 2.1 Implement `newLanguageCmd()` in `internal/cli/language.go` with Lipgloss styling, interactive prompt, direct argument handling, `--global`/`--local` flags, and register in `internal/cli/root.go`.
+- [x] 2.2 Add unit tests in `internal/cli/language_test.go` verifying direct argument switching, validation errors on invalid codes, non-interactive output, and help alias registration.
 
 ## 3. Verification & Quality Checks
 

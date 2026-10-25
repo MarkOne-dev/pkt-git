@@ -88,5 +88,26 @@
   },
   "DoctorAllPassed": {
     "other": "All checks passed! Your environment is ready."
+  },
+  "LanguageCmdShort": {
+    "other": "View or set the preferred interface language"
+  },
+  "LanguageCurrent": {
+    "other": "Current language: {{.Language}} ({{.Code}})"
+  },
+  "LanguageUpdated": {
+    "other": "Language updated to {{.Language}} ({{.Code}})"
+  },
+  "LanguagePersistedScope": {
+    "other": "Saved in: {{.Target}}"
+  },
+  "LanguageInvalidCode": {
+    "other": "unsupported language code \"{{.Code}}\". Supported languages: en (English), es (Español)"
+  },
+  "LanguageMenuTitle": {
+    "other": "Interface Language / Idioma de la interfaz"
+  },
+  "LanguageMenuPrompt": {
+    "other": "Select an option [1-2] (Enter to keep current): "
   }
 }
