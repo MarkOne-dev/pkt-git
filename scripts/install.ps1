@@ -237,7 +237,16 @@ try {
         Push-Location $rootDir
         try {
             $env:CGO_ENABLED = "0"
-            & go build -o $buildTarget ./cmd/pkt
+            $version = "0.1.0"
+            try {
+                $gitVer = (& git describe --tags --always 2>$null)
+                if ($LASTEXITCODE -eq 0 -and $gitVer) {
+                    $version = $gitVer.Trim()
+                }
+            }
+            catch {}
+            $ldflags = "-s -w -X github.com/MarkOne-dev/pkt-git/internal/config.Version=$version"
+            & go build -ldflags $ldflags -o $buildTarget ./cmd/pkt
             if ($LASTEXITCODE -ne 0) {
                 throw "go build failed with exit code $LASTEXITCODE."
             }

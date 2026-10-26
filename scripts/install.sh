@@ -218,7 +218,9 @@ if [[ -z "${SOURCE}" ]]; then
             exit 1
         fi
         TMP_BUILD="$(mktemp -d "${TMPDIR:-/tmp}/pkt-git-build.XXXXXX")"
-        (cd "${ROOT_DIR}" && CGO_ENABLED=0 go build -o "${TMP_BUILD}/pkt" ./cmd/pkt)
+        VERSION="$(git -C "${ROOT_DIR}" describe --tags --always 2>/dev/null || echo "0.1.0")"
+        LDFLAGS="-s -w -X github.com/MarkOne-dev/pkt-git/internal/config.Version=${VERSION}"
+        (cd "${ROOT_DIR}" && CGO_ENABLED=0 go build -ldflags "${LDFLAGS}" -o "${TMP_BUILD}/pkt" ./cmd/pkt)
         SOURCE="${TMP_BUILD}/pkt"
     fi
 fi

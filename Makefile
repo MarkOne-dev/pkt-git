@@ -5,14 +5,10 @@ BIN := $(BIN_DIR)/pkt
 DIST_DIR := dist
 CGO_ENABLED ?= 0
 
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
-DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo 0.1.0)
 
 LDFLAGS := -s -w \
-	-X github.com/MarkOne-dev/pkt-git/internal/config.Version=$(VERSION) \
-	-X github.com/MarkOne-dev/pkt-git/internal/config.Commit=$(COMMIT) \
-	-X github.com/MarkOne-dev/pkt-git/internal/config.Date=$(DATE)
+	-X github.com/MarkOne-dev/pkt-git/internal/config.Version=$(VERSION)
 
 .PHONY: build test fmt fmt-check vet lint dist clean
 
