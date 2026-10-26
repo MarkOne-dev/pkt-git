@@ -54,12 +54,34 @@ func TestInitCommandAutoExportsTopologies(t *testing.T) {
 	if !strings.Contains(stdout, "[ok] initialized") {
 		t.Fatalf("stdout missing initialized: %q", stdout)
 	}
-	if !strings.Contains(stdout, "auto-detected network.pkt -> exported to snapshot/network") {
+	if !strings.Contains(stdout, "organized network.pkt -> topologia/network.pkt") {
+		t.Fatalf("stdout missing relocation notice: %q", stdout)
+	}
+	if !strings.Contains(stdout, "auto-detected topologia/network.pkt -> exported to snapshot/network") {
 		t.Fatalf("stdout missing auto-detected export: %q", stdout)
+	}
+	relocatedPkt := filepath.Join(dir, "topologia", "network.pkt")
+	if _, err := os.Stat(relocatedPkt); err != nil {
+		t.Fatalf("missing relocated topology: %v", err)
 	}
 	snapXML := filepath.Join(dir, "snapshot", "network", "base.snapshot.xml")
 	if _, err := os.Stat(snapXML); err != nil {
 		t.Fatalf("missing auto-exported snapshot XML: %v", err)
+	}
+}
+
+func TestInitCommandScaffoldsTopologiaDir(t *testing.T) {
+	dir := initCLIRepo(t)
+	code, stdout, stderr := runCLI("init", dir)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "[ok] initialized") {
+		t.Fatalf("stdout missing initialized: %q", stdout)
+	}
+	gitkeep := filepath.Join(dir, "topologia", ".gitkeep")
+	if _, err := os.Stat(gitkeep); err != nil {
+		t.Fatalf("missing topologia/.gitkeep in empty repo: %v", err)
 	}
 }
 

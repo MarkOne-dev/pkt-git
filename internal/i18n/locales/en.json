@@ -1,4 +1,7 @@
 {
+  "InitRelocatedTopology": {
+    "other": "organized {{.Source}} -> {{.Target}}"
+  },
   "BannerSubtitle": {
     "other": "Cisco Packet Tracer ⇄ Git Version Control"
   },

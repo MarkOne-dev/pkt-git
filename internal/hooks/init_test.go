@@ -56,6 +56,11 @@ func TestInitCreatesHooksAndConfig(t *testing.T) {
 	if !result.AttributesCreated || !result.AttributesChanged {
 		t.Fatalf("result = %+v, want created attributes", result)
 	}
+
+	gitkeep := filepath.Join(dir, "topologia", ".gitkeep")
+	if _, err := os.Stat(gitkeep); err != nil {
+		t.Fatalf("topologia/.gitkeep was not created: %v", err)
+	}
 }
 
 func TestInitIsIdempotent(t *testing.T) {
