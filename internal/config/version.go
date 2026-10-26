@@ -3,7 +3,7 @@ package config
 
 // Build metadata. These are overridden at release time with -ldflags.
 var (
-	Version = "dev"
+	Version = "0.1.0"
 	Commit  = "none"
 	Date    = "unknown"
 )
