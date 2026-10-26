@@ -77,6 +77,15 @@ func Init(dir, executable string) (InitResult, error) {
 		return InitResult{}, fmt.Errorf("hooks: create %s: %w", hookDir, err)
 	}
 
+	topologiaDir := filepath.Join(root, "topologia")
+	if err := os.MkdirAll(topologiaDir, 0o755); err != nil {
+		return InitResult{}, fmt.Errorf("hooks: create topologia directory: %w", err)
+	}
+	entries, err := os.ReadDir(topologiaDir)
+	if err == nil && len(entries) == 0 {
+		_ = os.WriteFile(filepath.Join(topologiaDir, ".gitkeep"), []byte(""), 0o644)
+	}
+
 	result := InitResult{
 		Root:       root,
 		HookDir:    hookDir,
