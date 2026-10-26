@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/MarkOne-dev/pkt-git/internal/cli/ui"
 	"github.com/MarkOne-dev/pkt-git/internal/hooks"
+	"github.com/MarkOne-dev/pkt-git/internal/i18n"
 	"github.com/MarkOne-dev/pkt-git/internal/snapshot"
 )
 
@@ -46,6 +48,21 @@ func newInitCmd() *cobra.Command {
 			}
 			for _, t := range topos {
 				fullPktPath := filepath.Join(result.Root, t)
+				if filepath.Dir(t) == "." {
+					targetRel := filepath.Join("topologia", filepath.Base(t))
+					targetFull := filepath.Join(result.Root, targetRel)
+					if _, statErr := os.Stat(targetFull); os.IsNotExist(statErr) {
+						if renErr := os.Rename(fullPktPath, targetFull); renErr == nil {
+							_ = os.Remove(filepath.Join(result.Root, "topologia", ".gitkeep"))
+							ui.Success(out, "%s", i18n.T("InitRelocatedTopology", map[string]interface{}{
+								"Source": filepath.ToSlash(t),
+								"Target": filepath.ToSlash(targetRel),
+							}))
+							t = targetRel
+							fullPktPath = targetFull
+						}
+					}
+				}
 				destRel := snapshot.DefaultSnapshotDir(t)
 				destDir := filepath.Join(result.Root, destRel)
 				expResult, expErr := snapshot.Export(fullPktPath, destDir)
